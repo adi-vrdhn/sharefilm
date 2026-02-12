@@ -5,19 +5,12 @@ const { User } = require("../models");
 
 const router = express.Router();
 
-const issueToken = (res, user) => {
-  const token = jwt.sign(
+const generateToken = (user) => {
+  return jwt.sign(
     { id: user.id, name: user.name, email: user.email },
     process.env.JWT_SECRET,
     { expiresIn: "7d" }
   );
-
-  res.cookie("token", token, {
-    httpOnly: true,
-    sameSite: "none",
-    secure: true,
-    maxAge: 7 * 24 * 60 * 60 * 1000
-  });
 };
 
 router.post("/signup", async (req, res) => {
@@ -46,8 +39,11 @@ router.post("/signup", async (req, res) => {
     const hashed = await bcrypt.hash(password, 10);
     const user = await User.create({ name, email, password: hashed });
 
-    issueToken(res, user);
-    return res.json({ id: user.id, name: user.name, email: user.email });
+    const token = generateToken(user);
+    return res.json({ 
+      token, 
+      user: { id: user.id, name: user.name, email: user.email } 
+    });
   } catch (error) {
     return res.status(500).json({ message: "Signup failed" });
   }
@@ -71,15 +67,23 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    issueToken(res, user);
-    return res.json({ id: user.id, name: user.name, email: user.email });
+    const token = generateToken(user);
+    return res.json({ 
+      token, 
+      user: { id: user.id, name: user.name, email: user.email } 
+    });
   } catch (error) {
     return res.status(500).json({ message: "Login failed" });
   }
 });
 
 router.get("/me", async (req, res) => {
-  const token = req.cookies?.token;
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+
+  const token = authHeader.split(" ")[1];
   if (!token) {
     return res.status(401).json({ message: "Unauthorized" });
   }
@@ -101,7 +105,6 @@ router.get("/me", async (req, res) => {
 });
 
 router.post("/logout", (req, res) => {
-  res.clearCookie("token");
   return res.json({ message: "Logged out" });
 });
 

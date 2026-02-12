@@ -9,10 +9,17 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
       const response = await api.get("/auth/me");
       setUser(response.data);
     } catch (error) {
       setUser(null);
+      localStorage.removeItem("token");
     } finally {
       setLoading(false);
     }
@@ -24,16 +31,19 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (payload) => {
     const response = await api.post("/auth/login", payload);
-    setUser(response.data);
+    localStorage.setItem("token", response.data.token);
+    setUser(response.data.user);
   };
 
   const signup = async (payload) => {
     const response = await api.post("/auth/signup", payload);
-    setUser(response.data);
+    localStorage.setItem("token", response.data.token);
+    setUser(response.data.user);
   };
 
   const logout = async () => {
     await api.post("/auth/logout");
+    localStorage.removeItem("token");
     setUser(null);
   };
 
