@@ -9,6 +9,7 @@ import AddMovie from "./pages/AddMovie";
 import MovieList from "./pages/MovieList";
 import Notifications from "./pages/Notifications";
 import Friends from "./pages/Friends";
+import Chat from "./pages/Chat";
 
 const App = () => {
   const { user, logout } = useAuth();
@@ -25,6 +26,7 @@ const App = () => {
               <Link to="/dashboard">Dashboard</Link>
               <Link to="/add">Add Movie</Link>
               <Link to="/list">My List</Link>
+              <Link to="/chat">Messages</Link>
               <Link to="/friends">Friends</Link>
               <Link to="/notifications">Alerts</Link>
               <button className="nav-button" onClick={logout}>
@@ -72,6 +74,14 @@ const App = () => {
           element={
             <ProtectedRoute>
               <Friends />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chat"
+          element={
+            <ProtectedRoute>
+              <Chat />
             </ProtectedRoute>
           }
         />

@@ -9,6 +9,7 @@ const authRoutes = require("./routes/auth");
 const movieRoutes = require("./routes/movies");
 const notificationRoutes = require("./routes/notifications");
 const friendRoutes = require("./routes/friends");
+const messageRoutes = require("./routes/messages");
 const authMiddleware = require("./middleware/auth");
 
 const app = express();
@@ -32,6 +33,7 @@ app.use(authMiddleware);
 app.use(movieRoutes);
 app.use(notificationRoutes);
 app.use(friendRoutes);
+app.use(messageRoutes);
 
 const start = async () => {
   try {

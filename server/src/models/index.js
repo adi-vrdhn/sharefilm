@@ -3,6 +3,7 @@ const Movie = require("./Movie");
 const UserMovie = require("./UserMovie");
 const Notification = require("./Notification");
 const Friendship = require("./Friendship");
+const Message = require("./Message");
 
 User.hasMany(UserMovie, { foreignKey: "receiver_id", as: "receivedMovies" });
 User.hasMany(UserMovie, { foreignKey: "sender_id", as: "sentMovies" });
@@ -19,10 +20,16 @@ User.hasMany(Friendship, { foreignKey: "user_id", as: "friendships" });
 Friendship.belongsTo(User, { foreignKey: "user_id", as: "user" });
 Friendship.belongsTo(User, { foreignKey: "friend_id", as: "friend" });
 
+User.hasMany(Message, { foreignKey: "sender_id", as: "sentMessages" });
+User.hasMany(Message, { foreignKey: "receiver_id", as: "receivedMessages" });
+Message.belongsTo(User, { foreignKey: "sender_id", as: "sender" });
+Message.belongsTo(User, { foreignKey: "receiver_id", as: "receiver" });
+
 module.exports = {
   User,
   Movie,
   UserMovie,
   Notification,
-  Friendship
+  Friendship,
+  Message
 };
