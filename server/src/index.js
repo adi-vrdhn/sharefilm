@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const path = require("path");
 const sequelize = require("./config/db");
 require("./models");
 
@@ -34,6 +35,15 @@ app.use(movieRoutes);
 app.use(notificationRoutes);
 app.use(friendRoutes);
 app.use(messageRoutes);
+
+// Serve static files from React build
+const buildPath = path.join(__dirname, "../../client/dist");
+app.use(express.static(buildPath));
+
+// SPA fallback: serve index.html for any non-API routes
+app.get("*", (req, res) => {
+  res.sendFile(path.join(buildPath, "index.html"));
+});
 
 const start = async () => {
   try {

@@ -1,0 +1,13 @@
+{
+  "name": "filmshare",
+  "version": "1.0.0",
+  "description": "Share movies with friends",
+  "main": "server/src/index.js",
+  "scripts": {
+    "build": "cd client && npm install && npm run build && cd ../server && npm install",
+    "start": "cd server && npm start"
+  },
+  "engines": {
+    "node": "22.22.0"
+  }
+}
