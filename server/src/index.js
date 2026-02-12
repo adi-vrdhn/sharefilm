@@ -30,15 +30,16 @@ app.get("/health", (req, res) => {
 
 app.use("/auth", authRoutes);
 
+// Serve static files from React build BEFORE auth middleware
+const buildPath = path.join(__dirname, "../../client/dist");
+app.use(express.static(buildPath));
+
+// Apply auth middleware only to API routes
 app.use(authMiddleware);
 app.use(movieRoutes);
 app.use(notificationRoutes);
 app.use(friendRoutes);
 app.use(messageRoutes);
-
-// Serve static files from React build
-const buildPath = path.join(__dirname, "../../client/dist");
-app.use(express.static(buildPath));
 
 // SPA fallback: serve index.html for any non-API routes
 app.get("*", (req, res) => {
