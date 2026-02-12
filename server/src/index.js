@@ -14,10 +14,21 @@ const messageRoutes = require("./routes/messages");
 const authMiddleware = require("./middleware/auth");
 
 const app = express();
+app.set("trust proxy", 1);
+
+const allowedOrigins = (process.env.CLIENT_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(
   cors({
-    origin: process.env.CLIENT_ORIGIN,
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     credentials: true
   })
 );
