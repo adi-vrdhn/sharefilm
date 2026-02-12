@@ -1,4 +1,4 @@
-# Movie Gifts
+# Film Share
 
 Full-stack app for sharing movie recommendations with friends.
 

@@ -24,7 +24,7 @@ const Notifications = () => {
   return (
     <div className="container">
       <h1>Notifications</h1>
-      <p className="helper-text">Live feed of new movie gifts.</p>
+      <p className="helper-text">Live feed of new film shares.</p>
       {status && <p className="helper-text">{status}</p>}
       <div className="card-grid">
         {notes.map((note) => (

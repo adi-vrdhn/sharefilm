@@ -17,7 +17,7 @@ const App = () => {
     <div className="app-shell">
       <nav className="navbar">
         <Link className="logo" to={user ? "/dashboard" : "/login"}>
-          Movie Gifts
+          Film Share
         </Link>
         <div className="nav-links">
           {user ? (
@@ -84,6 +84,9 @@ const App = () => {
           }
         />
       </Routes>
+      <footer className="app-footer">
+        <p>Created by ADITYAVARDHAN SINGH RATHORE</p>
+      </footer>
     </div>
   );
 };

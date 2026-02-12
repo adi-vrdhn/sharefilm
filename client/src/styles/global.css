@@ -283,6 +283,19 @@ button.secondary {
   font-size: 14px;
 }
 
+.app-footer {
+  text-align: center;
+  padding: 24px;
+  color: var(--muted);
+  font-size: 12px;
+  border-top: 1px solid rgba(36, 31, 26, 0.1);
+  margin-top: auto;
+}
+
+.app-footer p {
+  margin: 0;
+}
+
 @media (max-width: 720px) {
   .navbar {
     flex-direction: column;
