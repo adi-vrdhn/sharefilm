@@ -14,7 +14,8 @@ router.get("/searchMovie", async (req, res) => {
     const results = await searchMovies(query);
     return res.json(results);
   } catch (error) {
-    return res.status(500).json({ message: "Search failed" });
+    console.error("TMDB search error:", error.message);
+    return res.status(500).json({ message: error.message || "Search failed" });
   }
 });
 
