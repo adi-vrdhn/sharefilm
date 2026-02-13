@@ -144,21 +144,23 @@ router.get("/discoverMovies", async (req, res) => {
 router.get("/similarMovies", async (req, res) => {
   try {
     const query = req.query.query;
-    if (!query) {
-      return res.status(400).json({ message: "Movie query is required" });
-    }
+    const movieId = req.query.movieId;
 
-    // First, search for the movie to get its TMDB ID
-    const searchResults = await searchMovies(query);
-    if (!searchResults || searchResults.length === 0) {
-      return res.status(404).json({ message: "Movie not found" });
-    }
+    let tmdbId = movieId;
 
-    // Get the first result's ID
-    const movieId = searchResults[0].tmdb_id;
+    // If no movieId provided, search for the movie using query
+    if (!tmdbId && query) {
+      const searchResults = await searchMovies(query);
+      if (!searchResults || searchResults.length === 0) {
+        return res.status(404).json({ message: "Movie not found" });
+      }
+      tmdbId = searchResults[0].tmdb_id;
+    } else if (!tmdbId && !query) {
+      return res.status(400).json({ message: "Either query or movieId is required" });
+    }
 
     // Fetch similar movies
-    const similarMovies = await getSimilarMovies(movieId);
+    const similarMovies = await getSimilarMovies(tmdbId);
     return res.json(similarMovies);
   } catch (error) {
     console.error("Similar movies error:", error.message);

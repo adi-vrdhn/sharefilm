@@ -37,6 +37,8 @@ const Discover = () => {
   const [similarMode, setSimilarMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [selectedSearchMovie, setSelectedSearchMovie] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
 
   const pointerStart = useRef(null);
@@ -87,6 +89,25 @@ const Discover = () => {
     localStorage.setItem("wantList", JSON.stringify(wantList));
   }, [wantList]);
 
+  // Autocomplete search for similar movies
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchSuggestions([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        const response = await api.get(`/searchMovie?q=${encodeURIComponent(searchQuery)}`);
+        setSearchSuggestions(response.data.slice(0, 6));
+      } catch (error) {
+        setSearchSuggestions([]);
+      }
+    }, 350);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
   const fetchMovies = async ({ reset = true, nextPage = 1 } = {}) => {
     setLoading(true);
     setStatus("");
@@ -126,8 +147,8 @@ const Discover = () => {
   };
 
   const searchSimilarMovies = async () => {
-    if (!searchQuery.trim()) {
-      setStatus("Please enter a movie name");
+    if (!selectedSearchMovie && !searchQuery.trim()) {
+      setStatus("Please select or enter a movie name");
       return;
     }
 
@@ -136,12 +157,14 @@ const Discover = () => {
     try {
       const response = await api.get("/similarMovies", {
         params: {
-          query: searchQuery
+          movieId: selectedSearchMovie?.tmdb_id || undefined,
+          query: !selectedSearchMovie ? searchQuery : undefined
         }
       });
       setSearchResults(response.data || []);
       setSimilarMode(true);
       setIndex(0);
+      setSearchSuggestions([]);
     } catch (error) {
       setStatus("Failed to find similar movies");
     } finally {
@@ -149,10 +172,18 @@ const Discover = () => {
     }
   };
 
+  const selectSearchMovie = (movie) => {
+    setSelectedSearchMovie(movie);
+    setSearchQuery(movie.title);
+    setSearchSuggestions([]);
+  };
+
   const exitSimilarMode = () => {
     setSimilarMode(false);
     setSearchQuery("");
     setSearchResults([]);
+    setSelectedSearchMovie(null);
+    setSearchSuggestions([]);
     setIndex(0);
   };
 
@@ -402,14 +433,35 @@ const Discover = () => {
         </div>
 
         <div className="similar-search-row">
-          <input
-            type="text"
-            className="similar-search-input"
-            placeholder="Search a movie to find similar ones..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyPress={(e) => e.key === "Enter" && searchSimilarMovies()}
-          />
+          <div className="similar-search-wrapper">
+            <input
+              type="text"
+              className="similar-search-input"
+              placeholder="Search a movie to find similar ones..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && searchSimilarMovies()}
+            />
+            {searchSuggestions.length > 0 && (
+              <div className="similar-suggestions-list">
+                {searchSuggestions.map((movie) => (
+                  <div
+                    key={movie.tmdb_id}
+                    className="similar-suggestion-item"
+                    onClick={() => selectSearchMovie(movie)}
+                  >
+                    {movie.poster && (
+                      <img src={movie.poster} alt={movie.title} className="suggestion-poster" />
+                    )}
+                    <div className="suggestion-info">
+                      <p className="suggestion-title">{movie.title}</p>
+                      <p className="suggestion-year">{movie.year}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           <button
             className="primary"
             onClick={searchSimilarMovies}
