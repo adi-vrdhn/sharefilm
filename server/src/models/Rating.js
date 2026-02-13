@@ -14,7 +14,7 @@ const Rating = sequelize.define(
       allowNull: false
     },
     user_movie_id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false
     },
     rating: {
