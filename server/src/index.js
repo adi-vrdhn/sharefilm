@@ -62,7 +62,8 @@ app.get("*", (req, res) => {
 const start = async () => {
   try {
     await sequelize.authenticate();
-    await sequelize.sync({ alter: true });
+    // Use force: false and alter: false (defaults) to safely sync
+    await sequelize.sync();
 
     const port = process.env.PORT || 4000;
     app.listen(port, () => {
