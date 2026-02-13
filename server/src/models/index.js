@@ -5,6 +5,7 @@ const Notification = require("./Notification");
 const Friendship = require("./Friendship");
 const Message = require("./Message");
 const Rating = require("./Rating");
+const SharedParty = require("./SharedParty");
 
 User.hasMany(UserMovie, { foreignKey: "receiver_id", as: "receivedMovies", constraints: true });
 User.hasMany(UserMovie, { foreignKey: "sender_id", as: "sentMovies", constraints: true });
@@ -38,5 +39,6 @@ module.exports = {
   Notification,
   Friendship,
   Message,
-  Rating
+  Rating,
+  SharedParty
 };

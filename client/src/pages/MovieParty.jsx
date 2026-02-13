@@ -15,11 +15,46 @@ const MovieParty = () => {
   const [votes, setVotes] = useState({});
   const [hasVoted, setHasVoted] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
+  const [partyId, setPartyId] = useState(null);
+  const [partyData, setPartyData] = useState(null);
+  const [joinPartyId, setJoinPartyId] = useState("");
 
   useEffect(() => {
     fetchFriends();
     loadPopularMovies();
   }, []);
+
+  // Poll for party updates when party is active
+  useEffect(() => {
+    if (!partyId || !partyStarted) return;
+
+    const pollParty = async () => {
+      try {
+        const response = await API.get(`/getParty/${partyId}`);
+        setPartyData(response.data);
+        // Update local vote counts from server data
+        const voteCount = {};
+        Object.keys(response.data.votes || {}).forEach((movieId) => {
+          voteCount[movieId] = response.data.votes[movieId]?.length || 0;
+        });
+        setVotes(voteCount);
+        
+        // Check if current user has voted
+        const userId = user.id;
+        const userHasVoted = Object.values(response.data.votes || {}).some(
+          (voters) => voters && voters.includes(userId)
+        );
+        setHasVoted(userHasVoted);
+      } catch (error) {
+        console.error("Error polling party:", error);
+      }
+    };
+
+    pollParty(); // Initial fetch
+    const interval = setInterval(pollParty, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [partyId, partyStarted]);
 
   const fetchFriends = async () => {
     try {
@@ -87,43 +122,96 @@ const MovieParty = () => {
       return;
     }
 
-    // Send notifications to selected friends
     try {
-      for (const friendId of selectedFriends) {
-        await API.post("/addNotification", {
-          userId: friendId,
-          message: `${user.name} invited you to a Movie Party!`,
-          type: "party_invite",
-        });
-      }
+      const response = await API.post("/createSharedParty", {
+        friendIds: selectedFriends,
+        movies: selectedMovies,
+      });
+      
+      setPartyId(response.data.partyId);
+      setPartyData(response.data.party);
       setPartyStarted(true);
-      alert(`Party started! ${selectedFriends.length} friends invited.`);
+      alert(`Party started! Party ID: ${response.data.partyId}\n${selectedFriends.length} friends invited.`);
     } catch (error) {
-      console.error("Error sending invites:", error);
-      alert("Error starting party");
+      console.error("Error starting party:", error);
+      alert("Error starting party. Please try again.");
     }
   };
 
-  const voteForMovie = (movieId) => {
+  const voteForMovie = async (movieId) => {
     if (hasVoted) {
       alert("You've already voted!");
       return;
     }
-    setVotes((prev) => ({
-      ...prev,
-      [movieId]: (prev[movieId] || 0) + 1,
-    }));
-    setHasVoted(true);
+    
+    try {
+      await API.post("/voteInParty", {
+        partyId: partyId,
+        movieId: movieId,
+      });
+      setHasVoted(true);
+      // The polling will update the vote counts automatically
+    } catch (error) {
+      console.error("Error voting:", error);
+      if (error.response?.data?.error) {
+        alert(error.response.data.error);
+      } else {
+        alert("Error submitting vote");
+      }
+    }
   };
 
-  const resetParty = () => {
+  const resetParty = async () => {
+    if (partyId) {
+      try {
+        await API.post(`/endParty/${partyId}`);
+      } catch (error) {
+        console.error("Error ending party:", error);
+      }
+    }
+    
     setPartyStarted(false);
     setSelectedFriends([]);
     setSelectedMovies([]);
     setVotes({});
     setHasVoted(false);
     setSearchQuery("");
+    setPartyId(null);
+    setPartyData(null);
+    setJoinPartyId("");
     loadPopularMovies();
+  };
+
+  const joinParty = async () => {
+    if (!joinPartyId.trim()) {
+      alert("Please enter a Party ID");
+      return;
+    }
+
+    try {
+      const response = await API.get(`/getParty/${joinPartyId.trim()}`);
+      setPartyData(response.data);
+      setPartyId(joinPartyId.trim());
+      setSelectedMovies(response.data.movies);
+      setPartyStarted(true);
+      
+      // Set initial vote counts
+      const voteCount = {};
+      Object.keys(response.data.votes || {}).forEach((movieId) => {
+        voteCount[movieId] = response.data.votes[movieId]?.length || 0;
+      });
+      setVotes(voteCount);
+      
+      // Check if user has voted
+      const userId = user.id;
+      const userHasVoted = Object.values(response.data.votes || {}).some(
+        (voters) => voters && voters.includes(userId)
+      );
+      setHasVoted(userHasVoted);
+    } catch (error) {
+      console.error("Error joining party:", error);
+      alert("Party not found or error loading party");
+    }
   };
 
   if (partyStarted) {
@@ -131,24 +219,32 @@ const MovieParty = () => {
       (a, b) => (votes[b.tmdb_id] || 0) - (votes[a.tmdb_id] || 0)
     );
     const winner = sortedMovies[0];
+    const isHost = partyData?.hostId === user.id;
 
     return (
       <div className="movie-party-page">
         <div className="party-active">
           <div className="party-header">
             <h2>🎬 Movie Party Active</h2>
-            <button className="btn-secondary" onClick={resetParty}>
-              End Party
-            </button>
+            {isHost && (
+              <button className="btn-secondary" onClick={resetParty}>
+                End Party
+              </button>
+            )}
           </div>
 
           <div className="party-info">
             <p>
-              <strong>Host:</strong> {user.name}
+              <strong>Host:</strong> {partyData?.hostName || user.name}
             </p>
             <p>
-              <strong>Friends Invited:</strong> {selectedFriends.length}
+              <strong>Party ID:</strong> <code>{partyId}</code>
             </p>
+            {isHost && (
+              <p>
+                <strong>Friends Invited:</strong> {selectedFriends.length}
+              </p>
+            )}
             {hasVoted && (
               <p className="voted-badge">✅ You've voted!</p>
             )}
@@ -193,6 +289,28 @@ const MovieParty = () => {
         <div className="party-header">
           <h1>🎬 Movie Party</h1>
           <p className="subtitle">Create a party, invite friends, and vote on movies!</p>
+        </div>
+
+        {/* Join Party Section */}
+        <div className="form-section join-party-section">
+          <h3>Join an Existing Party</h3>
+          <div className="join-party-box">
+            <input
+              type="text"
+              placeholder="Enter Party ID..."
+              value={joinPartyId}
+              onChange={(e) => setJoinPartyId(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && joinParty()}
+            />
+            <button
+              className="btn-secondary"
+              onClick={joinParty}
+              disabled={!joinPartyId.trim()}
+            >
+              Join Party
+            </button>
+          </div>
+          <p className="helper-text">OR create a new party below</p>
         </div>
 
         {/* Friends Selection */}
