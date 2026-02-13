@@ -32,13 +32,13 @@ const Layout = ({ children }) => {
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
-          <div className="user-profile">
+          <Link to="/profile" className="user-profile-link" onClick={() => setSidebarOpen(false)}>
             <div className="user-avatar">{user?.name?.[0] || "U"}</div>
             <div className="user-info">
               <div className="user-name">{user?.name}</div>
               <div className="user-email">{user?.email}</div>
             </div>
-          </div>
+          </Link>
         </div>
 
         <nav className="sidebar-nav">

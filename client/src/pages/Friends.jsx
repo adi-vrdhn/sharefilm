@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
 
 const Friends = () => {
@@ -6,13 +7,14 @@ const Friends = () => {
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("");
+  const navigate = useNavigate();
 
   const loadFriends = async () => {
     try {
       const response = await api.get("/getFriends");
       setFriends(response.data);
     } catch (error) {
-      setStatus("Failed to load friends");
+      setStatus("Failed to load buddies");
     }
   };
 
@@ -47,7 +49,7 @@ const Friends = () => {
       setUsers([]);
       loadFriends();
     } catch (error) {
-      setStatus(error.response?.data?.message || "Failed to add friend");
+      setStatus(error.response?.data?.message || "Failed to add buddy");
     }
   };
 
@@ -56,14 +58,14 @@ const Friends = () => {
       await api.delete(`/removeFriend/${id}`);
       setFriends((prev) => prev.filter((f) => f.id !== id));
     } catch (error) {
-      setStatus("Failed to remove friend");
+      setStatus("Failed to remove buddy");
     }
   };
 
   return (
     <div className="container">
-      <h1>My Friends</h1>
-      <p className="helper-text">Add friends to share movie recommendations.</p>
+      <h1>My Buddies</h1>
+      <p className="helper-text">Add buddies to share movie recommendations.</p>
 
       <div className="form-card" style={{ marginTop: 20, marginBottom: 20 }}>
         <div className="form-row autocomplete">
@@ -101,19 +103,41 @@ const Friends = () => {
 
       <div className="card-grid">
         {friends.map((friend) => (
-          <div className="notice-card" key={friend.id}>
-            <div>
-              <strong>{friend.name}</strong>
-              <div className="helper-text">{friend.email}</div>
+          <div
+            className="notice-card buddy-card"
+            key={friend.id}
+            onClick={() => navigate(`/profile/${friend.id}`)}
+            style={{ cursor: "pointer" }}
+          >
+            <div className="buddy-profile-section">
+              <div className="buddy-avatar">
+                {friend.profilePicture ? (
+                  <img src={friend.profilePicture} alt={friend.name} />
+                ) : (
+                  <span>{friend.name.charAt(0).toUpperCase()}</span>
+                )}
+              </div>
+              <div className="buddy-info">
+                <strong>{friend.name}</strong>
+                <div className="helper-text">{friend.email}</div>
+              </div>
             </div>
-            <button className="secondary" onClick={() => handleRemove(friend.id)}>
+            <button
+              className="secondary"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleRemove(friend.id);
+              }}
+            >
               Remove
             </button>
           </div>
         ))}
       </div>
 
-      {friends.length === 0 && <p className="helper-text">No friends yet. Search and add someone!</p>}
+      {friends.length === 0 && (
+        <p className="helper-text">No buddies yet. Search and add someone!</p>
+      )}
     </div>
   );
 };

@@ -7,12 +7,12 @@ const router = express.Router();
 router.get("/getFriends", async (req, res) => {
   try {
     const friendships = await Friendship.findAll({
-      where: { userId: req.user.id },
+      where: { userId: req.user.id, status: "accepted" },
       include: [
         {
           model: User,
           as: "friend",
-          attributes: ["id", "name", "email"]
+          attributes: ["id", "name", "email", "profilePicture"]
         }
       ]
     });
@@ -20,7 +20,7 @@ router.get("/getFriends", async (req, res) => {
     const friends = friendships.map((f) => f.friend);
     return res.json(friends);
   } catch (error) {
-    return res.status(500).json({ message: "Failed to fetch friends" });
+    return res.status(500).json({ message: "Failed to fetch buddies" });
   }
 });
 

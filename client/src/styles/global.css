@@ -334,6 +334,62 @@ button.secondary {
   }
 }
 
+.buddy-card {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  animation: none;
+  transition: all 0.2s ease;
+}
+
+.buddy-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px rgba(200, 160, 72, 0.15);
+}
+
+.buddy-profile-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.buddy-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(200, 160, 72, 0.15), rgba(225, 182, 90, 0.1));
+  border: 2px solid rgba(200, 160, 72, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-weight: 700;
+  color: var(--accent-2);
+}
+
+.buddy-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.buddy-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.buddy-info strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.buddy-info .helper-text {
+  font-size: 12px;
+}
+
 @media (max-width: 768px) {
   .container {
     width: min(1080px, 92vw);

@@ -14,6 +14,7 @@ import Chat from "./pages/Chat";
 import MovieParty from "./pages/MovieParty";
 import Discover from "./pages/Discover";
 import Watchlist from "./pages/Watchlist";
+import Profile from "./pages/Profile";
 
 const App = () => {
   const { user } = useAuth();
@@ -110,6 +111,26 @@ const App = () => {
           <ProtectedRoute>
             <Layout>
               <Dashboard />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Profile />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/:userId"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Profile />
             </Layout>
           </ProtectedRoute>
         }
