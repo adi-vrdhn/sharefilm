@@ -9,14 +9,16 @@ const MovieParty = () => {
   const [selectedFriends, setSelectedFriends] = useState([]);
   const [selectedMovies, setSelectedMovies] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [searchResults, setSearchResults] = useState([]);
+  const [movieResults, setMovieResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [partyStarted, setPartyStarted] = useState(false);
   const [votes, setVotes] = useState({});
   const [hasVoted, setHasVoted] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
 
   useEffect(() => {
     fetchFriends();
+    loadPopularMovies();
   }, []);
 
   const fetchFriends = async () => {
@@ -28,12 +30,24 @@ const MovieParty = () => {
     }
   };
 
+  const loadPopularMovies = async () => {
+    try {
+      setLoading(true);
+      const response = await API.get("/popularMovies");
+      setMovieResults(response.data || []);
+    } catch (error) {
+      console.error("Error loading popular movies:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const searchMovies = async () => {
     if (!searchQuery.trim()) return;
     try {
       setLoading(true);
       const response = await API.get(`/searchMovie?q=${searchQuery}`);
-      setSearchResults(response.data || []);
+      setMovieResults(response.data || []);
     } catch (error) {
       console.error("Error searching movies:", error);
       alert("Error searching movies. Try again.");
@@ -51,19 +65,21 @@ const MovieParty = () => {
   };
 
   const addMovieToParty = (movie) => {
-    const exists = selectedMovies.find((m) => m.id === movie.id);
+    const exists = selectedMovies.find((m) => m.tmdb_id === movie.tmdb_id);
     if (!exists) {
       setSelectedMovies((prev) => [...prev, movie]);
-      setVotes((prev) => ({ ...prev, [movie.id]: 0 }));
+      setVotes((prev) => ({ ...prev, [movie.tmdb_id]: 0 }));
     }
   };
 
   const removeMovie = (movieId) => {
-    setSelectedMovies((prev) => prev.filter((m) => m.id !== movieId));
+    setSelectedMovies((prev) => prev.filter((m) => m.tmdb_id !== movieId));
     setVotes((prev) => {
       const newVotes = { ...prev };
       delete newVotes[movieId];
       return newVotes;
+    });
+  };
     });
   };
 
@@ -108,13 +124,13 @@ const MovieParty = () => {
     setSelectedMovies([]);
     setVotes({});
     setHasVoted(false);
-    setSearchResults([]);
     setSearchQuery("");
+    loadPopularMovies();
   };
 
   if (partyStarted) {
     const sortedMovies = [...selectedMovies].sort(
-      (a, b) => (votes[b.id] || 0) - (votes[a.id] || 0)
+      (a, b) => (votes[b.tmdb_id] || 0) - (votes[a.tmdb_id] || 0)
     );
     const winner = sortedMovies[0];
 
@@ -145,13 +161,13 @@ const MovieParty = () => {
             <div className="movies-grid">
               {sortedMovies.map((movie) => (
                 <div
-                  key={movie.id}
+                  key={movie.tmdb_id}
                   className={`movie-vote-card ${
-                    movie.id === winner?.id && votes[movie.id] > 0
+                    movie.tmdb_id === winner?.tmdb_id && votes[movie.tmdb_id] > 0
                       ? "winner"
                       : ""
                   }`}
-                  onClick={() => !hasVoted && voteForMovie(movie.id)}
+                  onClick={() => !hasVoted && voteForMovie(movie.tmdb_id)}
                 >
                   <img
                     src={movie.poster || "https://via.placeholder.com/200x300"}
@@ -159,9 +175,19 @@ const MovieParty = () => {
                   />
                   <h4>{movie.title}</h4>
                   <p className="vote-count">
-                    👍 {votes[movie.id] || 0} vote{votes[movie.id] !== 1 ? "s" : ""}
+                    👍 {votes[movie.tmdb_id] || 0} vote{votes[movie.tmdb_id] !== 1 ? "s" : ""}
                   </p>
-                  {movie.id === winner?.id && votes[movie.id] > 0 && (
+                  {movie.tmdb_id === winner?.tmdb_id && votes[movie.tmdb_id] > 0 && (
+                    <div className="winner-badge">🏆 Leading</div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
                     <div className="winner-badge">🏆 Leading</div>
                   )}
                 </div>
@@ -205,28 +231,52 @@ const MovieParty = () => {
         {/* Movie Selection */}
         <div className="form-section">
           <h3>2. Add Movies</h3>
-          <div className="search-box">
-            <input
-              type="text"
-              placeholder="Search for a movie..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyPress={(e) => e.key === "Enter" && searchMovies()}
-            />
+          <div className="movie-selection-header">
+            <p className="helper-text">
+              {showSearch ? "Search for specific movies" : "Popular movies - click to add"}
+            </p>
             <button
-              className="btn-secondary"
-              onClick={searchMovies}
-              disabled={loading || !searchQuery.trim()}
+              className="btn-toggle"
+              onClick={() => {
+                setShowSearch(!showSearch);
+                if (showSearch) {
+                  setSearchQuery("");
+                  loadPopularMovies();
+                }
+              }}
             >
-              {loading ? "Searching..." : "Search"}
+              {showSearch ? "Show Popular" : "Search Movies"}
             </button>
           </div>
 
-          {searchResults.length > 0 && (
+          {showSearch && (
+            <div className="search-box">
+              <input
+                type="text"
+                placeholder="Search for a movie..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === "Enter" && searchMovies()}
+              />
+              <button
+                className="btn-secondary"
+                onClick={searchMovies}
+                disabled={loading || !searchQuery.trim()}
+              >
+                {loading ? "Searching..." : "Search"}
+              </button>
+            </div>
+          )}
+
+          {loading ? (
+            <div className="loading-state">
+              <p>Loading movies...</p>
+            </div>
+          ) : movieResults.length > 0 ? (
             <div className="search-results">
-              {searchResults.map((movie) => (
+              {movieResults.map((movie) => (
                 <div
-                  key={movie.id}
+                  key={movie.tmdb_id}
                   className="search-result-item"
                   onClick={() => addMovieToParty(movie)}
                 >
@@ -242,23 +292,20 @@ const MovieParty = () => {
                 </div>
               ))}
             </div>
-          )}
-
-          {searchQuery && !loading && searchResults.length === 0 && (
+          ) : (
             <div className="no-results">
               <p>No movies found. Try a different search.</p>
             </div>
           )}
-
           {selectedMovies.length > 0 && (
             <div className="selected-movies">
               <h4>Selected Movies:</h4>
               <div className="movie-chips">
                 {selectedMovies.map((movie) => (
-                  <div key={movie.id} className="movie-chip">
+                  <div key={movie.tmdb_id} className="movie-chip">
                     <img src={movie.poster} alt={movie.title} />
                     <span>{movie.title}</span>
-                    <button onClick={() => removeMovie(movie.id)}>×</button>
+                    <button onClick={() => removeMovie(movie.tmdb_id)}>×</button>
                   </div>
                 ))}
               </div>

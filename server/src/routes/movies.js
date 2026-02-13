@@ -1,6 +1,6 @@
 const express = require("express");
 const { User, Movie, UserMovie, Notification, Rating } = require("../models");
-const { searchMovies } = require("../services/tmdb");
+const { searchMovies, getPopularMovies } = require("../services/tmdb");
 
 const router = express.Router();
 
@@ -16,6 +16,16 @@ router.get("/searchMovie", async (req, res) => {
   } catch (error) {
     console.error("TMDB search error:", error.message);
     return res.status(500).json({ message: error.message || "Search failed" });
+  }
+});
+
+router.get("/popularMovies", async (req, res) => {
+  try {
+    const results = await getPopularMovies();
+    return res.json(results);
+  } catch (error) {
+    console.error("TMDB popular error:", error.message);
+    return res.status(500).json({ message: error.message || "Failed to fetch popular movies" });
   }
 });
 
