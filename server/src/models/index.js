@@ -10,50 +10,50 @@ const PartyMember = require("./PartyMember");
 const PartyMovie = require("./PartyMovie");
 const PartyVote = require("./PartyVote");
 
-User.hasMany(UserMovie, { foreignKey: "receiver_id", as: "receivedMovies" });
-User.hasMany(UserMovie, { foreignKey: "sender_id", as: "sentMovies" });
-UserMovie.belongsTo(User, { foreignKey: "receiver_id", as: "receiver" });
-UserMovie.belongsTo(User, { foreignKey: "sender_id", as: "sender" });
+User.hasMany(UserMovie, { foreignKey: "receiver_id", as: "receivedMovies", constraints: true });
+User.hasMany(UserMovie, { foreignKey: "sender_id", as: "sentMovies", constraints: true });
+UserMovie.belongsTo(User, { foreignKey: "receiver_id", as: "receiver", constraints: true });
+UserMovie.belongsTo(User, { foreignKey: "sender_id", as: "sender", constraints: true });
 
-Movie.hasMany(UserMovie, { foreignKey: "movie_id" });
-UserMovie.belongsTo(Movie, { foreignKey: "movie_id" });
+Movie.hasMany(UserMovie, { foreignKey: "movie_id", constraints: true });
+UserMovie.belongsTo(Movie, { foreignKey: "movie_id", constraints: true });
 
-User.hasMany(Notification, { foreignKey: "user_id" });
-Notification.belongsTo(User, { foreignKey: "user_id" });
+User.hasMany(Notification, { foreignKey: "user_id", constraints: true });
+Notification.belongsTo(User, { foreignKey: "user_id", constraints: true });
 
-User.hasMany(Friendship, { foreignKey: "user_id", as: "friendships" });
-Friendship.belongsTo(User, { foreignKey: "user_id", as: "user" });
-Friendship.belongsTo(User, { foreignKey: "friend_id", as: "friend" });
+User.hasMany(Friendship, { foreignKey: "user_id", as: "friendships", constraints: true });
+Friendship.belongsTo(User, { foreignKey: "user_id", as: "user", constraints: true });
+Friendship.belongsTo(User, { foreignKey: "friend_id", as: "friend", constraints: true });
 
-User.hasMany(Message, { foreignKey: "sender_id", as: "sentMessages" });
-User.hasMany(Message, { foreignKey: "receiver_id", as: "receivedMessages" });
-Message.belongsTo(User, { foreignKey: "sender_id", as: "sender" });
-Message.belongsTo(User, { foreignKey: "receiver_id", as: "receiver" });
+User.hasMany(Message, { foreignKey: "sender_id", as: "sentMessages", constraints: true });
+User.hasMany(Message, { foreignKey: "receiver_id", as: "receivedMessages", constraints: true });
+Message.belongsTo(User, { foreignKey: "sender_id", as: "sender", constraints: true });
+Message.belongsTo(User, { foreignKey: "receiver_id", as: "receiver", constraints: true });
 
-User.hasMany(Rating, { foreignKey: "user_id" });
-Rating.belongsTo(User, { foreignKey: "user_id" });
-UserMovie.hasMany(Rating, { foreignKey: "user_movie_id" });
-Rating.belongsTo(UserMovie, { foreignKey: "user_movie_id" });
+User.hasMany(Rating, { foreignKey: "user_id", constraints: true });
+Rating.belongsTo(User, { foreignKey: "user_id", constraints: true });
+UserMovie.hasMany(Rating, { foreignKey: "user_movie_id", constraints: true });
+Rating.belongsTo(UserMovie, { foreignKey: "user_movie_id", constraints: true });
 
-User.hasMany(Party, { foreignKey: "createdBy", as: "createdParties" });
-Party.belongsTo(User, { foreignKey: "createdBy", as: "creator" });
+User.hasMany(Party, { foreignKey: "createdBy", as: "createdParties", constraints: true });
+Party.belongsTo(User, { foreignKey: "createdBy", as: "creator", constraints: true });
 
-Party.hasMany(PartyMember, { foreignKey: "partyId", as: "members" });
-PartyMember.belongsTo(Party, { foreignKey: "partyId" });
-PartyMember.belongsTo(User, { foreignKey: "userId", as: "user" });
-User.hasMany(PartyMember, { foreignKey: "userId", as: "partyMemberships" });
+Party.hasMany(PartyMember, { foreignKey: "partyId", as: "members", constraints: true });
+PartyMember.belongsTo(Party, { foreignKey: "partyId", constraints: true });
+PartyMember.belongsTo(User, { foreignKey: "userId", as: "user", constraints: true });
+User.hasMany(PartyMember, { foreignKey: "userId", as: "partyMemberships", constraints: true });
 
-Party.hasMany(PartyMovie, { foreignKey: "partyId", as: "partyMovies" });
-PartyMovie.belongsTo(Party, { foreignKey: "partyId" });
-PartyMovie.belongsTo(Movie, { foreignKey: "movieId", as: "movie" });
-Movie.hasMany(PartyMovie, { foreignKey: "movieId" });
+Party.hasMany(PartyMovie, { foreignKey: "partyId", as: "partyMovies", constraints: true });
+PartyMovie.belongsTo(Party, { foreignKey: "partyId", constraints: true });
+PartyMovie.belongsTo(Movie, { foreignKey: "movieId", as: "movie", constraints: true });
+Movie.hasMany(PartyMovie, { foreignKey: "movieId", constraints: true });
 
-Party.hasMany(PartyVote, { foreignKey: "partyId", as: "votes" });
-PartyVote.belongsTo(Party, { foreignKey: "partyId" });
-PartyVote.belongsTo(User, { foreignKey: "userId", as: "voter" });
-PartyVote.belongsTo(Movie, { foreignKey: "movieId", as: "movie" });
-User.hasMany(PartyVote, { foreignKey: "userId", as: "partyVotes" });
-Movie.hasMany(PartyVote, { foreignKey: "movieId" });
+Party.hasMany(PartyVote, { foreignKey: "partyId", as: "votes", constraints: true });
+PartyVote.belongsTo(Party, { foreignKey: "partyId", constraints: true });
+PartyVote.belongsTo(User, { foreignKey: "userId", as: "voter", constraints: true });
+PartyVote.belongsTo(Movie, { foreignKey: "movieId", as: "movie", constraints: true });
+User.hasMany(PartyVote, { foreignKey: "userId", as: "partyVotes", constraints: true });
+Movie.hasMany(PartyVote, { foreignKey: "movieId", constraints: true });
 
 module.exports = {
   User,

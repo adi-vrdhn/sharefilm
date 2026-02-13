@@ -12,18 +12,10 @@ const PartyMovie = sequelize.define(
     partyId: {
       type: DataTypes.UUID,
       allowNull: false,
-      references: {
-        model: "Parties",
-        key: "id",
-      },
     },
     movieId: {
       type: DataTypes.UUID,
       allowNull: false,
-      references: {
-        model: "Movies",
-        key: "id",
-      },
     },
   },
   {

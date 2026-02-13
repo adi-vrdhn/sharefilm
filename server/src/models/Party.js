@@ -12,10 +12,6 @@ const Party = sequelize.define(
     createdBy: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: "Users",
-        key: "id",
-      },
     },
     active: {
       type: DataTypes.BOOLEAN,
