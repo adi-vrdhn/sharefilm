@@ -5,8 +5,7 @@ const SharedParty = sequelize.define(
   "SharedParty",
   {
     id: {
-      type: DataTypes.UUID,
-      defaultValue: DataTypes.UUIDV4,
+      type: DataTypes.STRING(4),
       primaryKey: true,
     },
     hostId: {

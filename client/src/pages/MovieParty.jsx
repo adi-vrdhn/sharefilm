@@ -18,6 +18,9 @@ const MovieParty = () => {
   const [partyId, setPartyId] = useState(null);
   const [partyData, setPartyData] = useState(null);
   const [joinPartyId, setJoinPartyId] = useState("");
+  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [movieDetails, setMovieDetails] = useState(null);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
 
   useEffect(() => {
     fetchFriends();
@@ -214,6 +217,24 @@ const MovieParty = () => {
     }
   };
 
+  const showMovieDetails = async (movie) => {
+    try {
+      setSelectedMovie(movie);
+      const response = await API.get(`/movieDetails/${movie.tmdb_id}`);
+      setMovieDetails(response.data);
+      setShowDetailsModal(true);
+    } catch (error) {
+      console.error("Error fetching movie details:", error);
+      alert("Failed to load movie details");
+    }
+  };
+
+  const closeDetailsModal = () => {
+    setShowDetailsModal(false);
+    setSelectedMovie(null);
+    setMovieDetails(null);
+  };
+
   if (partyStarted) {
     const sortedMovies = [...selectedMovies].sort(
       (a, b) => (votes[b.tmdb_id] || 0) - (votes[a.tmdb_id] || 0)
@@ -261,24 +282,87 @@ const MovieParty = () => {
                       ? "winner"
                       : ""
                   }`}
-                  onClick={() => !hasVoted && voteForMovie(movie.tmdb_id)}
                 >
-                  <img
-                    src={movie.poster || "https://via.placeholder.com/200x300"}
-                    alt={movie.title}
-                  />
-                  <h4>{movie.title}</h4>
+                  <div 
+                    className="movie-poster-section"
+                    onClick={() => showMovieDetails(movie)}
+                  >
+                    <img
+                      src={movie.poster || "https://via.placeholder.com/200x300"}
+                      alt={movie.title}
+                    />
+                    <div className="details-overlay">ℹ️ Details</div>
+                  </div>
+                  <h4 onClick={() => showMovieDetails(movie)} style={{cursor: 'pointer'}}>{movie.title}</h4>
                   <p className="vote-count">
                     👍 {votes[movie.tmdb_id] || 0} vote{votes[movie.tmdb_id] !== 1 ? "s" : ""}
                   </p>
                   {movie.tmdb_id === winner?.tmdb_id && votes[movie.tmdb_id] > 0 && (
                     <div className="winner-badge">🏆 Leading</div>
                   )}
+                  {!hasVoted && (
+                    <button 
+                      className="vote-btn"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        voteForMovie(movie.tmdb_id);
+                      }}
+                    >
+                      Vote
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
           </div>
         </div>
+
+        {/* Movie Details Modal */}
+        {showDetailsModal && movieDetails && (
+          <div className="modal-overlay" onClick={closeDetailsModal}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+              <button className="modal-close" onClick={closeDetailsModal}>×</button>
+              {movieDetails.backdrop && (
+                <div 
+                  className="modal-backdrop"
+                  style={{backgroundImage: `url(${movieDetails.backdrop})`}}
+                />
+              )}
+              <div className="modal-body">
+                <div className="modal-poster">
+                  <img src={movieDetails.poster || "https://via.placeholder.com/300x450"} alt={movieDetails.title} />
+                </div>
+                <div className="modal-info">
+                  <h2>{movieDetails.title}</h2>
+                  <div className="modal-meta">
+                    <span className="year">{movieDetails.year}</span>
+                    {movieDetails.runtime > 0 && (
+                      <span className="runtime">{movieDetails.runtime} min</span>
+                    )}
+                    {movieDetails.rating > 0 && (
+                      <span className="rating">⭐ {movieDetails.rating.toFixed(1)}/10</span>
+                    )}
+                  </div>
+                  {movieDetails.genres && (
+                    <p className="genres"><strong>Genres:</strong> {movieDetails.genres}</p>
+                  )}
+                  <p className="overview">{movieDetails.overview}</p>
+                  {!hasVoted && (
+                    <button 
+                      className="btn-primary modal-vote-btn"
+                      onClick={() => {
+                        voteForMovie(selectedMovie.tmdb_id);
+                        closeDetailsModal();
+                      }}
+                    >
+                      Vote for this Movie
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

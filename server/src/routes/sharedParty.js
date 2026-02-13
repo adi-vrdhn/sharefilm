@@ -1,8 +1,21 @@
 const express = require("express");
 const { SharedParty, Notification } = require("../models");
-const { v4: uuidv4 } = require("uuid");
 
 const router = express.Router();
+
+// Generate 4-digit party code
+const generatePartyCode = async () => {
+  let code;
+  let exists = true;
+  
+  while (exists) {
+    code = Math.floor(1000 + Math.random() * 9000).toString();
+    const existing = await SharedParty.findByPk(code);
+    exists = !!existing;
+  }
+  
+  return code;
+};
 
 // Create a shared party
 router.post("/createSharedParty", async (req, res) => {
@@ -13,8 +26,10 @@ router.post("/createSharedParty", async (req, res) => {
       return res.status(400).json({ message: "Movies required" });
     }
 
+    const partyCode = await generatePartyCode();
+    
     const party = await SharedParty.create({
-      id: uuidv4(),
+      id: partyCode,
       hostId: req.user.id,
       hostName: req.user.name,
       movies: movies,

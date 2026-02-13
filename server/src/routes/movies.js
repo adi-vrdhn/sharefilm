@@ -1,6 +1,6 @@
 const express = require("express");
 const { User, Movie, UserMovie, Notification, Rating } = require("../models");
-const { searchMovies, getPopularMovies } = require("../services/tmdb");
+const { searchMovies, getPopularMovies, getMovieDetails } = require("../services/tmdb");
 
 const router = express.Router();
 
@@ -26,6 +26,17 @@ router.get("/popularMovies", async (req, res) => {
   } catch (error) {
     console.error("TMDB popular error:", error.message);
     return res.status(500).json({ message: error.message || "Failed to fetch popular movies" });
+  }
+});
+
+router.get("/movieDetails/:tmdbId", async (req, res) => {
+  try {
+    const { tmdbId } = req.params;
+    const details = await getMovieDetails(tmdbId);
+    return res.json(details);
+  } catch (error) {
+    console.error("TMDB details error:", error.message);
+    return res.status(500).json({ message: error.message || "Failed to fetch movie details" });
   }
 });
 
