@@ -1,7 +1,8 @@
 import React from "react";
-import { Routes, Route, Link, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
@@ -10,94 +11,88 @@ import MovieList from "./pages/MovieList";
 import Notifications from "./pages/Notifications";
 import Friends from "./pages/Friends";
 import Chat from "./pages/Chat";
+import MovieParty from "./pages/MovieParty";
 
 const App = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
 
   return (
-    <div className="app-shell">
-      <nav className="navbar">
-        <Link className="logo" to={user ? "/dashboard" : "/login"}>
-          Film Share
-        </Link>
-        <div className="nav-links">
-          {user ? (
-            <>
-              <Link to="/dashboard">Dashboard</Link>
-              <Link to="/add">Add Movie</Link>
-              <Link to="/list">My List</Link>
-              <Link to="/chat">Messages</Link>
-              <Link to="/friends">Friends</Link>
-              <Link to="/notifications">Alerts</Link>
-              <button className="nav-button" onClick={logout}>
-                Log Out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login">Login</Link>
-              <Link to="/signup">Sign Up</Link>
-            </>
-          )}
-        </div>
-      </nav>
-      <Routes>
-        <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/add"
-          element={
-            <ProtectedRoute>
+    <Routes>
+      <Route path="/" element={<Navigate to={user ? "/add" : "/login"} />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/signup" element={<Signup />} />
+      
+      <Route
+        path="/add"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <AddMovie />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/list"
-          element={
-            <ProtectedRoute>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/party"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <MovieParty />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/list"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <MovieList />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/friends"
-          element={
-            <ProtectedRoute>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/friends"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <Friends />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/chat"
-          element={
-            <ProtectedRoute>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/chat"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <Chat />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/notifications"
-          element={
-            <ProtectedRoute>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <ProtectedRoute>
+            <Layout>
               <Notifications />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-      <footer className="app-footer">
-        <p>Created by ADITYAVARDHAN SINGH RATHORE</p>
-      </footer>
-    </div>
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Dashboard />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
   );
 };
 
