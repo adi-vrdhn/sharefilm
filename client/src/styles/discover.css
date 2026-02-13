@@ -281,6 +281,7 @@
   font-size: 14px;
   outline: none;
   transition: all 0.2s ease;
+  color: var(--ink);
 }
 
 .similar-search-input:focus {
@@ -409,6 +410,12 @@
   background: var(--card);
   font-family: "Space Grotesk", sans-serif;
   font-size: 14px;
+  color: var(--ink);
+}
+
+.filter-select option {
+  background: var(--card);
+  color: var(--ink);
 }
 
 .filter-select:focus {

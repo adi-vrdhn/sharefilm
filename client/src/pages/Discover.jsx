@@ -202,6 +202,7 @@ const Discover = () => {
           : [...prev.genre, genreId]
       };
     });
+    setShowGenreDropdown(false);
   };
 
   const moveNext = () => {
