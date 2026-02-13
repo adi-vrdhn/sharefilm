@@ -2,20 +2,20 @@
 .layout-container {
   display: flex;
   min-height: 100vh;
-  background: radial-gradient(circle at top left, rgba(200, 160, 72, 0.12), transparent 55%),
-    radial-gradient(circle at 20% 70%, rgba(90, 59, 30, 0.1), transparent 50%),
-    linear-gradient(120deg, var(--bg-1), var(--bg-2));
+  background: radial-gradient(circle at top left, rgba(198, 164, 90, 0.14), transparent 55%),
+    radial-gradient(circle at 20% 70%, rgba(122, 85, 50, 0.18), transparent 52%),
+    linear-gradient(135deg, var(--bg-1), var(--bg-2));
 }
 
 /* Sidebar */
 .sidebar {
   width: 280px;
-  background: rgba(255, 250, 245, 0.95);
-  border-right: 1px solid rgba(31, 26, 22, 0.08);
+  background: rgba(28, 33, 40, 0.95);
+  border-right: 1px solid rgba(239, 230, 217, 0.08);
   display: flex;
   flex-direction: column;
   padding: 16px;
-  box-shadow: 0 16px 30px rgba(31, 26, 22, 0.12);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.35);
   overflow-y: auto;
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
@@ -24,7 +24,7 @@
 .sidebar-header {
   margin-bottom: 24px;
   padding-bottom: 16px;
-  border-bottom: 1px solid rgba(31, 26, 22, 0.1);
+  border-bottom: 1px solid rgba(239, 230, 217, 0.1);
 }
 
 .user-profile {
@@ -47,7 +47,7 @@
 }
 
 .user-profile-link:hover {
-  background: rgba(200, 160, 72, 0.08);
+  background: rgba(198, 164, 90, 0.12);
 }
 
 .user-avatar {
