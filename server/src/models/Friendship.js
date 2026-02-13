@@ -18,6 +18,11 @@ const Friendship = sequelize.define(
       type: DataTypes.INTEGER,
       allowNull: false,
       field: "friend_id"
+    },
+    status: {
+      type: DataTypes.ENUM("pending", "accepted"),
+      defaultValue: "accepted",
+      allowNull: false
     }
   },
   {

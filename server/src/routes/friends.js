@@ -7,7 +7,7 @@ const router = express.Router();
 router.get("/getFriends", async (req, res) => {
   try {
     const friendships = await Friendship.findAll({
-      where: { userId: req.user.id, status: "accepted" },
+      where: { userId: req.user.id },
       include: [
         {
           model: User,

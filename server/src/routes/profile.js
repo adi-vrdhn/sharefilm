@@ -1,5 +1,6 @@
 const express = require("express");
 const { User, Friendship, UserMovie } = require("../models");
+const { Op } = require("sequelize");
 
 const router = express.Router();
 
@@ -16,12 +17,12 @@ router.get("/profile/me", async (req, res) => {
 
     // Get buddy count
     const buddyCount = await Friendship.count({
-      where: { userId: req.user.id, status: "accepted" }
+      where: { [Op.or]: [{ userId: req.user.id }, { friendId: req.user.id }] }
     });
 
     return res.json({
       ...user.toJSON(),
-      buddyCount
+      buddyCount: Math.floor(buddyCount / 2) // Each friendship is bidirectional, so divide by 2
     });
   } catch (error) {
     console.error("Profile fetch error:", error.message);
@@ -43,7 +44,10 @@ router.get("/profile/user/:userId", async (req, res) => {
 
     // Get buddy count
     const buddyCount = await Friendship.count({
-      where: { userId: parseInt(userId), status: "accepted" }
+      where: [
+        { userId: parseInt(userId) },
+        { friendId: parseInt(userId) }
+      ]
     });
 
     // Check if requester is a buddy of this user
@@ -51,8 +55,8 @@ router.get("/profile/user/:userId", async (req, res) => {
     if (req.user.id !== parseInt(userId)) {
       const friendship = await Friendship.findOne({
         where: [
-          { userId: req.user.id, friendId: userId, status: "accepted" },
-          { userId: userId, friendId: req.user.id, status: "accepted" }
+          { userId: req.user.id, friendId: parseInt(userId) },
+          { userId: parseInt(userId), friendId: req.user.id }
         ]
       });
       isBuddy = !!friendship;
@@ -60,7 +64,7 @@ router.get("/profile/user/:userId", async (req, res) => {
 
     return res.json({
       ...user.toJSON(),
-      buddyCount,
+      buddyCount: Math.floor(buddyCount / 2),
       isBuddy,
       isOwnProfile: req.user.id === parseInt(userId)
     });
@@ -105,11 +109,15 @@ router.put("/profile/me", async (req, res) => {
 router.get("/profile/me/buddies", async (req, res) => {
   try {
     const friendships = await Friendship.findAll({
-      where: { userId: req.user.id, status: "accepted" },
+      where: { userId: req.user.id },
       attributes: ["friendId"]
     });
 
     const buddyIds = friendships.map((f) => f.friendId);
+
+    if (buddyIds.length === 0) {
+      return res.json([]);
+    }
 
     const buddies = await User.findAll({
       where: { id: buddyIds },
