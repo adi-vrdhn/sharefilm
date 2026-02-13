@@ -54,10 +54,14 @@ const MovieParty = () => {
   const searchMovies = async () => {
     if (!searchQuery.trim()) return;
     try {
+      setLoading(true);
       const response = await API.get(`/searchMovie?q=${searchQuery}`);
       setSearchResults(response.data || []);
     } catch (error) {
       console.error("Error searching movies:", error);
+      alert("Error searching movies. Try again.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -267,8 +271,12 @@ const MovieParty = () => {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && searchMovies()}
                 />
-                <button className="btn-secondary" onClick={searchMovies}>
-                  Search
+                <button 
+                  className="btn-secondary" 
+                  onClick={searchMovies}
+                  disabled={loading || !searchQuery.trim()}
+                >
+                  {loading ? "Searching..." : "Search"}
                 </button>
               </div>
 
@@ -295,6 +303,12 @@ const MovieParty = () => {
                       />
                     </div>
                   ))}
+                </div>
+              )}
+
+              {searchQuery && !loading && searchResults.length === 0 && (
+                <div className="no-results">
+                  <p>No movies found. Try a different search.</p>
                 </div>
               )}
 

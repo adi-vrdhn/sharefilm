@@ -62,5 +62,9 @@ module.exports = {
   Notification,
   Friendship,
   Message,
-  Rating
+  Rating,
+  Party,
+  PartyMember,
+  PartyMovie,
+  PartyVote
 };
