@@ -55,7 +55,7 @@
   height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, #c8a048, #e1b65a);
-  color: #fff;
+  color: var(--bg-1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -132,7 +132,7 @@
 
 .nav-item.active {
   background: linear-gradient(135deg, #c8a048, #e1b65a);
-  color: #fff;
+  color: var(--bg-1);
 }
 
 .nav-icon {
@@ -193,7 +193,7 @@
   background: linear-gradient(135deg, #c8a048, #e1b65a);
   border: none;
   border-radius: 8px;
-  color: #fff;
+  color: var(--bg-1);
   font-size: 24px;
   cursor: pointer;
   box-shadow: 0 10px 20px rgba(200, 160, 72, 0.35);

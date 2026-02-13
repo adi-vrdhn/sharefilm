@@ -12,7 +12,7 @@
 }
 
 .image-editor-modal {
-  background: #fff;
+  background: var(--card);
   border-radius: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   max-width: 500px;
@@ -164,7 +164,7 @@
 
 .editor-actions button.primary {
   background: linear-gradient(135deg, #c8a048, #e1b65a);
-  color: #fff;
+  color: var(--bg-1);
   box-shadow: 0 4px 12px rgba(200, 160, 72, 0.2);
 }
 
@@ -174,13 +174,13 @@
 }
 
 .editor-actions button.secondary {
-  background: #fffaf5;
+  background: var(--card);
   color: var(--ink);
   border: 1px solid rgba(90, 59, 30, 0.2);
 }
 
 .editor-actions button.secondary:hover {
-  background: #fff;
+  background: rgba(38, 44, 51, 0.95);
   border-color: rgba(200, 160, 72, 0.4);
 }
 

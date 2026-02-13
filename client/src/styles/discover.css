@@ -20,7 +20,7 @@
 .view-tab {
   padding: 10px 16px;
   border-radius: 12px;
-  background: rgba(255, 250, 245, 0.6);
+  background: rgba(38, 44, 51, 0.7);
   border: 1px solid rgba(200, 160, 72, 0.2);
   color: var(--text);
   font-weight: 600;
@@ -31,13 +31,13 @@
 
 .view-tab:hover {
   border-color: rgba(200, 160, 72, 0.4);
-  background: rgba(255, 250, 245, 0.9);
+  background: rgba(38, 44, 51, 0.95);
 }
 
 .view-tab.active {
   background: linear-gradient(135deg, #c8a048, #e1b65a);
   border-color: #c8a048;
-  color: #fff;
+  color: var(--bg-1);
   box-shadow: 0 4px 12px rgba(200, 160, 72, 0.3);
 }
 
@@ -48,7 +48,7 @@
 }
 
 .stat-card {
-  background: rgba(255, 250, 245, 0.95);
+  background: rgba(38, 44, 51, 0.95);
   border: 1px solid rgba(200, 160, 72, 0.25);
   border-radius: 14px;
   padding: 12px 16px;
@@ -60,7 +60,7 @@
 .stat-link {
   padding: 10px 14px;
   border-radius: 12px;
-  background: #fffaf5;
+  background: var(--card);
   border: 1px solid rgba(90, 59, 30, 0.2);
   color: var(--ink);
   font-weight: 600;
@@ -127,7 +127,7 @@
 
 .genre-chip {
   border: 1px solid rgba(90, 59, 30, 0.2);
-  background: #fffaf5;
+  background: var(--card);
   color: var(--ink);
   padding: 6px 12px;
   border-radius: 999px;
@@ -143,7 +143,7 @@
 .genre-chip.active {
   background: linear-gradient(135deg, #c8a048, #e1b65a);
   border-color: transparent;
-  color: #fff;
+  color: var(--bg-1);
 }
 
 /* Genre Dropdown Styles */
@@ -158,7 +158,7 @@
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid rgba(90, 59, 30, 0.2);
-  background: #fffaf5;
+  background: var(--card);
   font-family: "Space Grotesk", sans-serif;
   font-size: 14px;
   cursor: pointer;
@@ -172,7 +172,7 @@
 
 .genre-dropdown-trigger:hover {
   border-color: rgba(200, 160, 72, 0.4);
-  background: #fff;
+  background: rgba(38, 44, 51, 0.95);
 }
 
 .dropdown-arrow {
@@ -189,7 +189,7 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: #fff;
+  background: var(--card);
   border: 1px solid rgba(200, 160, 72, 0.3);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(31, 26, 22, 0.15);
@@ -276,7 +276,7 @@
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid rgba(90, 59, 30, 0.2);
-  background: #fffaf5;
+  background: var(--card);
   font-family: "Space Grotesk", sans-serif;
   font-size: 14px;
   outline: none;
@@ -285,7 +285,7 @@
 
 .similar-search-input:focus {
   border-color: rgba(200, 160, 72, 0.4);
-  background: #fff;
+  background: rgba(38, 44, 51, 0.95);
   box-shadow: 0 0 0 3px rgba(200, 160, 72, 0.1);
 }
 
@@ -306,7 +306,7 @@
 
 .similar-search-row button.primary {
   background: linear-gradient(135deg, #c8a048, #e1b65a);
-  color: #fff;
+  color: var(--bg-1);
   box-shadow: 0 8px 16px rgba(200, 160, 72, 0.2);
 }
 
@@ -321,13 +321,13 @@
 }
 
 .similar-search-row button.secondary {
-  background: #fffaf5;
+  background: var(--card);
   color: var(--ink);
   border: 1px solid rgba(90, 59, 30, 0.2);
 }
 
 .similar-search-row button.secondary:hover {
-  background: #fff;
+  background: rgba(38, 44, 51, 0.95);
   border-color: rgba(200, 160, 72, 0.4);
 }
 
@@ -343,7 +343,7 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: #fff;
+  background: var(--card);
   border: 1px solid rgba(200, 160, 72, 0.3);
   border-top: none;
   border-radius: 0 0 12px 12px;
@@ -406,7 +406,7 @@
   padding: 12px 14px;
   border-radius: 12px;
   border: 1px solid rgba(90, 59, 30, 0.2);
-  background: #fffaf5;
+  background: var(--card);
   font-family: "Space Grotesk", sans-serif;
   font-size: 14px;
 }
@@ -435,7 +435,7 @@
 
 .swipe-card {
   width: 100%;
-  background: #fff;
+  background: var(--card);
   border-radius: 24px;
   overflow: hidden;
   border: 1px solid rgba(200, 160, 72, 0.25);
@@ -518,7 +518,7 @@
 
 .swipe-overview {
   margin: 0;
-  color: #4f433b;
+  color: var(--muted);
   line-height: 1.5;
   font-size: 14px;
 }
@@ -547,12 +547,12 @@
 
 .action-btn.primary {
   background: linear-gradient(135deg, #c8a048, #e1b65a);
-  color: #fff;
+  color: var(--bg-1);
   box-shadow: 0 12px 24px rgba(200, 160, 72, 0.25);
 }
 
 .action-btn.ghost {
-  background: #fffaf5;
+  background: var(--card);
   border: 1px solid rgba(90, 59, 30, 0.2);
   color: var(--ink);
 }
