@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
 import ImageEditor from "../components/ImageEditor";
 import "../styles/profile.css";
@@ -7,6 +8,7 @@ import "../styles/profile.css";
 const Profile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
+  const { user: authUser, updateUsername } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
@@ -120,6 +122,7 @@ const Profile = () => {
         newUsername
       });
       setProfile((prev) => ({ ...prev, name: newUsername }));
+      updateUsername(newUsername);
       setStatus("Username changed successfully!");
       setShowUsernameModal(false);
       setNewUsername("");

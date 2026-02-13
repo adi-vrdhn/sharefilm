@@ -42,7 +42,7 @@ router.post("/signup", async (req, res) => {
     const token = generateToken(user);
     return res.json({ 
       token, 
-      user: { id: user.id, name: user.name, email: user.email } 
+      user: { id: user.id, name: user.name, email: user.email, profilePicture: user.profilePicture, bio: user.bio } 
     });
   } catch (error) {
     return res.status(500).json({ message: "Signup failed" });
@@ -91,7 +91,7 @@ router.get("/me", async (req, res) => {
   try {
     const payload = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findByPk(payload.id, {
-      attributes: ["id", "name", "email"]
+      attributes: ["id", "name", "email", "profilePicture", "bio", "buddyCount"]
     });
 
     if (!user) {

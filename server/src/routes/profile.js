@@ -109,12 +109,16 @@ router.put("/profile/me", async (req, res) => {
 // Get buddy list with full details
 router.get("/profile/me/buddies", async (req, res) => {
   try {
+    // Get all friendships where current user is either userId or friendId
     const friendships = await Friendship.findAll({
-      where: { userId: req.user.id },
-      attributes: ["friendId"]
+      where: { [Op.or]: [{ userId: req.user.id }, { friendId: req.user.id }] },
+      attributes: ["userId", "friendId"]
     });
 
-    const buddyIds = friendships.map((f) => f.friendId);
+    // Extract unique buddy IDs (the other user in each friendship)
+    const buddyIds = friendships.map((f) => 
+      f.userId === req.user.id ? f.friendId : f.userId
+    );
 
     if (buddyIds.length === 0) {
       return res.json([]);
@@ -122,7 +126,7 @@ router.get("/profile/me/buddies", async (req, res) => {
 
     const buddies = await User.findAll({
       where: { id: buddyIds },
-      attributes: ["id", "name", "profilePicture"]
+      attributes: ["id", "name", "profilePicture", "bio"]
     });
 
     return res.json(buddies);

@@ -18,10 +18,9 @@ const Layout = ({ children }) => {
 
   const menuItems = [
     { path: "/add", label: "Add Movie", icon: "➕" },
-    { path: "/discover", label: "Discover", icon: "✨" },
-    { path: "/watchlist", label: "Watchlist", icon: "📌" },
-    { path: "/party", label: "Movie Party", icon: "🎬" },
     { path: "/list", label: "My Movies", icon: "📽️" },
+    { path: "/discover", label: "Discover", icon: "✨" },
+    { path: "/party", label: "Movie Party", icon: "🎬" },
     { path: "/friends", label: "Friends", icon: "👥" },
     { path: "/chat", label: "Messages", icon: "💬" },
     { path: "/notifications", label: "Notifications", icon: "🔔" }
@@ -33,7 +32,13 @@ const Layout = ({ children }) => {
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
           <Link to="/profile" className="user-profile-link" onClick={() => setSidebarOpen(false)}>
-            <div className="user-avatar">{user?.name?.[0] || "U"}</div>
+            <div className="user-avatar">
+              {user?.profilePicture ? (
+                <img src={user.profilePicture} alt={user?.name} className="user-avatar-img" />
+              ) : (
+                <span className="user-avatar-text">{user?.name?.[0] || "U"}</span>
+              )}
+            </div>
             <div className="user-info">
               <div className="user-name">{user?.name}</div>
               <div className="user-email">{user?.email}</div>

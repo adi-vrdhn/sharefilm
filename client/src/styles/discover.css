@@ -11,6 +11,36 @@
   gap: 20px;
 }
 
+.view-tabs {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.view-tab {
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(255, 250, 245, 0.6);
+  border: 1px solid rgba(200, 160, 72, 0.2);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.view-tab:hover {
+  border-color: rgba(200, 160, 72, 0.4);
+  background: rgba(255, 250, 245, 0.9);
+}
+
+.view-tab.active {
+  background: linear-gradient(135deg, #c8a048, #e1b65a);
+  border-color: #c8a048;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(200, 160, 72, 0.3);
+}
+
 .discover-stats {
   display: flex;
   gap: 12px;
