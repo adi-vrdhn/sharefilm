@@ -62,8 +62,8 @@ app.get("*", (req, res) => {
 const start = async () => {
   try {
     await sequelize.authenticate();
-    // Use force: false and alter: false (defaults) to safely sync
-    await sequelize.sync();
+    // Use alter: true temporarily to update SharedParty table schema
+    await sequelize.sync({ alter: true });
 
     const port = process.env.PORT || 4000;
     app.listen(port, () => {
