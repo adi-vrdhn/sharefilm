@@ -1,5 +1,5 @@
 const express = require("express");
-const { User, Movie, UserMovie, Notification } = require("../models");
+const { User, Movie, UserMovie, Notification, Rating } = require("../models");
 const { searchMovies } = require("../services/tmdb");
 
 const router = express.Router();
@@ -107,6 +107,65 @@ router.delete("/deleteMovie/:id", async (req, res) => {
     return res.json({ message: "Deleted" });
   } catch (error) {
     return res.status(500).json({ message: "Delete failed" });
+  }
+});
+
+// Rate a movie
+router.post("/rateMovie", async (req, res) => {
+  try {
+    const { userMovieId, rating } = req.body;
+
+    if (!userMovieId || !rating) {
+      return res.status(400).json({ message: "userMovieId and rating required" });
+    }
+
+    if (rating < 1 || rating > 5) {
+      return res.status(400).json({ message: "Rating must be between 1 and 5" });
+    }
+
+    // Check if user is the receiver of this movie
+    const userMovie = await UserMovie.findByPk(userMovieId);
+    if (!userMovie || userMovie.receiverId !== req.user.id) {
+      return res.status(403).json({ message: "Cannot rate this movie" });
+    }
+
+    // Find or create rating
+    const [ratingRecord] = await Rating.findOrCreate({
+      where: { user_id: req.user.id, user_movie_id: userMovieId },
+      defaults: { rating }
+    });
+
+    if (ratingRecord.rating !== rating) {
+      ratingRecord.rating = rating;
+      await ratingRecord.save();
+    }
+
+    return res.json(ratingRecord);
+  } catch (error) {
+    console.error("Rate movie error:", error.message);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+// Get ratings for a movie
+router.get("/getMovieRatings/:userMovieId", async (req, res) => {
+  try {
+    const { userMovieId } = req.params;
+
+    const ratings = await Rating.findAll({
+      where: { user_movie_id: userMovieId },
+      include: [
+        {
+          model: User,
+          attributes: ["id", "name"]
+        }
+      ]
+    });
+
+    return res.json(ratings);
+  } catch (error) {
+    console.error("Get ratings error:", error.message);
+    return res.status(500).json({ message: error.message });
   }
 });
 
