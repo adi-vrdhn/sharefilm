@@ -26,6 +26,7 @@ const Login = () => {
   return (
     <div className="container">
       <div className="auth-wrapper">
+        <div className="auth-brand">Film Share</div>
         <h1 className="auth-title">Welcome back</h1>
         <p className="helper-text">Log in to gift movies to friends.</p>
         <form onSubmit={handleSubmit}>
@@ -59,6 +60,7 @@ const Login = () => {
         <p className="helper-text">
           New here? <Link to="/signup">Create an account</Link>.
         </p>
+        <div className="auth-footer">Created by ADITYAVARDHAN (BATMAN)</div>
       </div>
     </div>
   );

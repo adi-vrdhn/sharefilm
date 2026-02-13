@@ -26,6 +26,7 @@ const Signup = () => {
   return (
     <div className="container">
       <div className="auth-wrapper">
+        <div className="auth-brand">Film Share</div>
         <h1 className="auth-title">Create account</h1>
         <p className="helper-text">Your username is how friends find you.</p>
         <form onSubmit={handleSubmit}>
@@ -70,6 +71,7 @@ const Signup = () => {
         <p className="helper-text">
           Already a member? <Link to="/login">Log in</Link>.
         </p>
+        <div className="auth-footer">Created by ADITYAVARDHAN (BATMAN)</div>
       </div>
     </div>
   );

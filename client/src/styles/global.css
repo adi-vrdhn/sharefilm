@@ -396,9 +396,25 @@ button.secondary {
   border: 1px solid rgba(200, 160, 72, 0.2);
 }
 
+.auth-brand {
+  font-family: "Unbounded", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 14px;
+  color: var(--accent-2);
+  margin-bottom: 10px;
+}
+
 .auth-title {
   font-family: "Unbounded", sans-serif;
   margin-bottom: 16px;
+}
+
+.auth-footer {
+  margin-top: 18px;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.6px;
 }
 
 .helper-text {
