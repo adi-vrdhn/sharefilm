@@ -95,9 +95,18 @@ const ImageEditor = ({ onSave, onCancel, currentImage }) => {
 
   const handleSave = () => {
     const canvas = canvasRef.current;
-    if (canvas) {
-      const base64 = canvas.toDataURL("image/png");
-      onSave(base64);
+    if (!canvas) return;
+
+    // Convert to JPEG with quality compression
+    const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+    
+    // Check size and compress further if needed
+    if (compressedBase64.length > 500000) {
+      // If still too large, reduce quality further
+      const veryCompressedBase64 = canvas.toDataURL("image/jpeg", 0.5);
+      onSave(veryCompressedBase64);
+    } else {
+      onSave(compressedBase64);
     }
   };
 

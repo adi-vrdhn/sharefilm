@@ -1,4 +1,5 @@
 const express = require("express");
+const bcrypt = require("bcryptjs");
 const { User, Friendship, UserMovie } = require("../models");
 const { Op } = require("sequelize");
 
@@ -128,6 +129,79 @@ router.get("/profile/me/buddies", async (req, res) => {
   } catch (error) {
     console.error("Buddies list error:", error.message);
     return res.status(500).json({ message: "Failed to fetch buddies" });
+  }
+});
+
+// Change password
+router.put("/profile/change-password", async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Both passwords required" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Verify current password
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match) {
+      return res.status(401).json({ message: "Current password is incorrect" });
+    }
+
+    // Hash and save new password
+    const hashed = await bcrypt.hash(newPassword, 10);
+    user.password = hashed;
+    await user.save();
+
+    return res.json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Password change error:", error.message);
+    return res.status(500).json({ message: "Failed to change password" });
+  }
+});
+
+// Change username
+router.put("/profile/change-username", async (req, res) => {
+  try {
+    const { newUsername } = req.body;
+
+    if (!newUsername) {
+      return res.status(400).json({ message: "New username required" });
+    }
+
+    if (newUsername.length < 3) {
+      return res.status(400).json({ message: "Username must be at least 3 characters" });
+    }
+
+    // Check if username already exists
+    const existingUser = await User.findOne({ where: { name: newUsername } });
+    if (existingUser) {
+      return res.status(409).json({ message: "Username already taken" });
+    }
+
+    const user = await User.findByPk(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.name = newUsername;
+    await user.save();
+
+    return res.json({ 
+      message: "Username changed successfully",
+      newUsername: user.name 
+    });
+  } catch (error) {
+    console.error("Username change error:", error.message);
+    return res.status(500).json({ message: "Failed to change username" });
   }
 });
 
