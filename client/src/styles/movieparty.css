@@ -84,6 +84,10 @@
   gap: 15px;
 }
 
+.movies-grid > * {
+  animation: riseFade 0.5s ease both;
+}
+
 .movie-vote-card {
   cursor: pointer;
   border: 2px solid #ddd;
@@ -551,7 +555,7 @@
 
 /* Join Party Section */
 .join-party-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #c8a048 0%, #e1b65a 100%);
   padding: 25px !important;
   border-radius: 12px;
   color: white;
@@ -578,12 +582,12 @@
 }
 
 .join-party-box input:focus {
-  outline: 2px solid #ffd700;
+  outline: 2px solid #f1d57d;
 }
 
 .join-party-box .btn-secondary {
   background: white;
-  color: #667eea;
+  color: #5a3b1e;
   font-weight: 600;
   border: none;
   padding: 12px 24px;
@@ -666,7 +670,7 @@
 .vote-btn {
   margin: 10px;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #c8a048 0%, #e1b65a 100%);
   color: white;
   border: none;
   border-radius: 6px;
