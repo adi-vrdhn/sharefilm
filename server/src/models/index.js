@@ -5,10 +5,6 @@ const Notification = require("./Notification");
 const Friendship = require("./Friendship");
 const Message = require("./Message");
 const Rating = require("./Rating");
-const Party = require("./Party");
-const PartyMember = require("./PartyMember");
-const PartyMovie = require("./PartyMovie");
-const PartyVote = require("./PartyVote");
 
 User.hasMany(UserMovie, { foreignKey: "receiver_id", as: "receivedMovies", constraints: true });
 User.hasMany(UserMovie, { foreignKey: "sender_id", as: "sentMovies", constraints: true });
@@ -35,26 +31,6 @@ Rating.belongsTo(User, { foreignKey: "user_id", constraints: true });
 UserMovie.hasMany(Rating, { foreignKey: "user_movie_id", constraints: true });
 Rating.belongsTo(UserMovie, { foreignKey: "user_movie_id", constraints: true });
 
-User.hasMany(Party, { foreignKey: "createdBy", as: "createdParties", constraints: true });
-Party.belongsTo(User, { foreignKey: "createdBy", as: "creator", constraints: true });
-
-Party.hasMany(PartyMember, { foreignKey: "partyId", as: "members", constraints: true });
-PartyMember.belongsTo(Party, { foreignKey: "partyId", constraints: true });
-PartyMember.belongsTo(User, { foreignKey: "userId", as: "user", constraints: true });
-User.hasMany(PartyMember, { foreignKey: "userId", as: "partyMemberships", constraints: true });
-
-Party.hasMany(PartyMovie, { foreignKey: "partyId", as: "partyMovies", constraints: true });
-PartyMovie.belongsTo(Party, { foreignKey: "partyId", constraints: true });
-PartyMovie.belongsTo(Movie, { foreignKey: "movieId", as: "movie", constraints: true });
-Movie.hasMany(PartyMovie, { foreignKey: "movieId", constraints: true });
-
-Party.hasMany(PartyVote, { foreignKey: "partyId", as: "votes", constraints: true });
-PartyVote.belongsTo(Party, { foreignKey: "partyId", constraints: true });
-PartyVote.belongsTo(User, { foreignKey: "userId", as: "voter", constraints: true });
-PartyVote.belongsTo(Movie, { foreignKey: "movieId", as: "movie", constraints: true });
-User.hasMany(PartyVote, { foreignKey: "userId", as: "partyVotes", constraints: true });
-Movie.hasMany(PartyVote, { foreignKey: "movieId", constraints: true });
-
 module.exports = {
   User,
   Movie,
@@ -62,9 +38,5 @@ module.exports = {
   Notification,
   Friendship,
   Message,
-  Rating,
-  Party,
-  PartyMember,
-  PartyMovie,
-  PartyVote
+  Rating
 };

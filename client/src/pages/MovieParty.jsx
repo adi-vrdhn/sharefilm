@@ -5,28 +5,18 @@ import "../styles/movieparty.css";
 
 const MovieParty = () => {
   const { user } = useAuth();
-  const [parties, setParties] = useState([]);
-  const [selectedFriends, setSelectedFriends] = useState([]);
   const [friends, setFriends] = useState([]);
-  const [roomCode, setRoomCode] = useState("");
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [selectedFriends, setSelectedFriends] = useState([]);
   const [selectedMovies, setSelectedMovies] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [currentParty, setCurrentParty] = useState(null);
-  const [votes, setVotes] = useState({});
   const [loading, setLoading] = useState(false);
+  const [partyStarted, setPartyStarted] = useState(false);
+  const [votes, setVotes] = useState({});
+  const [hasVoted, setHasVoted] = useState(false);
 
-  // Fetch user's friends
   useEffect(() => {
     fetchFriends();
-  }, []);
-
-  // Poll for active parties
-  useEffect(() => {
-    fetchParties();
-    const interval = setInterval(fetchParties, 5000); // Poll every 5 seconds
-    return () => clearInterval(interval);
   }, []);
 
   const fetchFriends = async () => {
@@ -35,19 +25,6 @@ const MovieParty = () => {
       setFriends(response.data);
     } catch (error) {
       console.error("Error fetching friends:", error);
-    }
-  };
-
-  const fetchParties = async () => {
-    try {
-      const response = await API.get("/getParties");
-      setParties(response.data);
-      if (currentParty) {
-        const updated = response.data.find((p) => p.id === currentParty.id);
-        if (updated) setCurrentParty(updated);
-      }
-    } catch (error) {
-      console.error("Error fetching parties:", error);
     }
   };
 
@@ -73,108 +50,108 @@ const MovieParty = () => {
     );
   };
 
-  const toggleMovie = (movieId) => {
-    setSelectedMovies((prev) =>
-      prev.includes(movieId)
-        ? prev.filter((id) => id !== movieId)
-        : [...prev, movieId]
-    );
+  const addMovieToParty = (movie) => {
+    const exists = selectedMovies.find((m) => m.id === movie.id);
+    if (!exists) {
+      setSelectedMovies((prev) => [...prev, movie]);
+      setVotes((prev) => ({ ...prev, [movie.id]: 0 }));
+    }
   };
 
-  const createParty = async () => {
+  const removeMovie = (movieId) => {
+    setSelectedMovies((prev) => prev.filter((m) => m.id !== movieId));
+    setVotes((prev) => {
+      const newVotes = { ...prev };
+      delete newVotes[movieId];
+      return newVotes;
+    });
+  };
+
+  const startParty = async () => {
     if (selectedFriends.length === 0 || selectedMovies.length === 0) {
-      alert("Select at least 1 friend and 1 movie");
+      alert("Select at least 1 friend and 1 movie to start the party!");
       return;
     }
 
-    setLoading(true);
+    // Send notifications to selected friends
     try {
-      const response = await API.post("/createParty", {
-        invitedFriends: selectedFriends,
-        movies: selectedMovies,
-      });
-      setCurrentParty(response.data);
-      setShowCreateForm(false);
-      setSelectedFriends([]);
-      setSelectedMovies([]);
-      setSearchResults([]);
-      setSearchQuery("");
-      fetchParties();
+      for (const friendId of selectedFriends) {
+        await API.post("/addNotification", {
+          userId: friendId,
+          message: `${user.name} invited you to a Movie Party!`,
+          type: "party_invite",
+        });
+      }
+      setPartyStarted(true);
+      alert(`Party started! ${selectedFriends.length} friends invited.`);
     } catch (error) {
-      alert("Error creating party: " + error.message);
-    } finally {
-      setLoading(false);
+      console.error("Error sending invites:", error);
+      alert("Error starting party");
     }
   };
 
-  const joinParty = async (partyId) => {
-    setLoading(true);
-    try {
-      const response = await API.post(`/joinParty/${partyId}`);
-      setCurrentParty(response.data);
-      fetchParties();
-    } catch (error) {
-      alert("Error joining party: " + error.message);
-    } finally {
-      setLoading(false);
+  const voteForMovie = (movieId) => {
+    if (hasVoted) {
+      alert("You've already voted!");
+      return;
     }
+    setVotes((prev) => ({
+      ...prev,
+      [movieId]: (prev[movieId] || 0) + 1,
+    }));
+    setHasVoted(true);
   };
 
-  const voteForMovie = async (partyId, movieId) => {
-    try {
-      const response = await API.post(`/voteMovie`, {
-        partyId,
-        movieId,
-      });
-      setVotes((prev) => ({
-        ...prev,
-        [movieId]: (prev[movieId] || 0) + 1,
-      }));
-      fetchParties();
-    } catch (error) {
-      console.error("Error voting:", error);
-    }
+  const resetParty = () => {
+    setPartyStarted(false);
+    setSelectedFriends([]);
+    setSelectedMovies([]);
+    setVotes({});
+    setHasVoted(false);
+    setSearchResults([]);
+    setSearchQuery("");
   };
 
-  const leaveParty = async () => {
-    if (!currentParty) return;
-    try {
-      await API.post(`/leaveParty/${currentParty.id}`);
-      setCurrentParty(null);
-      fetchParties();
-    } catch (error) {
-      console.error("Error leaving party:", error);
-    }
-  };
+  if (partyStarted) {
+    const sortedMovies = [...selectedMovies].sort(
+      (a, b) => (votes[b.id] || 0) - (votes[a.id] || 0)
+    );
+    const winner = sortedMovies[0];
 
-  if (currentParty) {
     return (
       <div className="movie-party-page">
         <div className="party-active">
           <div className="party-header">
-            <h2>🎬 Movie Party Room #{currentParty.id.slice(0, 6)}</h2>
-            <button className="btn-secondary" onClick={leaveParty}>
-              Leave Party
+            <h2>🎬 Movie Party Active</h2>
+            <button className="btn-secondary" onClick={resetParty}>
+              End Party
             </button>
           </div>
 
           <div className="party-info">
             <p>
-              <strong>Host:</strong> {currentParty.createdBy}
+              <strong>Host:</strong> {user.name}
             </p>
             <p>
-              <strong>Members:</strong> {currentParty.members?.length || 0}
+              <strong>Friends Invited:</strong> {selectedFriends.length}
             </p>
+            {hasVoted && (
+              <p className="voted-badge">✅ You've voted!</p>
+            )}
           </div>
 
           <div className="voting-section">
             <h3>Vote for Your Favorite Movie</h3>
             <div className="movies-grid">
-              {currentParty.movies?.map((movie) => (
+              {sortedMovies.map((movie) => (
                 <div
                   key={movie.id}
-                  className="movie-vote-card"
-                  onClick={() => voteForMovie(currentParty.id, movie.id)}
+                  className={`movie-vote-card ${
+                    movie.id === winner?.id && votes[movie.id] > 0
+                      ? "winner"
+                      : ""
+                  }`}
+                  onClick={() => !hasVoted && voteForMovie(movie.id)}
                 >
                   <img
                     src={movie.poster || "https://via.placeholder.com/200x300"}
@@ -182,8 +159,11 @@ const MovieParty = () => {
                   />
                   <h4>{movie.title}</h4>
                   <p className="vote-count">
-                    👍 {currentParty.votes?.[movie.id] || 0} votes
+                    👍 {votes[movie.id] || 0} vote{votes[movie.id] !== 1 ? "s" : ""}
                   </p>
+                  {movie.id === winner?.id && votes[movie.id] > 0 && (
+                    <div className="winner-badge">🏆 Leading</div>
+                  )}
                 </div>
               ))}
             </div>
@@ -196,164 +176,106 @@ const MovieParty = () => {
   return (
     <div className="movie-party-page">
       <div className="party-container">
-        {!showCreateForm ? (
-          <>
-            <div className="party-header">
-              <h1>🎬 Movie Party</h1>
-              <button
-                className="btn-primary"
-                onClick={() => setShowCreateForm(true)}
-              >
-                + Create Party
-              </button>
-            </div>
+        <div className="party-header">
+          <h1>🎬 Movie Party</h1>
+          <p className="subtitle">Create a party, invite friends, and vote on movies!</p>
+        </div>
 
-            {parties.length === 0 ? (
-              <div className="empty-state">
-                <p>No active parties. Create one to get started!</p>
-              </div>
-            ) : (
-              <div className="parties-list">
-                <h2>Available Parties</h2>
-                {parties.map((party) => (
-                  <div key={party.id} className="party-card">
-                    <div className="party-details">
-                      <h3>Room #{party.id.slice(0, 6)}</h3>
-                      <p>Host: {party.createdBy}</p>
-                      <p>Members: {party.members?.length || 0}</p>
-                      <p>Movies: {party.movies?.length || 0}</p>
-                    </div>
-                    <button
-                      className="btn-primary"
-                      onClick={() => joinParty(party.id)}
-                      disabled={loading}
-                    >
-                      {loading ? "Joining..." : "Join Party"}
-                    </button>
+        {/* Friends Selection */}
+        <div className="form-section">
+          <h3>1. Invite Friends</h3>
+          {friends.length === 0 ? (
+            <p className="no-data">No friends to invite. Add friends first!</p>
+          ) : (
+            <div className="friends-list">
+              {friends.map((friend) => (
+                <label key={friend.id} className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    checked={selectedFriends.includes(friend.id)}
+                    onChange={() => toggleFriend(friend.id)}
+                  />
+                  {friend.name}
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Movie Selection */}
+        <div className="form-section">
+          <h3>2. Add Movies</h3>
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Search for a movie..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyPress={(e) => e.key === "Enter" && searchMovies()}
+            />
+            <button
+              className="btn-secondary"
+              onClick={searchMovies}
+              disabled={loading || !searchQuery.trim()}
+            >
+              {loading ? "Searching..." : "Search"}
+            </button>
+          </div>
+
+          {searchResults.length > 0 && (
+            <div className="search-results">
+              {searchResults.map((movie) => (
+                <div
+                  key={movie.id}
+                  className="search-result-item"
+                  onClick={() => addMovieToParty(movie)}
+                >
+                  <img
+                    src={movie.poster || "https://via.placeholder.com/50x75"}
+                    alt={movie.title}
+                  />
+                  <div className="result-info">
+                    <p className="title">{movie.title}</p>
+                    <p className="year">{movie.year}</p>
+                  </div>
+                  <button className="add-btn">+</button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {searchQuery && !loading && searchResults.length === 0 && (
+            <div className="no-results">
+              <p>No movies found. Try a different search.</p>
+            </div>
+          )}
+
+          {selectedMovies.length > 0 && (
+            <div className="selected-movies">
+              <h4>Selected Movies:</h4>
+              <div className="movie-chips">
+                {selectedMovies.map((movie) => (
+                  <div key={movie.id} className="movie-chip">
+                    <img src={movie.poster} alt={movie.title} />
+                    <span>{movie.title}</span>
+                    <button onClick={() => removeMovie(movie.id)}>×</button>
                   </div>
                 ))}
               </div>
-            )}
-          </>
-        ) : (
-          <div className="create-party-form">
-            <h2>Create a Movie Party</h2>
-
-            {/* Friends Selection */}
-            <div className="form-section">
-              <h3>1. Invite Friends</h3>
-              <div className="friends-list">
-                {friends.length === 0 ? (
-                  <p className="no-data">No friends to invite</p>
-                ) : (
-                  friends.map((friend) => (
-                    <label key={friend.id} className="checkbox-item">
-                      <input
-                        type="checkbox"
-                        checked={selectedFriends.includes(friend.id)}
-                        onChange={() => toggleFriend(friend.id)}
-                      />
-                      {friend.name}
-                    </label>
-                  ))
-                )}
-              </div>
             </div>
+          )}
+        </div>
 
-            {/* Movie Selection */}
-            <div className="form-section">
-              <h3>2. Add Movies</h3>
-              <div className="search-box">
-                <input
-                  type="text"
-                  placeholder="Search for a movie..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && searchMovies()}
-                />
-                <button 
-                  className="btn-secondary" 
-                  onClick={searchMovies}
-                  disabled={loading || !searchQuery.trim()}
-                >
-                  {loading ? "Searching..." : "Search"}
-                </button>
-              </div>
-
-              {searchResults.length > 0 && (
-                <div className="search-results">
-                  {searchResults.map((movie) => (
-                    <div
-                      key={movie.id}
-                      className="search-result-item"
-                      onClick={() => toggleMovie(movie.id)}
-                    >
-                      <img
-                        src={movie.poster || "https://via.placeholder.com/50x75"}
-                        alt={movie.title}
-                      />
-                      <div className="result-info">
-                        <p className="title">{movie.title}</p>
-                        <p className="year">{movie.year}</p>
-                      </div>
-                      <input
-                        type="checkbox"
-                        checked={selectedMovies.includes(movie.id)}
-                        onChange={() => toggleMovie(movie.id)}
-                      />
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {searchQuery && !loading && searchResults.length === 0 && (
-                <div className="no-results">
-                  <p>No movies found. Try a different search.</p>
-                </div>
-              )}
-
-              {selectedMovies.length > 0 && (
-                <div className="selected-movies">
-                  <h4>Selected:</h4>
-                  {selectedMovies.map((movieId) => {
-                    const movie = searchResults.find((m) => m.id === movieId);
-                    return (
-                      <span key={movieId} className="tag">
-                        {movie?.title}
-                        <button onClick={() => toggleMovie(movieId)}>×</button>
-                      </span>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="form-actions">
-              <button
-                className="btn-primary"
-                onClick={createParty}
-                disabled={
-                  loading ||
-                  selectedFriends.length === 0 ||
-                  selectedMovies.length === 0
-                }
-              >
-                {loading ? "Creating..." : "Create Party"}
-              </button>
-              <button
-                className="btn-secondary"
-                onClick={() => {
-                  setShowCreateForm(false);
-                  setSelectedFriends([]);
-                  setSelectedMovies([]);
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Start Party Button */}
+        <div className="form-actions">
+          <button
+            className="btn-primary btn-large"
+            onClick={startParty}
+            disabled={selectedFriends.length === 0 || selectedMovies.length === 0}
+          >
+            🎉 Start Party
+          </button>
+        </div>
       </div>
     </div>
   );

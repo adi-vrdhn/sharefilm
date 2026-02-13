@@ -18,11 +18,16 @@
   border-bottom: 2px solid #e0e0e0;
 }
 
-.party-header h1,
-.party-header h2 {
+.party-header h1 {
   margin: 0;
   font-size: 1.8rem;
   color: #333;
+}
+
+.subtitle {
+  margin: 8px 0 0 0;
+  color: #666;
+  font-size: 1rem;
 }
 
 .party-header .btn-primary,
@@ -58,6 +63,15 @@
   color: #555;
 }
 
+.voted-badge {
+  background: #4caf50;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  display: inline-block;
+  font-weight: 500;
+}
+
 .voting-section h3 {
   margin: 0 0 20px 0;
   font-size: 1.3rem;
@@ -77,12 +91,31 @@
   overflow: hidden;
   transition: all 0.3s ease;
   text-align: center;
+  position: relative;
+}
+
+.movie-vote-card.winner {
+  border-color: #ffd700;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
 }
 
 .movie-vote-card:hover {
   border-color: #ff6b6b;
   transform: translateY(-5px);
   box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+}
+
+.winner-badge {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #ffd700;
+  color: #333;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .movie-vote-card img {
@@ -270,6 +303,23 @@
   border-color: #ff6b6b;
 }
 
+.search-result-item .add-btn {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 1.2rem;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+}
+
+.search-result-item .add-btn:hover {
+  background: #e55555;
+}
+
 .search-result-item img {
   width: 50px;
   height: 75px;
@@ -303,7 +353,7 @@
 
 .selected-movies {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 8px;
   margin-top: 15px;
   padding: 12px;
@@ -317,29 +367,50 @@
   color: #333;
 }
 
-.tag {
-  display: inline-flex;
+.movie-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.movie-chip {
+  display: flex;
   align-items: center;
-  gap: 6px;
-  background: #ff6b6b;
-  color: white;
-  padding: 6px 12px;
+  gap: 8px;
+  background: white;
+  border: 1px solid #ddd;
+  padding: 6px 10px;
   border-radius: 20px;
   font-size: 0.9rem;
 }
 
-.tag button {
+.movie-chip img {
+  width: 30px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.movie-chip span {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.movie-chip button {
   background: none;
   border: none;
-  color: white;
-  font-size: 1.2rem;
+  color: #999;
+  font-size: 1.3rem;
   cursor: pointer;
   padding: 0;
   line-height: 1;
+  margin-left: 4px;
 }
 
-.tag button:hover {
-  opacity: 0.8;
+.movie-chip button:hover {
+  color: #ff6b6b;
 }
 
 .form-actions {
@@ -371,6 +442,12 @@
 .btn-primary {
   background: #ff6b6b;
   color: white;
+}
+
+.btn-primary.btn-large {
+  padding: 15px 40px;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .btn-primary:hover:not(:disabled) {
