@@ -8,7 +8,7 @@ import "../styles/profile.css";
 const Profile = () => {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { user: authUser, updateUsername } = useAuth();
+  const { user: authUser, updateUsername, updateProfilePicture } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
@@ -59,6 +59,7 @@ const Profile = () => {
     try {
       const response = await api.put("/profile/me", { profilePicture: base64Image });
       setProfile((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
+      updateProfilePicture(response.data.profilePicture);
       setIsEditingPicture(false);
       setStatus("Picture updated!");
       setTimeout(() => setStatus(""), 3000);

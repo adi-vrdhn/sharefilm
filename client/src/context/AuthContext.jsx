@@ -90,12 +90,22 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  const updateUser = (updates) => {
+    setUser((prev) => (prev ? { ...prev, ...updates } : prev));
+  };
+
   const updateUsername = (newName) => {
-    setUser((prev) => ({ ...prev, name: newName }));
+    updateUser({ name: newName });
+  };
+
+  const updateProfilePicture = (profilePicture) => {
+    updateUser({ profilePicture });
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, signup, logout, updateUsername, fetchUser }}>
+    <AuthContext.Provider
+      value={{ user, loading, login, signup, logout, updateUsername, updateProfilePicture, updateUser, fetchUser }}
+    >
       {children}
     </AuthContext.Provider>
   );
