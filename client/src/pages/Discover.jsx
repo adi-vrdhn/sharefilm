@@ -25,7 +25,6 @@ const Discover = () => {
   const [movies, setMovies] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [cardOffset, setCardOffset] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [index, setIndex] = useState(0);
   const [status, setStatus] = useState("");
@@ -36,6 +35,11 @@ const Discover = () => {
   });
 
   const pointerStart = useRef(null);
+  const swipeCardRef = useRef(null);
+  const cardOffsetRef = useRef(0);
+  const rafRef = useRef(null);
+  const isDraggingRef = useRef(false);
+  const swipeInProgressRef = useRef(false);
 
   const genreMap = useMemo(() => {
     const map = {};
@@ -91,7 +95,11 @@ const Discover = () => {
         }
       });
 
-      const items = response.data || [];
+      let items = response.data || [];
+      if (items.length === 0) {
+        const fallback = await api.get("/popularMovies");
+        items = fallback.data || [];
+      }
       if (reset) {
         setMovies(items);
         setIndex(0);
@@ -99,10 +107,6 @@ const Discover = () => {
       } else {
         setMovies((prev) => [...prev, ...items]);
         setPage(nextPage);
-      }
-
-      if (items.length === 0) {
-        setStatus("No movies found. Try different filters.");
       }
     } catch (error) {
       setStatus("Failed to load movies");
@@ -128,12 +132,11 @@ const Discover = () => {
   };
 
   const moveNext = () => {
-    if (index + 1 >= movies.length) {
+    const nextIndex = index + 1;
+    if (nextIndex >= movies.length - 2) {
       fetchMovies({ reset: false, nextPage: page + 1 });
-      setIndex((prev) => prev + 1);
-      return;
     }
-    setIndex((prev) => prev + 1);
+    setIndex(nextIndex);
   };
 
   const handleAction = async (action, movie = currentMovie) => {
@@ -166,16 +169,60 @@ const Discover = () => {
     moveNext();
   };
 
+  const applyTransform = (delta) => {
+    if (!swipeCardRef.current) return;
+    swipeCardRef.current.style.transform = `translateX(${delta}px) rotate(${delta / 18}deg)`;
+  };
+
+  const resetTransform = () => {
+    if (!swipeCardRef.current) return;
+    swipeCardRef.current.style.transition = "transform 0.2s ease";
+    swipeCardRef.current.style.transform = "translateX(0) rotate(0deg)";
+    window.setTimeout(() => {
+      if (swipeCardRef.current) {
+        swipeCardRef.current.style.transition = "";
+      }
+    }, 220);
+  };
+
+  const animateSwipe = (direction) => {
+    if (!swipeCardRef.current || swipeInProgressRef.current) return;
+    swipeInProgressRef.current = true;
+    const width = window.innerWidth || 600;
+    const target = direction === "right" ? width : -width;
+    swipeCardRef.current.style.transition = "transform 0.25s ease";
+    swipeCardRef.current.style.transform = `translateX(${target}px) rotate(${target / 18}deg)`;
+    window.setTimeout(async () => {
+      await handleAction(direction === "right" ? "nah" : "watched");
+      swipeInProgressRef.current = false;
+      if (swipeCardRef.current) {
+        swipeCardRef.current.style.transition = "";
+        swipeCardRef.current.style.transform = "translateX(0) rotate(0deg)";
+      }
+    }, 230);
+  };
+
   const onPointerDown = (event) => {
+    if (swipeInProgressRef.current) return;
     pointerStart.current = event.clientX;
+    cardOffsetRef.current = 0;
+    isDraggingRef.current = false;
     setIsDragging(false);
+    event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   const onPointerMove = (event) => {
     if (pointerStart.current === null) return;
     const delta = event.clientX - pointerStart.current;
-    setCardOffset(delta);
-    if (Math.abs(delta) > 6) {
+    cardOffsetRef.current = delta;
+    if (!rafRef.current) {
+      rafRef.current = window.requestAnimationFrame(() => {
+        rafRef.current = null;
+        applyTransform(cardOffsetRef.current);
+      });
+    }
+    if (Math.abs(delta) > 6 && !isDraggingRef.current) {
+      isDraggingRef.current = true;
       setIsDragging(true);
     }
   };
@@ -183,18 +230,21 @@ const Discover = () => {
   const onPointerUp = () => {
     if (pointerStart.current === null) return;
     const threshold = 120;
-    if (cardOffset > threshold) {
-      handleAction("nah");
-    } else if (cardOffset < -threshold) {
-      handleAction("watched");
+    const delta = cardOffsetRef.current;
+    if (delta > threshold) {
+      animateSwipe("right");
+    } else if (delta < -threshold) {
+      animateSwipe("left");
+    } else {
+      resetTransform();
     }
-    setCardOffset(0);
     pointerStart.current = null;
+    isDraggingRef.current = false;
     setIsDragging(false);
   };
 
   const handleCardClick = () => {
-    if (isDragging) return;
+    if (isDragging || swipeInProgressRef.current) return;
     handleAction("want");
   };
 
@@ -347,7 +397,7 @@ const Discover = () => {
 
             <div
               className="swipe-card swipe-card-front"
-              style={{ transform: `translateX(${cardOffset}px) rotate(${cardOffset / 18}deg)` }}
+              ref={swipeCardRef}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}

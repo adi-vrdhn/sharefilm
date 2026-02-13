@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import api from "../api/axios";
 
 const Chat = () => {
@@ -8,6 +8,12 @@ const Chat = () => {
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
+  const pollingIntervalRef = useRef(null);
+  const messagesEndRef = useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   // Load friends on mount
   useEffect(() => {
@@ -26,6 +32,10 @@ const Chat = () => {
   useEffect(() => {
     if (!selectedFriend) {
       setMessages([]);
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
       return;
     }
 
@@ -40,8 +50,33 @@ const Chat = () => {
         setLoading(false);
       }
     };
+    
     loadMessages();
+
+    // Set up real-time polling every 1.5 seconds
+    const pollMessages = setInterval(async () => {
+      try {
+        const response = await api.get(`/getMessages?with=${selectedFriend.id}`);
+        setMessages(response.data);
+      } catch (error) {
+        // Silent fail for polling to avoid spamming errors
+      }
+    }, 1500);
+
+    pollingIntervalRef.current = pollMessages;
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+        pollingIntervalRef.current = null;
+      }
+    };
   }, [selectedFriend]);
+
+  // Auto-scroll to bottom when messages update
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -55,6 +90,7 @@ const Chat = () => {
       });
       setMessages([...messages, response.data]);
       setNewMessage("");
+      scrollToBottom();
     } catch (error) {
       setStatus(error.response?.data?.message || "Failed to send message");
     }
@@ -118,6 +154,7 @@ const Chat = () => {
                     </div>
                   ))
                 )}
+                <div ref={messagesEndRef} />
               </div>
 
               <form className="message-form" onSubmit={handleSend}>
