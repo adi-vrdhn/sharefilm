@@ -33,6 +33,11 @@ const Discover = () => {
     const saved = localStorage.getItem("wantList");
     return saved ? JSON.parse(saved) : [];
   });
+  const [showGenreDropdown, setShowGenreDropdown] = useState(false);
+  const [similarMode, setSimilarMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   const pointerStart = useRef(null);
   const swipeCardRef = useRef(null);
@@ -49,9 +54,10 @@ const Discover = () => {
     return map;
   }, [genres]);
 
-  const currentMovie = movies[index];
-  const nextMovie = movies[index + 1];
-  const thirdMovie = movies[index + 2];
+  const activeMovies = similarMode ? searchResults : movies;
+  const currentMovie = activeMovies[index];
+  const nextMovie = activeMovies[index + 1];
+  const thirdMovie = activeMovies[index + 2];
 
   useEffect(() => {
     const loadFilters = async () => {
@@ -119,6 +125,37 @@ const Discover = () => {
     fetchMovies({ reset: true, nextPage: 1 });
   };
 
+  const searchSimilarMovies = async () => {
+    if (!searchQuery.trim()) {
+      setStatus("Please enter a movie name");
+      return;
+    }
+
+    setIsSearching(true);
+    setStatus("");
+    try {
+      const response = await api.get("/similarMovies", {
+        params: {
+          query: searchQuery
+        }
+      });
+      setSearchResults(response.data || []);
+      setSimilarMode(true);
+      setIndex(0);
+    } catch (error) {
+      setStatus("Failed to find similar movies");
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const exitSimilarMode = () => {
+    setSimilarMode(false);
+    setSearchQuery("");
+    setSearchResults([]);
+    setIndex(0);
+  };
+
   const toggleGenre = (genreId) => {
     setFilters((prev) => {
       const exists = prev.genre.includes(genreId);
@@ -133,8 +170,16 @@ const Discover = () => {
 
   const moveNext = () => {
     const nextIndex = index + 1;
-    if (nextIndex >= movies.length - 2) {
-      fetchMovies({ reset: false, nextPage: page + 1 });
+    if (similarMode) {
+      if (nextIndex >= searchResults.length) {
+        setStatus("No more similar movies");
+        setIndex(nextIndex - 1);
+        return;
+      }
+    } else {
+      if (nextIndex >= movies.length - 2) {
+        fetchMovies({ reset: false, nextPage: page + 1 });
+      }
     }
     setIndex(nextIndex);
   };
@@ -275,19 +320,45 @@ const Discover = () => {
         <div className="filter-row">
           <div className="filter-group">
             <label>Genres</label>
-            <div className="genre-grid">
-              {genres.map((genre) => (
-                <button
-                  key={genre.id}
-                  type="button"
-                  className={`genre-chip ${
-                    filters.genre.includes(String(genre.id)) ? "active" : ""
-                  }`}
-                  onClick={() => toggleGenre(String(genre.id))}
-                >
-                  {genre.name}
-                </button>
-              ))}
+            <div className="genre-dropdown-container">
+              <button
+                type="button"
+                className="genre-dropdown-trigger"
+                onClick={() => setShowGenreDropdown(!showGenreDropdown)}
+              >
+                {filters.genre.length === 0 ? "Select genres..." : `${filters.genre.length} selected`}
+                <span className="dropdown-arrow">▼</span>
+              </button>
+              {showGenreDropdown && (
+                <div className="genre-dropdown-menu">
+                  {genres.map((genre) => (
+                    <label key={genre.id} className="genre-option">
+                      <input
+                        type="checkbox"
+                        checked={filters.genre.includes(String(genre.id))}
+                        onChange={() => toggleGenre(String(genre.id))}
+                      />
+                      <span>{genre.name}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+              {filters.genre.length > 0 && (
+                <div className="genre-tags">
+                  {filters.genre.map((genreId) => (
+                    <span key={genreId} className="genre-tag">
+                      {genreMap[genreId]}
+                      <button
+                        type="button"
+                        onClick={() => toggleGenre(genreId)}
+                        className="tag-remove"
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
           <div className="filter-group">
@@ -329,6 +400,30 @@ const Discover = () => {
             Find Movies
           </button>
         </div>
+
+        <div className="similar-search-row">
+          <input
+            type="text"
+            className="similar-search-input"
+            placeholder="Search a movie to find similar ones..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyPress={(e) => e.key === "Enter" && searchSimilarMovies()}
+          />
+          <button
+            className="primary"
+            onClick={searchSimilarMovies}
+            disabled={isSearching}
+          >
+            {isSearching ? "Searching..." : "Find Similar"}
+          </button>
+          {similarMode && (
+            <button className="secondary" onClick={exitSimilarMode}>
+              Back to Browse
+            </button>
+          )}
+        </div>
+
         {status && <p className="helper-text">{status}</p>}
       </div>
 

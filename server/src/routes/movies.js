@@ -6,7 +6,8 @@ const {
   getMovieDetails,
   getGenres,
   getWatchProviders,
-  discoverMovies
+  discoverMovies,
+  getSimilarMovies
 } = require("../services/tmdb");
 
 const router = express.Router();
@@ -137,6 +138,31 @@ router.get("/discoverMovies", async (req, res) => {
   } catch (error) {
     console.error("TMDB discover error:", error.message);
     return res.status(500).json({ message: error.message || "Failed to discover movies" });
+  }
+});
+
+router.get("/similarMovies", async (req, res) => {
+  try {
+    const query = req.query.query;
+    if (!query) {
+      return res.status(400).json({ message: "Movie query is required" });
+    }
+
+    // First, search for the movie to get its TMDB ID
+    const searchResults = await searchMovies(query);
+    if (!searchResults || searchResults.length === 0) {
+      return res.status(404).json({ message: "Movie not found" });
+    }
+
+    // Get the first result's ID
+    const movieId = searchResults[0].tmdb_id;
+
+    // Fetch similar movies
+    const similarMovies = await getSimilarMovies(movieId);
+    return res.json(similarMovies);
+  } catch (error) {
+    console.error("Similar movies error:", error.message);
+    return res.status(500).json({ message: error.message || "Failed to fetch similar movies" });
   }
 });
 

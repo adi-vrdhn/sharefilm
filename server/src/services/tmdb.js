@@ -140,11 +140,36 @@ const discoverMovies = async ({
   }));
 };
 
+const getSimilarMovies = async (tmdbId) => {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) {
+    throw new Error("TMDB_API_KEY is required");
+  }
+
+  const response = await axios.get(`${TMDB_BASE}/movie/${tmdbId}/similar`, {
+    params: {
+      api_key: apiKey,
+      page: 1
+    }
+  });
+
+  return (response.data.results || []).map((movie) => ({
+    tmdb_id: movie.id,
+    title: movie.title,
+    poster: movie.poster_path ? `${POSTER_BASE}${movie.poster_path}` : "",
+    year: movie.release_date ? movie.release_date.split("-")[0] : "",
+    overview: movie.overview || "",
+    rating: movie.vote_average || 0,
+    genre_ids: movie.genre_ids || []
+  }));
+};
+
 module.exports = {
   searchMovies,
   getPopularMovies,
   getMovieDetails,
   getGenres,
   getWatchProviders,
-  discoverMovies
+  discoverMovies,
+  getSimilarMovies
 };
