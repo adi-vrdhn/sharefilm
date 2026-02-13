@@ -80,8 +80,6 @@ const MovieParty = () => {
       return newVotes;
     });
   };
-    });
-  };
 
   const startParty = async () => {
     if (selectedFriends.length === 0 || selectedMovies.length === 0) {
@@ -178,16 +176,6 @@ const MovieParty = () => {
                     👍 {votes[movie.tmdb_id] || 0} vote{votes[movie.tmdb_id] !== 1 ? "s" : ""}
                   </p>
                   {movie.tmdb_id === winner?.tmdb_id && votes[movie.tmdb_id] > 0 && (
-                    <div className="winner-badge">🏆 Leading</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
                     <div className="winner-badge">🏆 Leading</div>
                   )}
                 </div>
