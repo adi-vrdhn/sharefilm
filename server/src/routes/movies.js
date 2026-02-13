@@ -1,6 +1,13 @@
 const express = require("express");
-const { User, Movie, UserMovie, Notification, Rating } = require("../models");
-const { searchMovies, getPopularMovies, getMovieDetails } = require("../services/tmdb");
+const { User, Movie, UserMovie, Notification, Rating, SwipeEvent } = require("../models");
+const {
+  searchMovies,
+  getPopularMovies,
+  getMovieDetails,
+  getGenres,
+  getWatchProviders,
+  discoverMovies
+} = require("../services/tmdb");
 
 const router = express.Router();
 
@@ -37,6 +44,71 @@ router.get("/movieDetails/:tmdbId", async (req, res) => {
   } catch (error) {
     console.error("TMDB details error:", error.message);
     return res.status(500).json({ message: error.message || "Failed to fetch movie details" });
+  }
+});
+
+router.get("/genres", async (req, res) => {
+  try {
+    const genres = await getGenres();
+    return res.json(genres);
+  } catch (error) {
+    console.error("TMDB genres error:", error.message);
+    return res.status(500).json({ message: error.message || "Failed to fetch genres" });
+  }
+});
+
+router.get("/watchProviders", async (req, res) => {
+  try {
+    const region = req.query.region || "IN";
+    const providers = await getWatchProviders(region);
+    return res.json(providers);
+  } catch (error) {
+    console.error("TMDB providers error:", error.message);
+    return res.status(500).json({ message: error.message || "Failed to fetch providers" });
+  }
+});
+
+router.get("/discoverMovies", async (req, res) => {
+  try {
+    const results = await discoverMovies({
+      genre: req.query.genre,
+      provider: req.query.provider,
+      language: req.query.language,
+      page: Number(req.query.page || 1),
+      region: req.query.region || "IN"
+    });
+    return res.json(results);
+  } catch (error) {
+    console.error("TMDB discover error:", error.message);
+    return res.status(500).json({ message: error.message || "Failed to discover movies" });
+  }
+});
+
+router.post("/swipeEvent", async (req, res) => {
+  try {
+    const { tmdbId, action, genreIds, providerId, language } = req.body;
+
+    if (!tmdbId || !action) {
+      return res.status(400).json({ message: "tmdbId and action required" });
+    }
+
+    if (!["nah", "watched", "want"].includes(action)) {
+      return res.status(400).json({ message: "Invalid action" });
+    }
+
+    const event = await SwipeEvent.create({
+      userId: req.user.id,
+      tmdbId,
+      action,
+      genreIds: Array.isArray(genreIds) ? genreIds : null,
+      providerId: providerId || null,
+      language: language || null
+    });
+
+    return res.json({ id: event.id });
+  } catch (error) {
+    console.error("Swipe event error:", error.message);
+    return res.status(500).json({ message: "Failed to record swipe" });
   }
 });
 

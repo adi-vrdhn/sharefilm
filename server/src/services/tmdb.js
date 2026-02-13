@@ -72,8 +72,77 @@ const getMovieDetails = async (tmdbId) => {
   };
 };
 
+const getGenres = async () => {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) {
+    throw new Error("TMDB_API_KEY is required");
+  }
+
+  const response = await axios.get(`${TMDB_BASE}/genre/movie/list`, {
+    params: {
+      api_key: apiKey
+    }
+  });
+
+  return response.data.genres || [];
+};
+
+const getWatchProviders = async (region = "IN") => {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) {
+    throw new Error("TMDB_API_KEY is required");
+  }
+
+  const response = await axios.get(`${TMDB_BASE}/watch/providers/movie`, {
+    params: {
+      api_key: apiKey,
+      watch_region: region
+    }
+  });
+
+  return response.data.results || [];
+};
+
+const discoverMovies = async ({
+  genre,
+  provider,
+  language,
+  page = 1,
+  region = "IN"
+}) => {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) {
+    throw new Error("TMDB_API_KEY is required");
+  }
+
+  const response = await axios.get(`${TMDB_BASE}/discover/movie`, {
+    params: {
+      api_key: apiKey,
+      with_genres: genre || undefined,
+      with_watch_providers: provider || undefined,
+      watch_region: provider ? region : undefined,
+      with_original_language: language || undefined,
+      sort_by: "popularity.desc",
+      page
+    }
+  });
+
+  return (response.data.results || []).map((movie) => ({
+    tmdb_id: movie.id,
+    title: movie.title,
+    poster: movie.poster_path ? `${POSTER_BASE}${movie.poster_path}` : "",
+    year: movie.release_date ? movie.release_date.split("-")[0] : "",
+    overview: movie.overview || "",
+    rating: movie.vote_average || 0,
+    genre_ids: movie.genre_ids || []
+  }));
+};
+
 module.exports = {
   searchMovies,
   getPopularMovies,
-  getMovieDetails
+  getMovieDetails,
+  getGenres,
+  getWatchProviders,
+  discoverMovies
 };

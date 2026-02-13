@@ -18,6 +18,7 @@ const Layout = ({ children }) => {
 
   const menuItems = [
     { path: "/add", label: "Add Movie", icon: "➕" },
+    { path: "/discover", label: "Discover", icon: "✨" },
     { path: "/party", label: "Movie Party", icon: "🎬" },
     { path: "/list", label: "My Movies", icon: "📽️" },
     { path: "/friends", label: "Friends", icon: "👥" },

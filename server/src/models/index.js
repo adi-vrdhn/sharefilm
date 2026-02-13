@@ -6,6 +6,7 @@ const Friendship = require("./Friendship");
 const Message = require("./Message");
 const Rating = require("./Rating");
 const SharedParty = require("./SharedParty");
+const SwipeEvent = require("./SwipeEvent");
 
 User.hasMany(UserMovie, { foreignKey: "receiver_id", as: "receivedMovies", constraints: true });
 User.hasMany(UserMovie, { foreignKey: "sender_id", as: "sentMovies", constraints: true });
@@ -32,6 +33,9 @@ Rating.belongsTo(User, { foreignKey: "user_id", constraints: true });
 UserMovie.hasMany(Rating, { foreignKey: "user_movie_id", constraints: true });
 Rating.belongsTo(UserMovie, { foreignKey: "user_movie_id", constraints: true });
 
+User.hasMany(SwipeEvent, { foreignKey: "user_id", constraints: true });
+SwipeEvent.belongsTo(User, { foreignKey: "user_id", constraints: true });
+
 module.exports = {
   User,
   Movie,
@@ -40,5 +44,6 @@ module.exports = {
   Friendship,
   Message,
   Rating,
-  SharedParty
+  SharedParty,
+  SwipeEvent
 };

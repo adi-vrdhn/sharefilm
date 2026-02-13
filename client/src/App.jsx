@@ -12,6 +12,7 @@ import Notifications from "./pages/Notifications";
 import Friends from "./pages/Friends";
 import Chat from "./pages/Chat";
 import MovieParty from "./pages/MovieParty";
+import Discover from "./pages/Discover";
 
 const App = () => {
   const { user } = useAuth();
@@ -38,6 +39,16 @@ const App = () => {
           <ProtectedRoute>
             <Layout>
               <MovieParty />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/discover"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Discover />
             </Layout>
           </ProtectedRoute>
         }
