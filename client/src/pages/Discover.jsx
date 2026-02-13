@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import api from "../api/axios";
 import "../styles/discover.css";
 
@@ -17,7 +18,7 @@ const Discover = () => {
   const [genres, setGenres] = useState([]);
   const [providers, setProviders] = useState([]);
   const [filters, setFilters] = useState({
-    genre: "",
+    genre: [],
     provider: "",
     language: "en"
   });
@@ -28,6 +29,7 @@ const Discover = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [index, setIndex] = useState(0);
   const [status, setStatus] = useState("");
+  const [hasLoaded, setHasLoaded] = useState(false);
   const [wantList, setWantList] = useState(() => {
     const saved = localStorage.getItem("wantList");
     return saved ? JSON.parse(saved) : [];
@@ -44,6 +46,8 @@ const Discover = () => {
   }, [genres]);
 
   const currentMovie = movies[index];
+  const nextMovie = movies[index + 1];
+  const thirdMovie = movies[index + 2];
 
   useEffect(() => {
     const loadFilters = async () => {
@@ -63,6 +67,13 @@ const Discover = () => {
   }, []);
 
   useEffect(() => {
+    if (hasLoaded) return;
+    if (genres.length === 0 && providers.length === 0) return;
+    setHasLoaded(true);
+    fetchMovies({ reset: true, nextPage: 1 });
+  }, [genres, providers, hasLoaded]);
+
+  useEffect(() => {
     localStorage.setItem("wantList", JSON.stringify(wantList));
   }, [wantList]);
 
@@ -72,7 +83,7 @@ const Discover = () => {
     try {
       const response = await api.get("/discoverMovies", {
         params: {
-          genre: filters.genre || undefined,
+          genre: filters.genre.length ? filters.genre.join(",") : undefined,
           provider: filters.provider || undefined,
           language: filters.language || undefined,
           page: nextPage,
@@ -104,6 +115,18 @@ const Discover = () => {
     fetchMovies({ reset: true, nextPage: 1 });
   };
 
+  const toggleGenre = (genreId) => {
+    setFilters((prev) => {
+      const exists = prev.genre.includes(genreId);
+      return {
+        ...prev,
+        genre: exists
+          ? prev.genre.filter((id) => id !== genreId)
+          : [...prev.genre, genreId]
+      };
+    });
+  };
+
   const moveNext = () => {
     if (index + 1 >= movies.length) {
       fetchMovies({ reset: false, nextPage: page + 1 });
@@ -117,9 +140,14 @@ const Discover = () => {
     if (!movie) return;
 
     if (action === "want") {
+      const enriched = {
+        ...movie,
+        provider_id: filters.provider || null,
+        language: filters.language || null
+      };
       setWantList((prev) => {
         if (prev.find((item) => item.tmdb_id === movie.tmdb_id)) return prev;
-        return [...prev, movie];
+        return [...prev, enriched];
       });
     }
 
@@ -187,28 +215,30 @@ const Discover = () => {
             <span className="stat-label">Want list</span>
             <span className="stat-value">{wantList.length}</span>
           </div>
+          <Link className="stat-link" to="/watchlist">
+            Open Watchlist
+          </Link>
         </div>
       </div>
 
       <div className="filter-panel">
         <div className="filter-row">
           <div className="filter-group">
-            <label>Genre</label>
-            <select
-              className="filter-select"
-              value={filters.genre}
-              onChange={(event) => setFilters((prev) => ({
-                ...prev,
-                genre: event.target.value
-              }))}
-            >
-              <option value="">Any</option>
+            <label>Genres</label>
+            <div className="genre-grid">
               {genres.map((genre) => (
-                <option key={genre.id} value={genre.id}>
+                <button
+                  key={genre.id}
+                  type="button"
+                  className={`genre-chip ${
+                    filters.genre.includes(String(genre.id)) ? "active" : ""
+                  }`}
+                  onClick={() => toggleGenre(String(genre.id))}
+                >
                   {genre.name}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
           <div className="filter-group">
             <label>Platform</label>
@@ -260,39 +290,93 @@ const Discover = () => {
             <p className="helper-text">Refine filters and fetch again.</p>
           </div>
         )}
-
         {currentMovie && (
-          <div
-            className="swipe-card"
-            style={{ transform: `translateX(${cardOffset}px) rotate(${cardOffset / 18}deg)` }}
-            onPointerDown={onPointerDown}
-            onPointerMove={onPointerMove}
-            onPointerUp={onPointerUp}
-            onPointerLeave={onPointerUp}
-            onClick={handleCardClick}
-          >
-            <div className="swipe-poster">
-              {currentMovie.poster ? (
-                <img src={currentMovie.poster} alt={currentMovie.title} />
-              ) : (
-                <div className="poster-fallback" />
-              )}
-            </div>
-            <div className="swipe-body">
-              <div className="swipe-title">
-                <h2>{currentMovie.title}</h2>
-                <span>{currentMovie.year}</span>
+          <div className="swipe-stack">
+            {thirdMovie && (
+              <div className="swipe-card swipe-card-back swipe-card-back-2">
+                <div className="swipe-poster">
+                  {thirdMovie.poster ? (
+                    <img src={thirdMovie.poster} alt={thirdMovie.title} />
+                  ) : (
+                    <div className="poster-fallback" />
+                  )}
+                </div>
+                <div className="swipe-body">
+                  <div className="swipe-title">
+                    <h2>{thirdMovie.title}</h2>
+                    <span>{thirdMovie.year}</span>
+                  </div>
+                  <div className="swipe-meta">
+                    <span>⭐ {thirdMovie.rating.toFixed(1)}</span>
+                    {thirdMovie.genre_ids?.length > 0 && (
+                      <span>{formatGenres(thirdMovie.genre_ids)}</span>
+                    )}
+                  </div>
+                  <p className="swipe-overview">
+                    {thirdMovie.overview || "No overview available."}
+                  </p>
+                </div>
               </div>
-              <div className="swipe-meta">
-                <span>⭐ {currentMovie.rating.toFixed(1)}</span>
-                {currentMovie.genre_ids?.length > 0 && (
-                  <span>{formatGenres(currentMovie.genre_ids)}</span>
+            )}
+            {nextMovie && (
+              <div className="swipe-card swipe-card-back">
+                <div className="swipe-poster">
+                  {nextMovie.poster ? (
+                    <img src={nextMovie.poster} alt={nextMovie.title} />
+                  ) : (
+                    <div className="poster-fallback" />
+                  )}
+                </div>
+                <div className="swipe-body">
+                  <div className="swipe-title">
+                    <h2>{nextMovie.title}</h2>
+                    <span>{nextMovie.year}</span>
+                  </div>
+                  <div className="swipe-meta">
+                    <span>⭐ {nextMovie.rating.toFixed(1)}</span>
+                    {nextMovie.genre_ids?.length > 0 && (
+                      <span>{formatGenres(nextMovie.genre_ids)}</span>
+                    )}
+                  </div>
+                  <p className="swipe-overview">
+                    {nextMovie.overview || "No overview available."}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <div
+              className="swipe-card swipe-card-front"
+              style={{ transform: `translateX(${cardOffset}px) rotate(${cardOffset / 18}deg)` }}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove}
+              onPointerUp={onPointerUp}
+              onPointerLeave={onPointerUp}
+              onClick={handleCardClick}
+            >
+              <div className="swipe-poster">
+                {currentMovie.poster ? (
+                  <img src={currentMovie.poster} alt={currentMovie.title} />
+                ) : (
+                  <div className="poster-fallback" />
                 )}
               </div>
-              <p className="swipe-overview">
-                {currentMovie.overview || "No overview available."}
-              </p>
-              <div className="swipe-hint">Tap the card to add to Want list</div>
+              <div className="swipe-body">
+                <div className="swipe-title">
+                  <h2>{currentMovie.title}</h2>
+                  <span>{currentMovie.year}</span>
+                </div>
+                <div className="swipe-meta">
+                  <span>⭐ {currentMovie.rating.toFixed(1)}</span>
+                  {currentMovie.genre_ids?.length > 0 && (
+                    <span>{formatGenres(currentMovie.genre_ids)}</span>
+                  )}
+                </div>
+                <p className="swipe-overview">
+                  {currentMovie.overview || "No overview available."}
+                </p>
+                <div className="swipe-hint">Tap the card to add to Want list</div>
+              </div>
             </div>
           </div>
         )}

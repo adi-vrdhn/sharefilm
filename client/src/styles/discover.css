@@ -14,6 +14,7 @@
 .discover-stats {
   display: flex;
   gap: 12px;
+  align-items: center;
 }
 
 .stat-card {
@@ -24,6 +25,23 @@
   min-width: 120px;
   text-align: center;
   box-shadow: 0 10px 20px var(--shadow);
+}
+
+.stat-link {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #fffaf5;
+  border: 1px solid rgba(90, 59, 30, 0.2);
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.stat-link:hover {
+  border-color: rgba(200, 160, 72, 0.5);
+  transform: translateY(-1px);
 }
 
 .stat-label {
@@ -68,6 +86,36 @@
   letter-spacing: 1px;
 }
 
+.genre-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 140px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.genre-chip {
+  border: 1px solid rgba(90, 59, 30, 0.2);
+  background: #fffaf5;
+  color: var(--ink);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.genre-chip:hover {
+  border-color: rgba(200, 160, 72, 0.4);
+}
+
+.genre-chip.active {
+  background: linear-gradient(135deg, #c8a048, #e1b65a);
+  border-color: transparent;
+  color: #fff;
+}
+
 .filter-select {
   padding: 12px 14px;
   border-radius: 12px;
@@ -93,15 +141,43 @@
   min-height: 520px;
 }
 
-.swipe-card {
+.swipe-stack {
+  position: relative;
   width: min(520px, 94vw);
+  min-height: 520px;
+}
+
+.swipe-card {
+  width: 100%;
   background: #fff;
   border-radius: 24px;
   overflow: hidden;
   border: 1px solid rgba(200, 160, 72, 0.25);
   box-shadow: 0 20px 50px rgba(31, 26, 22, 0.2);
   cursor: grab;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.swipe-card-front {
+  position: relative;
+  z-index: 2;
+  transform-origin: center bottom;
+}
+
+.swipe-card-back {
+  position: absolute;
+  inset: 10px 10px auto 10px;
+  z-index: 1;
+  transform: scale(0.96) translateY(8px);
+  box-shadow: 0 12px 24px rgba(31, 26, 22, 0.18);
+  cursor: default;
+  opacity: 0.9;
+}
+
+.swipe-card-back-2 {
+  inset: 20px 20px auto 20px;
+  transform: scale(0.92) translateY(16px);
+  opacity: 0.75;
 }
 
 .swipe-card:active {
@@ -209,12 +285,18 @@
     flex-direction: column;
   }
 
+  .discover-stats {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
   .swipe-stage {
     min-height: 460px;
   }
 
-  .swipe-card {
+  .swipe-stack {
     width: min(520px, 92vw);
+    min-height: 460px;
   }
 
   .swipe-poster img,

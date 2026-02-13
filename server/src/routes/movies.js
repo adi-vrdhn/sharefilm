@@ -11,6 +11,49 @@ const {
 
 const router = express.Router();
 
+const getPersonalizedDefaults = async (userId) => {
+  const events = await SwipeEvent.findAll({
+    where: { userId, action: "want" },
+    order: [["createdAt", "DESC"]],
+    limit: 200
+  });
+
+  const genreCounts = {};
+  const providerCounts = {};
+  const languageCounts = {};
+
+  events.forEach((event) => {
+    (event.genreIds || []).forEach((id) => {
+      genreCounts[id] = (genreCounts[id] || 0) + 1;
+    });
+
+    if (event.providerId) {
+      providerCounts[event.providerId] = (providerCounts[event.providerId] || 0) + 1;
+    }
+
+    if (event.language) {
+      languageCounts[event.language] = (languageCounts[event.language] || 0) + 1;
+    }
+  });
+
+  const topGenres = Object.entries(genreCounts)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([id]) => id);
+
+  const topProvider = Object.entries(providerCounts)
+    .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+  const topLanguage = Object.entries(languageCounts)
+    .sort((a, b) => b[1] - a[1])[0]?.[0];
+
+  return {
+    topGenres,
+    topProvider,
+    topLanguage
+  };
+};
+
 router.get("/searchMovie", async (req, res) => {
   try {
     const query = req.query.q;
@@ -70,10 +113,23 @@ router.get("/watchProviders", async (req, res) => {
 
 router.get("/discoverMovies", async (req, res) => {
   try {
+    const genreQuery = req.query.genre;
+    const providerQuery = req.query.provider;
+    const languageQuery = req.query.language;
+
+    let fallback = {};
+    if (!genreQuery || !providerQuery || !languageQuery) {
+      fallback = await getPersonalizedDefaults(req.user.id);
+    }
+
+    const genreValue = genreQuery
+      ? genreQuery.split(",").filter(Boolean)
+      : fallback.topGenres;
+
     const results = await discoverMovies({
-      genre: req.query.genre,
-      provider: req.query.provider,
-      language: req.query.language,
+      genre: genreValue,
+      provider: providerQuery || fallback.topProvider,
+      language: languageQuery || fallback.topLanguage,
       page: Number(req.query.page || 1),
       region: req.query.region || "IN"
     });

@@ -115,10 +115,12 @@ const discoverMovies = async ({
     throw new Error("TMDB_API_KEY is required");
   }
 
+  const genreValue = Array.isArray(genre) ? genre.filter(Boolean).join(",") : genre;
+
   const response = await axios.get(`${TMDB_BASE}/discover/movie`, {
     params: {
       api_key: apiKey,
-      with_genres: genre || undefined,
+      with_genres: genreValue || undefined,
       with_watch_providers: provider || undefined,
       watch_region: provider ? region : undefined,
       with_original_language: language || undefined,
