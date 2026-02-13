@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/axios";
+import ImageEditor from "../components/ImageEditor";
 import "../styles/profile.css";
 
 const Profile = () => {
@@ -44,20 +45,13 @@ const Profile = () => {
     }
   };
 
-  const handlePictureUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
+  const handlePictureSave = async (base64Image) => {
     try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64 = e.target.result;
-        const response = await api.put("/profile/me", { profilePicture: base64 });
-        setProfile((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
-        setStatus("Picture updated!");
-        setTimeout(() => setStatus(""), 3000);
-      };
-      reader.readAsDataURL(file);
+      const response = await api.put("/profile/me", { profilePicture: base64Image });
+      setProfile((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
+      setIsEditingPicture(false);
+      setStatus("Picture updated!");
+      setTimeout(() => setStatus(""), 3000);
     } catch (error) {
       setStatus("Failed to update picture");
     }
@@ -85,15 +79,13 @@ const Profile = () => {
               )}
             </div>
             {isOwnProfile && (
-              <label className="picture-upload-label">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handlePictureUpload}
-                  className="picture-upload-input"
-                />
-                <span className="upload-button">Change Picture</span>
-              </label>
+              <button
+                className="secondary"
+                onClick={() => setIsEditingPicture(true)}
+                style={{ marginTop: "8px" }}
+              >
+                📸 Change Picture
+              </button>
             )}
           </div>
 
@@ -167,6 +159,15 @@ const Profile = () => {
           </div>
         )}
       </div>
+
+      {/* Image Editor Modal */}
+      {isEditingPicture && (
+        <ImageEditor
+          currentImage={profile?.profilePicture}
+          onSave={handlePictureSave}
+          onCancel={() => setIsEditingPicture(false)}
+        />
+      )}
     </div>
   );
 };
