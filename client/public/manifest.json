@@ -1,6 +1,6 @@
 {
-  "name": "ShareFilm - Movie Discovery & Social",
-  "short_name": "ShareFilm",
+  "name": "FilmShare - Movie Discovery & Social",
+  "short_name": "FilmShare",
   "description": "Discover movies, share watchlists, and connect with friends",
   "start_url": "/",
   "scope": "/",

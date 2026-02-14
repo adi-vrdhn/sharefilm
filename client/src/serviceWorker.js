@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sharefilm-v1';
+const CACHE_NAME = 'filmshare-v1';
 const urlsToCache = [
   '/',
   '/index.html',

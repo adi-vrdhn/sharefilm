@@ -29,7 +29,7 @@ const Signup = () => {
       <div className="auth-wrapper">
         <div className="auth-brand">
           <Logo size="40" />
-          <span>ShareFilm</span>
+          <span>FilmShare</span>
         </div>
         <h1 className="auth-title">Create account</h1>
         <p className="helper-text">Your username is how friends find you.</p>

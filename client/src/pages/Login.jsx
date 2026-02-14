@@ -29,7 +29,7 @@ const Login = () => {
       <div className="auth-wrapper">
         <div className="auth-brand">
           <Logo size="40" />
-          <span>ShareFilm</span>
+          <span>FilmShare</span>
         </div>
         <h1 className="auth-title">Welcome back</h1>
         <p className="helper-text">Log in to gift movies to friends.</p>
