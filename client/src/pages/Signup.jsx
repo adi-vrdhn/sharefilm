@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Logo from "../components/Logo";
 
 const Signup = () => {
   const { signup } = useAuth();
@@ -26,7 +27,10 @@ const Signup = () => {
   return (
     <div className="container">
       <div className="auth-wrapper">
-        <div className="auth-brand">Film Share</div>
+        <div className="auth-brand">
+          <Logo size="40" />
+          <span>ShareFilm</span>
+        </div>
         <h1 className="auth-title">Create account</h1>
         <p className="helper-text">Your username is how friends find you.</p>
         <form onSubmit={handleSubmit}>

@@ -629,12 +629,24 @@ button.secondary {
 }
 
 .auth-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.auth-brand span {
   font-family: "Unbounded", sans-serif;
   text-transform: uppercase;
   letter-spacing: 2px;
-  font-size: 14px;
-  color: var(--accent-2);
-  margin-bottom: 10px;
+  font-size: 18px;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.auth-brand svg {
+  display: inline-block;
 }
 
 .auth-title {

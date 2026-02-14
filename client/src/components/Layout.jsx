@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import Logo from "./Logo";
 import "../styles/layout.css";
 
 const Layout = ({ children }) => {
@@ -31,6 +32,10 @@ const Layout = ({ children }) => {
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
+          <div className="sidebar-logo">
+            <Logo size="32" />
+            <span>ShareFilm</span>
+          </div>
           <Link to="/profile" className="user-profile-link" onClick={() => setSidebarOpen(false)}>
             <div className="user-avatar">
               {user?.profilePicture ? (

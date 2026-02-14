@@ -582,6 +582,24 @@ body.swiping {
   color: var(--ink);
 }
 
+.action-btn.secondary {
+  background: rgba(200, 160, 72, 0.15);
+  border: 1px solid rgba(200, 160, 72, 0.3);
+  color: var(--ink);
+  transition: all 0.2s ease;
+}
+
+.action-btn.secondary:hover:not(:disabled) {
+  background: rgba(200, 160, 72, 0.25);
+  border-color: rgba(200, 160, 72, 0.5);
+  transform: translateY(-2px);
+}
+
+.action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 .empty-card {
   text-align: center;
   padding: 40px 20px;

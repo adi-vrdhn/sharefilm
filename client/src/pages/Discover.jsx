@@ -45,6 +45,7 @@ const Discover = () => {
     provider: "",
     language: ""
   });
+  const [cardHistory, setCardHistory] = useState([]); // Track viewed cards for back button
 
   const pointerStart = useRef(null);
   const swipeCardRef = useRef(null);
@@ -190,6 +191,7 @@ const Discover = () => {
     setSelectedSearchMovie(null);
     setSearchSuggestions([]);
     setIndex(0);
+    setCardHistory([]); // Clear history when exiting similar mode
   };
 
   const toggleGenre = (genreId) => {
@@ -218,7 +220,22 @@ const Discover = () => {
         fetchMovies({ reset: false, nextPage: page + 1 });
       }
     }
+    // Add current index to history before moving to next
+    setCardHistory((prev) => [...prev, index]);
     setIndex(nextIndex);
+  };
+
+  const movePrev = () => {
+    if (cardHistory.length === 0) {
+      setStatus("No previous cards");
+      return;
+    }
+    // Get the last viewed card from history
+    const previousIndex = cardHistory[cardHistory.length - 1];
+    // Remove it from history
+    setCardHistory((prev) => prev.slice(0, -1));
+    // Go back to that card
+    setIndex(previousIndex);
   };
 
   const handleAction = async (action, movie = currentMovie) => {
@@ -645,6 +662,9 @@ const Discover = () => {
       </div>
 
       <div className="swipe-actions">
+        <button className="action-btn secondary" onClick={movePrev} disabled={cardHistory.length === 0} title="Go back to previous card">
+          ← Back
+        </button>
         <button className="action-btn ghost" onClick={() => handleAction("watched")}>
           Watched
         </button>
