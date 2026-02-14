@@ -253,48 +253,59 @@ const Discover = () => {
 
   const applyTransform = (delta) => {
     if (!swipeCardRef.current) return;
-    swipeCardRef.current.style.transform = `translateX(${delta}px) rotate(${delta / 18}deg)`;
+    // Use a cubic easing for smoother feel
+    const rotation = (delta / 20) * Math.sign(delta) * Math.min(Math.abs(delta) / 150, 1);
+    swipeCardRef.current.style.transform = `translateX(${delta}px) rotate(${rotation}deg)`;
   };
 
   const resetTransform = () => {
     if (!swipeCardRef.current) return;
-    swipeCardRef.current.style.transition = "transform 0.2s ease";
+    swipeCardRef.current.style.transition = "transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)";
     swipeCardRef.current.style.transform = "translateX(0) rotate(0deg)";
     window.setTimeout(() => {
       if (swipeCardRef.current) {
         swipeCardRef.current.style.transition = "";
       }
-    }, 220);
+    }, 300);
   };
 
   const animateSwipe = (direction) => {
     if (!swipeCardRef.current || swipeInProgressRef.current) return;
     swipeInProgressRef.current = true;
     const width = window.innerWidth || 600;
-    const target = direction === "right" ? width : -width;
-    swipeCardRef.current.style.transition = "transform 0.25s ease";
-    swipeCardRef.current.style.transform = `translateX(${target}px) rotate(${target / 18}deg)`;
+    const target = direction === "right" ? width * 1.2 : -width * 1.2;
+    const rotation = direction === "right" ? 25 : -25;
+    swipeCardRef.current.style.transition = "transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)";
+    swipeCardRef.current.style.transform = `translateX(${target}px) rotate(${rotation}deg)`;
     window.setTimeout(async () => {
       await handleAction(direction === "right" ? "nah" : "watched");
       swipeInProgressRef.current = false;
+      document.body.classList.remove('swiping');
       if (swipeCardRef.current) {
         swipeCardRef.current.style.transition = "";
         swipeCardRef.current.style.transform = "translateX(0) rotate(0deg)";
       }
-    }, 230);
+    }, 400);
   };
 
   const onPointerDown = (event) => {
     if (swipeInProgressRef.current) return;
+    event.preventDefault();
+    document.body.classList.add('swiping');
     pointerStart.current = event.clientX;
     cardOffsetRef.current = 0;
     isDraggingRef.current = false;
     setIsDragging(false);
-    event.currentTarget.setPointerCapture(event.pointerId);
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch (e) {
+      // Fallback if setPointerCapture is not available
+    }
   };
 
   const onPointerMove = (event) => {
     if (pointerStart.current === null) return;
+    event.preventDefault();
     const delta = event.clientX - pointerStart.current;
     cardOffsetRef.current = delta;
     if (!rafRef.current) {
@@ -303,14 +314,16 @@ const Discover = () => {
         applyTransform(cardOffsetRef.current);
       });
     }
-    if (Math.abs(delta) > 6 && !isDraggingRef.current) {
+    if (Math.abs(delta) > 8 && !isDraggingRef.current) {
       isDraggingRef.current = true;
       setIsDragging(true);
     }
   };
 
-  const onPointerUp = () => {
+  const onPointerUp = (event) => {
     if (pointerStart.current === null) return;
+    event.preventDefault();
+    document.body.classList.remove('swiping');
     const threshold = 120;
     const delta = cardOffsetRef.current;
     if (delta > threshold) {
@@ -323,6 +336,11 @@ const Discover = () => {
     pointerStart.current = null;
     isDraggingRef.current = false;
     setIsDragging(false);
+    try {
+      event.currentTarget.releasePointerCapture?.(event.pointerId);
+    } catch (e) {
+      // Fallback if releasePointerCapture is not available
+    }
   };
 
   const handleCardClick = () => {

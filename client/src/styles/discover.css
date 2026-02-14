@@ -1,3 +1,9 @@
+/* Prevent scrolling while swiping */
+body.swiping {
+  overflow: hidden;
+  touch-action: none;
+}
+
 .discover-page {
   display: flex;
   flex-direction: column;
@@ -432,12 +438,18 @@
   justify-content: center;
   align-items: center;
   min-height: 520px;
+  overflow: hidden;
+  touch-action: none;
 }
 
 .swipe-stack {
   position: relative;
   width: min(520px, 94vw);
   min-height: 520px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .swipe-card {
@@ -448,13 +460,17 @@
   border: 1px solid rgba(200, 160, 72, 0.25);
   box-shadow: 0 20px 50px rgba(31, 26, 22, 0.2);
   cursor: grab;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, opacity 0.3s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
 }
 
 .swipe-card-front {
   position: relative;
   z-index: 2;
   transform-origin: center bottom;
+  will-change: transform;
 }
 
 .swipe-card-back {
@@ -473,8 +489,10 @@
   opacity: 0.75;
 }
 
-.swipe-card:active {
+.swipe-card:active,
+.swipe-card.dragging {
   cursor: grabbing;
+  transition: none;
 }
 
 .swipe-poster img {
@@ -607,12 +625,14 @@
   }
 
   .swipe-stage {
-    min-height: 400px;
+    min-height: 380px;
+    overflow: hidden;
   }
 
   .swipe-stack {
     width: min(480px, 90vw);
-    min-height: 400px;
+    min-height: 380px;
+    touch-action: none;
   }
 
   .swipe-poster img,
@@ -697,17 +717,19 @@
   }
 
   .swipe-stage {
-    min-height: 350px;
+    min-height: 320px;
+    overflow: hidden;
   }
 
   .swipe-stack {
     width: min(350px, 85vw);
-    min-height: 350px;
+    min-height: 320px;
+    touch-action: none;
   }
 
   .swipe-poster img,
   .poster-fallback {
-    height: 200px;
+    height: 180px;
   }
 
   .swipe-card h3,
