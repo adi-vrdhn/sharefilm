@@ -30,22 +30,6 @@
   gap: 12px;
 }
 
-.sidebar-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 8px;
-}
-
-.sidebar-logo span {
-  font-family: "Unbounded", sans-serif;
-  font-size: 14px;
-  font-weight: 700;
-  color: var(--ink);
-  letter-spacing: 0.5px;
-}
-
 .user-profile {
   display: flex;
   gap: 12px;

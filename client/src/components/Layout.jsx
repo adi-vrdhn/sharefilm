@@ -32,10 +32,7 @@ const Layout = ({ children }) => {
       {/* Sidebar */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
-          <div className="sidebar-logo">
-            <Logo size="32" />
-            <span>FilmShare</span>
-          </div>
+
           <Link to="/profile" className="user-profile-link" onClick={() => setSidebarOpen(false)}>
             <div className="user-avatar">
               {user?.profilePicture ? (

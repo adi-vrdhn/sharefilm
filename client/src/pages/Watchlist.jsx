@@ -28,6 +28,12 @@ const Watchlist = () => {
   });
   const [status, setStatus] = useState("");
 
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
+
   const genreMap = useMemo(() => {
     const map = {};
     genres.forEach((genre) => {
@@ -57,6 +63,33 @@ const Watchlist = () => {
     localStorage.setItem("wantList", JSON.stringify(watchlist));
   }, [watchlist]);
 
+  // Debounced search effect
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setShowDropdown(false);
+      return;
+    }
+
+    setIsSearching(true);
+    const searchTimer = setTimeout(async () => {
+      try {
+        const response = await api.get("/searchMovie", {
+          params: { q: searchQuery }
+        });
+        setSearchResults(response.data || []);
+        setShowDropdown(true);
+      } catch (error) {
+        console.error("Search error:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(searchTimer);
+  }, [searchQuery]);
+
   const toggleGenre = (genreId) => {
     setFilters((prev) => {
       const exists = prev.genre.includes(genreId);
@@ -71,6 +104,44 @@ const Watchlist = () => {
 
   const handleRemove = (tmdbId) => {
     setWatchlist((prev) => prev.filter((movie) => movie.tmdb_id !== tmdbId));
+  };
+
+  const handleAddFromSearch = async (movie) => {
+    // Check if already in watchlist
+    if (watchlist.some((m) => m.tmdb_id === movie.tmdb_id)) {
+      setStatus("Already in watchlist!");
+      setTimeout(() => setStatus(""), 3000);
+      return;
+    }
+
+    try {
+      // Fetch full details of the movie from the API
+      const response = await api.get(`/getMovieDetails/${movie.tmdb_id}`);
+      const movieData = response.data;
+
+      // Add to watchlist with all details
+      const newMovie = {
+        tmdb_id: movieData.tmdb_id || movie.tmdb_id,
+        title: movieData.title || movie.title,
+        poster: movieData.poster || movie.poster,
+        year: movieData.year || movie.year,
+        rating: movieData.rating || 0,
+        overview: movieData.overview || "",
+        genre_ids: movieData.genre_ids || [],
+        provider_id: movieData.provider_id || null,
+        language: movieData.language || ""
+      };
+
+      setWatchlist((prev) => [...prev, newMovie]);
+      setSearchQuery("");
+      setShowDropdown(false);
+      setStatus("Added to watchlist!");
+      setTimeout(() => setStatus(""), 3000);
+    } catch (error) {
+      console.error("Error adding movie:", error);
+      setStatus("Error adding movie");
+      setTimeout(() => setStatus(""), 3000);
+    }
   };
 
   const filteredList = watchlist.filter((movie) => {
@@ -100,6 +171,38 @@ const Watchlist = () => {
           <p className="helper-text">Your saved picks from Discover.</p>
         </div>
         <div className="watchlist-count">{watchlist.length} saved</div>
+      </div>
+
+      {/* Search and Add Movie Section */}
+      <div className="search-add-movie">
+        <div className="search-container">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search & add movies from TMDB..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => searchResults.length > 0 && setShowDropdown(true)}
+          />
+          {isSearching && <span className="search-spinner">⏳</span>}
+          {showDropdown && searchResults.length > 0 && (
+            <div className="search-dropdown">
+              {searchResults.map((movie) => (
+                <button
+                  key={movie.tmdb_id}
+                  className="search-result-item"
+                  onClick={() => handleAddFromSearch(movie)}
+                >
+                  <img src={movie.poster} alt={movie.title} className="result-poster" />
+                  <div className="result-info">
+                    <div className="result-title">{movie.title}</div>
+                    <div className="result-year">{movie.year}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="watchlist-filters">

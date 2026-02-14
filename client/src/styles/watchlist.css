@@ -224,3 +224,140 @@
     line-height: 1.4;
   }
 }
+/* Search and Add Movie Section */
+.search-add-movie {
+  background: var(--card);
+  border: 1px solid rgba(200, 160, 72, 0.2);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: 0 16px 30px var(--shadow);
+}
+
+.search-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(200, 160, 72, 0.08);
+  border: 1px solid rgba(200, 160, 72, 0.3);
+  border-radius: 12px;
+  color: var(--ink);
+  font-family: "Space Grotesk", sans-serif;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  outline: none;
+}
+
+.search-input:focus {
+  background: rgba(200, 160, 72, 0.12);
+  border-color: var(--ink);
+  box-shadow: 0 0 0 3px rgba(214, 181, 111, 0.1);
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+.search-spinner {
+  position: absolute;
+  right: 16px;
+  font-size: 16px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 8px;
+  background: var(--card);
+  border: 1px solid rgba(200, 160, 72, 0.3);
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 100;
+}
+
+.search-result-item {
+  width: 100%;
+  padding: 12px 16px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(200, 160, 72, 0.1);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  transition: background 0.2s ease;
+}
+
+.search-result-item:last-child {
+  border-bottom: none;
+}
+
+.search-result-item:hover {
+  background: rgba(200, 160, 72, 0.08);
+}
+
+.result-poster {
+  width: 40px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  flex: 1;
+}
+
+.result-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.3;
+}
+
+.result-year {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .search-add-movie {
+    padding: 16px;
+  }
+
+  .search-dropdown {
+    max-height: 300px;
+  }
+
+  .result-poster {
+    width: 35px;
+    height: 50px;
+  }
+
+  .result-title {
+    font-size: 13px;
+  }
+}

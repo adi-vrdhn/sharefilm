@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import Logo from "../components/Logo";
-
 const Signup = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
@@ -28,7 +26,6 @@ const Signup = () => {
     <div className="container">
       <div className="auth-wrapper">
         <div className="auth-brand">
-          <Logo size="40" />
           <span>FilmShare</span>
         </div>
         <h1 className="auth-title">Create account</h1>

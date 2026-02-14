@@ -629,10 +629,6 @@ button.secondary {
 }
 
 .auth-brand {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
   margin-bottom: 24px;
 }
 
@@ -643,10 +639,6 @@ button.secondary {
   font-size: 18px;
   color: var(--ink);
   font-weight: 700;
-}
-
-.auth-brand svg {
-  display: inline-block;
 }
 
 .auth-title {
