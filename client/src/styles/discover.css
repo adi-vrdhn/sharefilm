@@ -573,37 +573,184 @@
   box-shadow: 0 16px 30px var(--shadow);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
   .discover-header {
     flex-direction: column;
   }
 
   .discover-stats {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .discover-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .discover-stats {
     width: 100%;
     flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .stat-card {
+    flex: 1;
+    min-width: calc(50% - 6px);
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .stat-value {
+    font-size: 18px;
   }
 
   .swipe-stage {
-    min-height: 460px;
+    min-height: 400px;
   }
 
   .swipe-stack {
-    width: min(520px, 92vw);
-    min-height: 460px;
+    width: min(480px, 90vw);
+    min-height: 400px;
   }
 
   .swipe-poster img,
   .poster-fallback {
-    height: 260px;
+    height: 240px;
   }
 
   .swipe-actions {
     flex-direction: column;
     align-items: center;
+    gap: 10px;
   }
 
   .action-btn {
     width: 100%;
-    max-width: 320px;
+    max-width: 280px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+
+  .filter-group label {
+    font-size: 12px;
+  }
+
+  .genre-dropdown-trigger {
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+
+  .filter-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .filter-panel {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .similar-search-row {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .similar-search-input {
+    width: 100%;
+    font-size: 16px;
+    min-width: unset;
+  }
+
+  .discover-page {
+    gap: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .discover-header {
+    gap: 12px;
+  }
+
+  .discover-stats {
+    gap: 8px;
+  }
+
+  .stat-card {
+    min-width: calc(50% - 4px);
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .stat-label {
+    font-size: 10px;
+  }
+
+  .stat-value {
+    font-size: 16px;
+  }
+
+  .stat-link {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .swipe-stage {
+    min-height: 350px;
+  }
+
+  .swipe-stack {
+    width: min(350px, 85vw);
+    min-height: 350px;
+  }
+
+  .swipe-poster img,
+  .poster-fallback {
+    height: 200px;
+  }
+
+  .swipe-card h3,
+  .swipe-card p {
+    font-size: 12px;
+  }
+
+  .action-btn {
+    max-width: 100%;
+    padding: 10px 12px;
+    font-size: 12px;
+  }
+
+  .genre-grid {
+    max-height: 120px;
+  }
+
+  .view-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  .filter-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .filter-panel {
+    padding: 12px;
+    border-radius: 12px;
+  }
+
+  .similar-search-row {
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+  }
+
+  .similar-search-input {
+    padding: 12px 12px;
+  }
+
+  .discover-page {
+    gap: 12px;
   }
 }

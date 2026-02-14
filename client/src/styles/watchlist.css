@@ -102,11 +102,125 @@
 }
 
 @media (max-width: 768px) {
+  .watchlist-page {
+    gap: 16px;
+  }
+
   .watchlist-header {
     flex-direction: column;
+    gap: 12px;
+  }
+
+  .watchlist-count {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .watchlist-filters {
+    padding: 14px;
+    gap: 12px;
+    border-radius: 14px;
+  }
+
+  .watchlist-filters .filter-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .watchlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+  }
+
+  .watchlist-card {
+    border-radius: 16px;
   }
 
   .watchlist-poster img {
     height: 260px;
+  }
+
+  .watchlist-body {
+    padding: 14px;
+    gap: 8px;
+  }
+
+  .watchlist-title h3 {
+    font-size: 16px;
+  }
+
+  .watchlist-meta {
+    font-size: 12px;
+  }
+
+  .watchlist-overview {
+    font-size: 13px;
+  }
+}
+
+@media (max-width: 480px) {
+  .watchlist-page {
+    gap: 12px;
+  }
+
+  .watchlist-header {
+    gap: 10px;
+  }
+
+  .watchlist-count {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .watchlist-filters {
+    padding: 12px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+
+  .watchlist-filters .filter-row {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .watchlist-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 10px;
+  }
+
+  .watchlist-card {
+    border-radius: 12px;
+  }
+
+  .watchlist-poster img {
+    height: 220px;
+  }
+
+  .watchlist-body {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .watchlist-title {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .watchlist-title h3 {
+    font-size: 14px;
+  }
+
+  .watchlist-meta {
+    font-size: 11px;
+    gap: 6px;
+  }
+
+  .watchlist-meta span {
+    padding: 3px 8px;
+  }
+
+  .watchlist-overview {
+    font-size: 12px;
+    line-height: 1.4;
   }
 }

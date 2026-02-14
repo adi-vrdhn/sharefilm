@@ -391,13 +391,45 @@ button.secondary {
 }
 
 @media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+
   .container {
     width: min(1080px, 92vw);
     padding: 16px 0 32px;
   }
 
   .navbar {
-    padding: 16px 20px;
+    padding: 14px 18px;
+    gap: 12px;
+  }
+
+  .logo {
+    font-size: 18px;
+  }
+
+  .nav-links {
+    gap: 10px;
+    font-size: 13px;
+  }
+
+  .nav-button {
+    padding: 8px 14px;
+    font-size: 13px;
+  }
+
+  h1 {
+    font-size: 24px;
+    margin-bottom: 6px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  h3 {
+    font-size: 16px;
   }
 
   .section-card {
@@ -408,6 +440,7 @@ button.secondary {
   .card-grid,
   .hero {
     gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   }
 
   .movie-card img {
@@ -418,27 +451,170 @@ button.secondary {
     padding: 14px;
   }
 
+  .movie-card-body h3 {
+    font-size: 15px;
+  }
+
   .poster-preview {
     width: 140px;
     height: 210px;
   }
-}
 
-@media (max-width: 480px) {
-  .container {
-    width: 94vw;
+  button.primary,
+  button.secondary {
+    padding: 10px 14px;
+    font-size: 13px;
+    min-height: 44px;
   }
 
-  .logo {
-    font-size: 18px;
+  .nav-button {
+    min-height: 40px;
+  }
+
+  .input,
+  input,
+  textarea,
+  select {
+    padding: 11px 12px;
+    font-size: 16px;
+    border-radius: 10px;
+  }
+
+  .plus-button {
+    width: 56px;
+    height: 56px;
+    font-size: 28px;
+  }
+
+  .form-card {
+    padding: 20px;
+    border-radius: 16px;
   }
 
   .section-title {
     font-size: 16px;
   }
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 13px;
+  }
+
+  .container {
+    width: 94vw;
+    padding: 12px 0 24px;
+  }
+
+  .navbar {
+    padding: 12px 14px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .logo {
+    font-size: 16px;
+  }
+
+  .nav-links {
+    width: 100%;
+    gap: 8px;
+    font-size: 12px;
+    flex-wrap: wrap;
+  }
+
+  .nav-button {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+
+  h1 {
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  h3 {
+    font-size: 15px;
+  }
+
+  .section-card {
+    padding: 14px;
+    border-radius: 12px;
+  }
+
+  .card-grid,
+  .hero {
+    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .movie-card {
+    border-radius: 12px;
+  }
 
   .movie-card img {
-    height: 220px;
+    height: 200px;
+  }
+
+  .movie-card-body {
+    padding: 12px;
+    gap: 6px;
+  }
+
+  .movie-card-body h3 {
+    font-size: 13px;
+  }
+
+  .section-title {
+    font-size: 15px;
+    margin-bottom: 10px;
+  }
+
+  .poster-preview {
+    width: 120px;
+    height: 180px;
+  }
+
+  button.primary,
+  button.secondary {
+    padding: 10px 12px;
+    font-size: 12px;
+    min-height: 44px;
+    width: 100%;
+  }
+
+  .nav-button {
+    min-height: 40px;
+  }
+
+  .input,
+  input,
+  textarea,
+  select {
+    padding: 11px 12px;
+    font-size: 16px;
+    border-radius: 10px;
+    width: 100%;
+  }
+
+  .plus-button {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+    border-radius: 16px;
+  }
+
+  .form-card {
+    padding: 16px;
+    border-radius: 14px;
+  }
+
+  .form-row {
+    margin-bottom: 12px;
   }
 }
 

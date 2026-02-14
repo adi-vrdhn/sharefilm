@@ -184,22 +184,158 @@
   border-color: rgba(200, 160, 72, 0.4);
 }
 
-@media (max-width: 512px) {
-  .image-editor-modal {
+@media (max-width: 768px) {
+  .image-editor-overlay {
     padding: 20px;
+  }
+
+  .image-editor-modal {
+    max-width: 95vw;
+    padding: 20px;
+    gap: 16px;
+    border-radius: 16px;
+  }
+
+  .image-editor-modal h2 {
+    font-size: 20px;
+  }
+
+  .editor-content {
+    min-height: 250px;
     gap: 16px;
   }
 
+  .upload-area {
+    padding: 30px 16px;
+    gap: 12px;
+  }
+
+  .upload-area p {
+    font-size: 14px;
+  }
+
   .preview-canvas {
-    width: 250px;
-    height: 250px;
+    width: 280px;
+    height: 280px;
+  }
+
+  .controls-section {
+    gap: 12px;
+  }
+
+  .control-group {
+    gap: 6px;
+  }
+
+  .control-group label {
+    font-size: 12px;
+  }
+
+  .slider {
+    height: 5px;
+  }
+
+  .value-display {
+    font-size: 11px;
+  }
+
+  .editor-actions {
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .editor-actions button {
+    padding: 10px 16px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 512px) {
+  .image-editor-modal {
+    padding: 16px;
+    gap: 12px;
+    max-width: 90vw;
+  }
+
+  .image-editor-modal h2 {
+    font-size: 18px;
+  }
+
+  .editor-content {
+    min-height: 200px;
+    gap: 12px;
+  }
+
+  .upload-area {
+    padding: 24px 12px;
+    gap: 10px;
+    border-radius: 12px;
+  }
+
+  .upload-area p {
+    font-size: 13px;
+  }
+
+  .upload-area button {
+    padding: 10px 16px;
+    font-size: 12px;
+  }
+
+  .preview-section {
+    gap: 8px;
+  }
+
+  .preview-canvas {
+    width: 240px;
+    height: 240px;
+    border-radius: 50%;
+  }
+
+  .canvas-hint {
+    font-size: 11px;
+  }
+
+  .controls-section {
+    gap: 10px;
+  }
+
+  .control-group {
+    gap: 6px;
+  }
+
+  .control-group label {
+    font-size: 12px;
+  }
+
+  .slider {
+    height: 4px;
+  }
+
+  .slider::-webkit-slider-thumb {
+    width: 16px;
+    height: 16px;
+  }
+
+  .slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+  }
+
+  .value-display {
+    font-size: 11px;
   }
 
   .editor-actions {
     flex-direction: column;
+    gap: 8px;
   }
 
   .editor-actions button {
     width: 100%;
+    padding: 10px 12px;
+    font-size: 12px;
+    min-width: unset;
   }
 }

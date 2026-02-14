@@ -485,25 +485,69 @@
   cursor: not-allowed;
 }
 
+@media (max-width: 768px) {
+  .profile-card {
+    padding: 28px 20px;
+    max-width: 100%;
+  }
+
+  .profile-header {
+    gap: 20px;
+  }
+
+  .profile-picture-container {
+    width: 110px;
+    height: 110px;
+  }
+
+  .profile-name {
+    font-size: 24px;
+  }
+
+  .bio-section,
+  .buddies-section,
+  .account-settings-section {
+    padding: 16px;
+  }
+
+  .bio-section textarea {
+    font-size: 15px;
+  }
+
+  .settings-buttons {
+    flex-direction: column;
+  }
+
+  .settings-buttons button {
+    width: 100%;
+  }
+
+  .buddies-list {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  }
+}
+
 @media (max-width: 512px) {
   .profile-card {
-    padding: 24px 16px;
+    padding: 20px 14px;
+    border-radius: 16px;
   }
 
   .profile-header {
     flex-direction: column;
-    gap: 20px;
+    gap: 16px;
     align-items: center;
     text-align: center;
   }
 
   .profile-picture-container {
-    width: 100px;
-    height: 100px;
+    width: 90px;
+    height: 90px;
   }
 
   .profile-header-top {
     flex-direction: column;
+    width: 100%;
   }
 
   .buddy-count {
@@ -512,22 +556,127 @@
   }
 
   .profile-name {
-    font-size: 24px;
+    font-size: 22px;
+    margin: 0;
+  }
+
+  .profile-info {
+    width: 100%;
+    text-align: center;
+  }
+
+  .edit-button {
+    width: 100%;
+  }
+
+  .bio-section,
+  .buddies-section,
+  .account-settings-section {
+    padding: 14px 12px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+  }
+
+  .bio-heading,
+  .section-heading {
+    font-size: 16px;
+    margin-bottom: 12px;
+  }
+
+  .bio-content {
+    font-size: 13px;
+  }
+
+  .bio-section textarea {
+    font-size: 16px;
+    padding: 10px;
+    min-height: 80px;
+  }
+
+  .edit-save-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .edit-save-buttons button {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .buddies-header {
+    margin-bottom: 12px;
+  }
+
+  .add-buddy {
+    margin-bottom: 10px;
+  }
+
+  .add-buddy input {
+    font-size: 16px;
+    padding: 10px 12px;
+    width: 100%;
+  }
+
+  .add-buddy button {
+    width: 100%;
+    margin-top: 8px;
   }
 
   .buddies-list {
     grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+  }
+
+  .buddy-item {
+    padding: 10px;
+  }
+
+  .buddy-avatar {
+    width: 50px;
+    height: 50px;
+    font-size: 16px;
+  }
+
+  .buddy-name {
+    font-size: 12px;
+  }
+
+  .buddy-remove-btn {
+    padding: 4px;
+    font-size: 14px;
   }
 
   .settings-buttons {
     flex-direction: column;
+    gap: 10px;
   }
 
   .settings-buttons button {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 13px;
     min-width: unset;
   }
 
   .modal-content {
-    padding: 24px;
+    padding: 20px;
+    border-radius: 14px;
+    max-width: 90vw;
+    max-height: 85vh;
+  }
+
+  .modal-header {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .modal-buttons {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-buttons button {
+    width: 100%;
   }
 }
