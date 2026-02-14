@@ -1,0 +1,16 @@
+<svg width="192" height="192" viewBox="0 0 192 192" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background -->
+  <rect width="192" height="192" fill="#0b0d10" rx="45"/>
+  
+  <!-- Film reel circles -->
+  <circle cx="60" cy="60" r="35" fill="#d6b56f" opacity="0.9"/>
+  <circle cx="132" cy="60" r="35" fill="#d6b56f" opacity="0.7"/>
+  <circle cx="96" cy="132" r="35" fill="#d6b56f" opacity="0.8"/>
+  
+  <!-- Center accent -->
+  <circle cx="96" cy="96" r="25" fill="none" stroke="#0b0d10" stroke-width="3"/>
+  <circle cx="96" cy="96" r="12" fill="#0b0d10"/>
+  
+  <!-- Play button symbol -->
+  <polygon points="85,87 85,105 103,96" fill="#d6b56f" opacity="0.9"/>
+</svg>
