@@ -12,6 +12,8 @@ const Messages = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -126,7 +128,15 @@ const Messages = () => {
       hour12: true
     });
   };
-
+  // Filter conversations based on search
+  const filteredConversations = conversations.filter((conv) => {
+    if (!searchQuery.trim()) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      conv.friend.name.toLowerCase().includes(query) ||
+      conv.friend.username.toLowerCase().includes(query)
+    );
+  });
   if (loading) {
     return (
       <div className="messages-loading">
@@ -142,16 +152,46 @@ const Messages = () => {
       <div className={`conversations-panel ${selectedFriend ? "hidden-mobile" : ""}`}>
         <div className="conversations-header">
           <h2>{user?.username}</h2>
+          <button 
+            className="search-toggle-btn" 
+            onClick={() => setShowSearch(!showSearch)}
+            title="Search friends"
+          >
+            🔍
+          </button>
         </div>
         
+        {showSearch && (
+          <div className="search-bar">
+            <input
+              type="text"
+              className="friend-search-input"
+              placeholder="Search friends..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              autoFocus
+            />
+            {searchQuery && (
+              <button 
+                className="clear-search-btn"
+                onClick={() => setSearchQuery("")}
+              >
+                ×
+              </button>
+            )}
+          </div>
+        )}
+        
         <div className="conversations-list">
-          {conversations.length === 0 ? (
+          {filteredConversations.length === 0 ? (
             <div className="empty-conversations">
-              <p>No conversations yet</p>
-              <span className="helper-text">Add friends to start chatting</span>
+              <p>{searchQuery ? "No friends found" : "No conversations yet"}</p>
+              <span className="helper-text">
+                {searchQuery ? "Try a different search" : "Add friends to start chatting"}
+              </span>
             </div>
           ) : (
-            conversations.map((conv) => (
+            filteredConversations.map((conv) => (
               <button
                 key={conv.friend.id}
                 className={`conversation-item ${
@@ -320,9 +360,17 @@ const Messages = () => {
             <h3>{selectedFriend.name}</h3>
             <p className="profile-username">@{selectedFriend.username}</p>
             
-            <div className="profile-actions">
-              <button className="profile-action-btn">View Profile</button>
-              <button className="profile-action-btn">Shared Movies</button>
+            <div className="profile-features">
+              <div className="feature-item">
+                <span className="feature-icon">👤</span>
+                <span className="feature-label">View Profile</span>
+                <span className="feature-status">Yet to come</span>
+              </div>
+              <div className="feature-item">
+                <span className="feature-icon">🎬</span>
+                <span className="feature-label">Shared Movies</span>
+                <span className="feature-status">Yet to come</span>
+              </div>
             </div>
           </div>
         </div>
