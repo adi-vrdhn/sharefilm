@@ -14,6 +14,7 @@ import MovieParty from "./pages/MovieParty";
 import Discover from "./pages/Discover";
 import Watchlist from "./pages/Watchlist";
 import Profile from "./pages/Profile";
+import Analytics from "./pages/Analytics";
 
 const LoadingScreen = () => (
   <div style={{
@@ -141,6 +142,16 @@ const App = () => {
           <ProtectedRoute>
             <Layout>
               <Profile />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/analytics"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <Analytics />
             </Layout>
           </ProtectedRoute>
         }

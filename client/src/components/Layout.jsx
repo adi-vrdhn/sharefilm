@@ -10,6 +10,10 @@ const Layout = ({ children }) => {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Admin emails - only these users can see Analytics
+  const ADMIN_EMAILS = ["avrdhn28@gmail.com"];
+  const isAdmin = user?.email && ADMIN_EMAILS.includes(user.email);
+
   const handleLogout = async () => {
     await logout();
     navigate("/login");
@@ -23,7 +27,8 @@ const Layout = ({ children }) => {
     { path: "/discover", label: "Discover", icon: "✨" },
     { path: "/party", label: "Movie Party", icon: "🎬" },
     { path: "/friends", label: "Friends", icon: "👥" },
-    { path: "/notifications", label: "Notifications", icon: "🔔" }
+    { path: "/notifications", label: "Notifications", icon: "🔔" },
+    { path: "/analytics", label: "Analytics", icon: "📊" }
   ];
 
   return (
@@ -48,17 +53,24 @@ const Layout = ({ children }) => {
         </div>
 
         <nav className="sidebar-nav">
-          {menuItems.map((item) => (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`nav-item ${isActive(item.path) ? "active" : ""}`}
-              onClick={() => setSidebarOpen(false)}
-            >
-              <span className="nav-icon">{item.icon}</span>
-              <span className="nav-label">{item.label}</span>
-            </Link>
-          ))}
+          {menuItems.map((item) => {
+            // Hide Analytics from non-admin users
+            if (item.path === "/analytics" && !isAdmin) {
+              return null;
+            }
+            
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`nav-item ${isActive(item.path) ? "active" : ""}`}
+                onClick={() => setSidebarOpen(false)}
+              >
+                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-label">{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="sidebar-footer">
