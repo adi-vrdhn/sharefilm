@@ -10,7 +10,7 @@ import AddMovie from "./pages/AddMovie";
 import MovieList from "./pages/MovieList";
 import Notifications from "./pages/Notifications";
 import Friends from "./pages/Friends";
-import Chat from "./pages/Chat";
+import Messages from "./pages/Messages";
 import MovieParty from "./pages/MovieParty";
 import Discover from "./pages/Discover";
 import Watchlist from "./pages/Watchlist";
@@ -107,11 +107,11 @@ const App = () => {
         }
       />
       <Route
-        path="/chat"
+        path="/messages"
         element={
           <ProtectedRoute>
             <Layout>
-              <Chat />
+              <Messages />
             </Layout>
           </ProtectedRoute>
         }

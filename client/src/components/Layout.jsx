@@ -23,7 +23,7 @@ const Layout = ({ children }) => {
     { path: "/discover", label: "Discover", icon: "✨" },
     { path: "/party", label: "Movie Party", icon: "🎬" },
     { path: "/friends", label: "Friends", icon: "👥" },
-    { path: "/chat", label: "Messages", icon: "💬" },
+    { path: "/messages", label: "Messages", icon: "💬" },
     { path: "/notifications", label: "Notifications", icon: "🔔" }
   ];
 

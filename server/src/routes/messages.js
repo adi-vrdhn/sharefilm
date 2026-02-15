@@ -1,6 +1,78 @@
 const express = require("express");
 const { User, Message, Friendship } = require("../models");
+const { Op } = require("sequelize");
+const sequelize = require("../config/db");
 const router = express.Router();
+
+// Get all conversations (list of friends with last message)
+router.get("/getConversations", async (req, res) => {
+  try {
+    // Get all friends
+    const friendships = await Friendship.findAll({
+      where: { user_id: req.user.id },
+      include: [
+        {
+          model: User,
+          as: "friend",
+          attributes: ["id", "name", "username", "profilePicture"]
+        }
+      ]
+    });
+
+    const conversations = await Promise.all(
+      friendships.map(async (friendship) => {
+        const friend = friendship.friend;
+        
+        // Get last message with this friend
+        const lastMessage = await Message.findOne({
+          where: {
+            [Op.or]: [
+              { sender_id: req.user.id, receiver_id: friend.id },
+              { sender_id: friend.id, receiver_id: req.user.id }
+            ]
+          },
+          order: [["created_at", "DESC"]]
+        });
+
+        // Count unread messages from this friend
+        const unreadCount = await Message.count({
+          where: {
+            sender_id: friend.id,
+            receiver_id: req.user.id,
+            read: false
+          }
+        });
+
+        return {
+          friend: {
+            id: friend.id,
+            name: friend.name,
+            username: friend.username,
+            profilePicture: friend.profilePicture
+          },
+          lastMessage: lastMessage ? {
+            content: lastMessage.content,
+            createdAt: lastMessage.created_at,
+            senderId: lastMessage.sender_id
+          } : null,
+          unreadCount
+        };
+      })
+    );
+
+    // Sort by last message time
+    conversations.sort((a, b) => {
+      if (!a.lastMessage) return 1;
+      if (!b.lastMessage) return -1;
+      return new Date(b.lastMessage.createdAt) - new Date(a.lastMessage.createdAt);
+    });
+
+    return res.json(conversations);
+  } catch (error) {
+    console.error("Get conversations error:", error.message);
+    return res.status(500).json({ message: error.message });
+  }
+});
 
 // Get messages with a specific friend
 router.get("/getMessages", async (req, res) => {
