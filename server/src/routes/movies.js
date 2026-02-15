@@ -55,6 +55,16 @@ const getPersonalizedDefaults = async (userId) => {
   };
 };
 
+const getWatchedMoviesForRecommendations = async (userId) => {
+  const watchedEvents = await SwipeEvent.findAll({
+    where: { userId, action: "watched" },
+    order: [["createdAt", "DESC"]],
+    limit: 10 // Get last 10 watched movies
+  });
+
+  return watchedEvents.map(event => event.tmdbId);
+};
+
 router.get("/searchMovie", async (req, res) => {
   try {
     const query = req.query.q;
@@ -117,6 +127,7 @@ router.get("/discoverMovies", async (req, res) => {
     const genreQuery = req.query.genre;
     const providerQuery = req.query.provider;
     const languageQuery = req.query.language;
+    const page = Number(req.query.page || 1);
 
     let fallback = {};
     if (!genreQuery || !providerQuery || !languageQuery) {
@@ -127,13 +138,48 @@ router.get("/discoverMovies", async (req, res) => {
       ? genreQuery.split(",").filter(Boolean)
       : fallback.topGenres;
 
+    // Get standard discover results
     const results = await discoverMovies({
       genre: genreValue,
       provider: providerQuery || fallback.topProvider,
       language: languageQuery || fallback.topLanguage,
-      page: Number(req.query.page || 1),
+      page: page,
       region: req.query.region || "IN"
     });
+
+    // On first page, enhance with recommendations based on watched movies
+    if (page === 1) {
+      const watchedMovieIds = await getWatchedMoviesForRecommendations(req.user.id);
+      
+      if (watchedMovieIds.length > 0) {
+        // Get similar movies to the most recently watched ones
+        const similarMoviesPromises = watchedMovieIds.slice(0, 3).map(movieId => 
+          getSimilarMovies(movieId).catch(() => [])
+        );
+        
+        const similarMoviesArrays = await Promise.all(similarMoviesPromises);
+        const allSimilarMovies = similarMoviesArrays.flat();
+        
+        // Remove duplicates and movies already in results
+        const existingIds = new Set(results.map(m => m.tmdb_id));
+        const uniqueSimilar = allSimilarMovies.filter(m => !existingIds.has(m.tmdb_id));
+        
+        // Mix similar movies into results (30% similar, 70% discover)
+        const similarCount = Math.min(6, uniqueSimilar.length);
+        const recommendedMovies = uniqueSimilar.slice(0, similarCount);
+        
+        // Shuffle results with recommendations
+        const mixed = [...recommendedMovies, ...results.slice(0, 14)];
+        // Shuffle to mix them well
+        for (let i = mixed.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [mixed[i], mixed[j]] = [mixed[j], mixed[i]];
+        }
+        
+        return res.json(mixed);
+      }
+    }
+
     return res.json(results);
   } catch (error) {
     console.error("TMDB discover error:", error.message);
@@ -216,6 +262,24 @@ router.post("/addMovieForFriend", async (req, res) => {
 
     if (friendUser.id === req.user.id) {
       return res.status(400).json({ message: "Cannot add to yourself" });
+    }
+
+    // Check if friend has already watched this movie through discover
+    const watchedEvent = await SwipeEvent.findOne({
+      where: {
+        userId: friendUser.id,
+        tmdbId: movie.tmdb_id,
+        action: "watched"
+      }
+    });
+
+    if (watchedEvent) {
+      return res.status(409).json({ 
+        message: "already_watched",
+        warning: `${friendUser.name} has already watched ${movie.title} through Discover.`,
+        movieTitle: movie.title,
+        friendName: friendUser.name
+      });
     }
 
     const [savedMovie] = await Movie.findOrCreate({

@@ -27,7 +27,6 @@ const Discover = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [index, setIndex] = useState(0);
   const [status, setStatus] = useState("");
-  const [hasLoaded, setHasLoaded] = useState(false);
   const [wantList, setWantList] = useState(() => {
     const saved = localStorage.getItem("wantList");
     return saved ? JSON.parse(saved) : [];
@@ -84,12 +83,13 @@ const Discover = () => {
     loadFilters();
   }, []);
 
+  // Auto-refresh movies when entering discover page
   useEffect(() => {
-    if (hasLoaded) return;
     if (genres.length === 0 && providers.length === 0) return;
-    setHasLoaded(true);
-    fetchMovies({ reset: true, nextPage: 1 });
-  }, [genres, providers, hasLoaded]);
+    if (view === "discover" && !similarMode) {
+      fetchMovies({ reset: true, nextPage: 1 });
+    }
+  }, [view]); // Refresh when switching to discover view
 
   useEffect(() => {
     localStorage.setItem("wantList", JSON.stringify(wantList));

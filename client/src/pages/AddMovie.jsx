@@ -10,6 +10,8 @@ const AddMovie = () => {
   const [friends, setFriends] = useState([]);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showWarningPopup, setShowWarningPopup] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
 
   useEffect(() => {
     const loadFriends = async () => {
@@ -63,10 +65,21 @@ const AddMovie = () => {
       setQuery("");
       setFriend("");
     } catch (error) {
-      setStatus(error.response?.data?.message || "Failed to send movie.");
+      // Check if user has already watched this movie
+      if (error.response?.status === 409 && error.response?.data?.message === "already_watched") {
+        setWarningMessage(error.response.data.warning);
+        setShowWarningPopup(true);
+      } else {
+        setStatus(error.response?.data?.message || "Failed to send movie.");
+      }
     } finally {
       setLoading(false);
     }
+  };
+
+  const closeWarningPopup = () => {
+    setShowWarningPopup(false);
+    setWarningMessage("");
   };
 
   return (
@@ -144,6 +157,25 @@ const AddMovie = () => {
               {loading ? "Sending..." : "Submit"}
             </button>
           </form>
+        </div>
+      )}
+
+      {/* Warning Popup */}
+      {showWarningPopup && (
+        <div className="modal-overlay" onClick={closeWarningPopup}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>⚠️ Already Watched</h3>
+            </div>
+            <div className="modal-body">
+              <p>{warningMessage}</p>
+            </div>
+            <div className="modal-footer">
+              <button className="primary" onClick={closeWarningPopup}>
+                Got it
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>
