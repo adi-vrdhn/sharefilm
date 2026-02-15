@@ -78,6 +78,7 @@ const Layout = ({ children }) => {
 
       {/* Main content */}
       <main className="main-content">
+        <div className="page-header-title">FILMSHARE</div>
         {children}
       </main>
 

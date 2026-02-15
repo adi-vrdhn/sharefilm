@@ -30,6 +30,9 @@ const Login = () => {
         </div>
         <h1 className="auth-title">Welcome back</h1>
         <p className="helper-text">Log in to gift movies to friends.</p>
+        <div className="warning-box">
+          <strong>⚠️ IMPORTANT:</strong> Do NOT use your original email ID. Create a temporary email for this app.
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="form-row">
             <label>Email</label>

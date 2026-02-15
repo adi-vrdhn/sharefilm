@@ -2,6 +2,8 @@
 
 Welcome to **FilmShare** - Your personal cinema companion for discovering, sharing, and tracking movies with friends!
 
+**⚠️ IMPORTANT: Please do NOT use your original/personal email ID for registration. Create a new temporary email ID specifically for this app to protect your privacy and security.**
+
 ---
 
 ## � Download the App

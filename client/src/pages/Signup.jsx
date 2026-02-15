@@ -30,6 +30,9 @@ const Signup = () => {
         </div>
         <h1 className="auth-title">Create account</h1>
         <p className="helper-text">Your username is how friends find you.</p>
+        <div className="warning-box">
+          <strong>⚠️ IMPORTANT:</strong> Do NOT use your original email ID. Create a temporary email for this app.
+        </div>
         <form onSubmit={handleSubmit}>
           <div className="form-row">
             <label>Username</label>
