@@ -33,6 +33,16 @@ const User = sequelize.define(
       allowNull: true,
       defaultValue: null,
       comment: "Base64 encoded image or URL"
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'created_at'
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: 'updated_at'
     }
   },
   {
