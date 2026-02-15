@@ -4,7 +4,39 @@ Welcome to **FilmShare** - Your personal cinema companion for discovering, shari
 
 ---
 
-## 📖 Table of Contents
+## � Download the App
+
+**FilmShare works best as an installed app on your device!**
+
+### Installation Steps:
+
+**On Mobile (iPhone/Android):**
+1. Open FilmShare in your mobile browser (Safari for iPhone, Chrome for Android)
+2. Visit: `https://your-filmshare-url.com`
+3. **iPhone (Safari):**
+   - Tap the Share button (square with arrow)
+   - Scroll down and tap "Add to Home Screen"
+   - Tap "Add" in the top right
+4. **Android (Chrome):**
+   - Tap the three-dot menu
+   - Select "Add to Home Screen" or "Install App"
+   - Tap "Add" or "Install"
+
+**On Desktop (Chrome/Edge):**
+1. Open FilmShare in Chrome or Edge browser
+2. Look for the install icon (⊕) in the address bar
+3. Click "Install" when prompted
+4. Or: Click the three-dot menu → "Install FilmShare"
+
+**Benefits of Installing:**
+- ✨ App icon on your home screen
+- 🚀 Faster loading and offline support
+- 📱 Full-screen experience without browser UI
+- 🔔 Better notification support
+
+---
+
+## �📖 Table of Contents
 
 1. [Getting Started](#getting-started)
 2. [Add Movie](#1-add-movie)
