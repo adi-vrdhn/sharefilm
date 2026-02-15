@@ -13,7 +13,6 @@ const Messages = () => {
   const [sending, setSending] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showSearch, setShowSearch] = useState(false);
   const messagesEndRef = useRef(null);
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -152,35 +151,25 @@ const Messages = () => {
       <div className={`conversations-panel ${selectedFriend ? "hidden-mobile" : ""}`}>
         <div className="conversations-header">
           <h2>{user?.username}</h2>
-          <button 
-            className="search-toggle-btn" 
-            onClick={() => setShowSearch(!showSearch)}
-            title="Search friends"
-          >
-            🔍
-          </button>
         </div>
         
-        {showSearch && (
-          <div className="search-bar">
-            <input
-              type="text"
-              className="friend-search-input"
-              placeholder="Search friends..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              autoFocus
-            />
-            {searchQuery && (
-              <button 
-                className="clear-search-btn"
-                onClick={() => setSearchQuery("")}
-              >
-                ×
-              </button>
-            )}
-          </div>
-        )}
+        <div className="search-bar">
+          <input
+            type="text"
+            className="friend-search-input"
+            placeholder="Search friends..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery && (
+            <button 
+              className="clear-search-btn"
+              onClick={() => setSearchQuery("")}
+            >
+              ×
+            </button>
+          )}
+        </div>
         
         <div className="conversations-list">
           {filteredConversations.length === 0 ? (
