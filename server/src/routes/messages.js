@@ -9,7 +9,7 @@ router.get("/getConversations", async (req, res) => {
   try {
     // Get all friends
     const friendships = await Friendship.findAll({
-      where: { user_id: req.user.id },
+      where: { userId: req.user.id },
       include: [
         {
           model: User,
@@ -85,8 +85,8 @@ router.get("/getMessages", async (req, res) => {
     // Check if they are friends
     const friendship = await Friendship.findOne({
       where: {
-        user_id: req.user.id,
-        friend_id: friendId
+        userId: req.user.id,
+        friendId: friendId
       }
     });
 
@@ -142,8 +142,8 @@ router.post("/sendMessage", async (req, res) => {
     // Check if they are friends
     const friendship = await Friendship.findOne({
       where: {
-        user_id: req.user.id,
-        friend_id: to
+        userId: req.user.id,
+        friendId: to
       }
     });
 
