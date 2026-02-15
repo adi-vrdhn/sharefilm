@@ -1,12 +1,12 @@
 import React from "react";
 
-const MovieCard = ({ item, onDelete }) => {
+const MovieCard = ({ item, onDelete, onWatched }) => {
   return (
     <div className="movie-card">
       {item.movie.poster ? (
         <img src={item.movie.poster} alt={item.movie.title} />
       ) : (
-        <div style={{ height: 320, background: "#f4e3d6" }} />
+        <div className="poster-placeholder" />
       )}
       <div className="movie-card-body">
         <h3>{item.movie.title}</h3>
@@ -14,11 +14,18 @@ const MovieCard = ({ item, onDelete }) => {
         <span className="helper-text">
           {new Date(item.dateAdded).toLocaleDateString()}
         </span>
-        {onDelete && (
-          <button className="secondary" onClick={() => onDelete(item.id)}>
-            Delete
-          </button>
-        )}
+        <div className="movie-card-actions">
+          {onWatched && (
+            <button className="primary" onClick={() => onWatched(item)}>
+              Watched
+            </button>
+          )}
+          {onDelete && (
+            <button className="secondary" onClick={() => onDelete(item.id)}>
+              Delete
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

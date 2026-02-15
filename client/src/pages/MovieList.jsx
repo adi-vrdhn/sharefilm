@@ -28,6 +28,23 @@ const MovieList = () => {
     }
   };
 
+  const handleWatched = async (item) => {
+    try {
+      // Mark as watched in database
+      await api.post("/markMovieWatched", {
+        tmdbId: item.movie.tmdbId,
+        userMovieId: item.id
+      });
+      
+      // Remove from list
+      setMovies((prev) => prev.filter((m) => m.id !== item.id));
+      setStatus(`${item.movie.title} marked as watched!`);
+      setTimeout(() => setStatus(""), 3000);
+    } catch (error) {
+      setStatus("Failed to mark as watched");
+    }
+  };
+
   return (
     <div className="container">
       <h1>My Movie List</h1>
@@ -35,7 +52,7 @@ const MovieList = () => {
       {status && <p className="helper-text">{status}</p>}
       <div className="card-grid">
         {movies.map((item) => (
-          <MovieCard key={item.id} item={item} onDelete={handleDelete} />
+          <MovieCard key={item.id} item={item} onDelete={handleDelete} onWatched={handleWatched} />
         ))}
       </div>
       {movies.length === 0 && <p className="helper-text">No movies yet.</p>}

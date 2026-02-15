@@ -353,6 +353,41 @@ router.delete("/deleteMovie/:id", async (req, res) => {
   }
 });
 
+// Mark movie as watched
+router.post("/markMovieWatched", async (req, res) => {
+  try {
+    const { tmdbId, userMovieId } = req.body;
+
+    if (!tmdbId || !userMovieId) {
+      return res.status(400).json({ message: "tmdbId and userMovieId required" });
+    }
+
+    // Verify user owns this movie entry
+    const userMovie = await UserMovie.findByPk(userMovieId);
+    if (!userMovie || userMovie.receiverId !== req.user.id) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    // Create swipe event to track as watched
+    await SwipeEvent.create({
+      userId: req.user.id,
+      tmdbId,
+      action: "watched",
+      genreIds: null,
+      providerId: null,
+      language: null
+    });
+
+    // Delete from user's movie list
+    await userMovie.destroy();
+
+    return res.json({ message: "Marked as watched" });
+  } catch (error) {
+    console.error("Mark watched error:", error.message);
+    return res.status(500).json({ message: "Failed to mark as watched" });
+  }
+});
+
 // Rate a movie
 router.post("/rateMovie", async (req, res) => {
   try {
