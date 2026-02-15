@@ -10,7 +10,6 @@ import AddMovie from "./pages/AddMovie";
 import MovieList from "./pages/MovieList";
 import Notifications from "./pages/Notifications";
 import Friends from "./pages/Friends";
-import Messages from "./pages/Messages";
 import MovieParty from "./pages/MovieParty";
 import Discover from "./pages/Discover";
 import Watchlist from "./pages/Watchlist";
@@ -102,16 +101,6 @@ const App = () => {
           <ProtectedRoute>
             <Layout>
               <Friends />
-            </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/messages"
-        element={
-          <ProtectedRoute>
-            <Layout>
-              <Messages />
             </Layout>
           </ProtectedRoute>
         }
