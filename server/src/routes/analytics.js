@@ -27,13 +27,14 @@ router.get("/stats", isAdmin, async (req, res) => {
     // Total users
     const totalUsers = await User.count();
 
-    // Users registered today
+    // Users registered today (only count if createdAt exists)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const usersToday = await User.count({
       where: {
         createdAt: {
-          [Op.gte]: today
+          [Op.gte]: today,
+          [Op.ne]: null
         }
       }
     });
@@ -44,7 +45,8 @@ router.get("/stats", isAdmin, async (req, res) => {
     const usersThisWeek = await User.count({
       where: {
         createdAt: {
-          [Op.gte]: weekAgo
+          [Op.gte]: weekAgo,
+          [Op.ne]: null
         }
       }
     });
@@ -61,9 +63,22 @@ router.get("/stats", isAdmin, async (req, res) => {
     // Recent users (last 10)
     const recentUsers = await User.findAll({
       attributes: ["id", "name", "email", "createdAt"],
+      where: {
+        createdAt: {
+          [Op.ne]: null
+        }
+      },
       order: [["createdAt", "DESC"]],
       limit: 10
     });
+
+    // If no recent users with createdAt, just get any 10 users
+    const allUsers = recentUsers.length === 0 
+      ? await User.findAll({
+          attributes: ["id", "name", "email", "createdAt"],
+          limit: 10
+        })
+      : recentUsers;
 
     // Most active users
     const activeUsers = await SwipeEvent.findAll({
@@ -91,7 +106,7 @@ router.get("/stats", isAdmin, async (req, res) => {
         totalInteractions,
         totalFriendships
       },
-      recentUsers,
+      recentUsers: allUsers,
       activeUsers
     });
   } catch (error) {

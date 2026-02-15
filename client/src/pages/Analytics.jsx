@@ -30,7 +30,9 @@ const Analytics = () => {
   };
 
   const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "N/A";
     return date.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
@@ -62,7 +64,7 @@ const Analytics = () => {
     );
   }
 
-  if (!stats) {
+  if (!stats || !stats.overview) {
     return (
       <div className="analytics-page">
         <h1>📊 App Analytics</h1>
@@ -96,37 +98,37 @@ const Analytics = () => {
           <div className="stats-grid">
             <div className="stat-box highlight">
               <div className="stat-icon">👥</div>
-              <div className="stat-value">{stats.overview.totalUsers}</div>
+              <div className="stat-value">{stats.overview?.totalUsers || 0}</div>
               <div className="stat-label">Total Users</div>
             </div>
 
             <div className="stat-box">
               <div className="stat-icon">🆕</div>
-              <div className="stat-value">{stats.overview.usersToday}</div>
+              <div className="stat-value">{stats.overview?.usersToday || 0}</div>
               <div className="stat-label">New Today</div>
             </div>
 
             <div className="stat-box">
               <div className="stat-icon">📅</div>
-              <div className="stat-value">{stats.overview.usersThisWeek}</div>
+              <div className="stat-value">{stats.overview?.usersThisWeek || 0}</div>
               <div className="stat-label">This Week</div>
             </div>
 
             <div className="stat-box">
               <div className="stat-icon">🎬</div>
-              <div className="stat-value">{stats.overview.totalMoviesShared}</div>
+              <div className="stat-value">{stats.overview?.totalMoviesShared || 0}</div>
               <div className="stat-label">Movies Shared</div>
             </div>
 
             <div className="stat-box">
               <div className="stat-icon">⚡</div>
-              <div className="stat-value">{stats.overview.totalInteractions}</div>
+              <div className="stat-value">{stats.overview?.totalInteractions || 0}</div>
               <div className="stat-label">Total Swipes</div>
             </div>
 
             <div className="stat-box">
               <div className="stat-icon">🤝</div>
-              <div className="stat-value">{Math.floor(stats.overview.totalFriendships)}</div>
+              <div className="stat-value">{Math.floor(stats.overview?.totalFriendships || 0)}</div>
               <div className="stat-label">Friendships</div>
             </div>
           </div>
@@ -139,13 +141,19 @@ const Analytics = () => {
                 <div className="table-cell">Email</div>
                 <div className="table-cell">Joined</div>
               </div>
-              {stats.recentUsers.map((user) => (
-                <div key={user.id} className="table-row">
-                  <div className="table-cell"><strong>{user.name}</strong></div>
-                  <div className="table-cell">{user.email}</div>
-                  <div className="table-cell">{formatDate(user.createdAt)}</div>
+              {stats.recentUsers && stats.recentUsers.length > 0 ? (
+                stats.recentUsers.map((user) => (
+                  <div key={user.id} className="table-row">
+                    <div className="table-cell"><strong>{user.name}</strong></div>
+                    <div className="table-cell">{user.email}</div>
+                    <div className="table-cell">{formatDate(user.createdAt)}</div>
+                  </div>
+                ))
+              ) : (
+                <div className="table-row">
+                  <div className="table-cell">No users yet</div>
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -168,20 +176,26 @@ const Analytics = () => {
         </>
       ) : (
         <div className="analytics-section">
-          <h2>All Users ({stats.recentUsers.length})</h2>
+          <h2>All Users ({stats.recentUsers?.length || 0})</h2>
           <div className="users-table">
             <div className="table-header">
               <div className="table-cell">Name</div>
               <div className="table-cell">Email</div>
               <div className="table-cell">Joined</div>
             </div>
-            {stats.recentUsers.map((user) => (
-              <div key={user.id} className="table-row">
-                <div className="table-cell"><strong>{user.name}</strong></div>
-                <div className="table-cell">{user.email}</div>
-                <div className="table-cell">{formatDate(user.createdAt)}</div>
+            {stats.recentUsers && stats.recentUsers.length > 0 ? (
+              stats.recentUsers.map((user) => (
+                <div key={user.id} className="table-row">
+                  <div className="table-cell"><strong>{user.name}</strong></div>
+                  <div className="table-cell">{user.email}</div>
+                  <div className="table-cell">{formatDate(user.createdAt)}</div>
+                </div>
+              ))
+            ) : (
+              <div className="table-row">
+                <div className="table-cell">No users yet</div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       )}
