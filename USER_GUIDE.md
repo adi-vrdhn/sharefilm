@@ -12,7 +12,7 @@ Welcome to **FilmShare** - Your personal cinema companion for discovering, shari
 
 **On Mobile (iPhone/Android):**
 1. Open FilmShare in your mobile browser (Safari for iPhone, Chrome for Android)
-2. Visit: `https://your-filmshare-url.com`
+2. Visit: `www.filmshare.in`
 3. **iPhone (Safari):**
    - Tap the Share button (square with arrow)
    - Scroll down and tap "Add to Home Screen"
