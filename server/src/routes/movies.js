@@ -244,7 +244,7 @@ router.post("/swipeEvent", async (req, res) => {
 
 router.post("/addMovieForFriend", async (req, res) => {
   try {
-    const { movie, friend } = req.body;
+    const { movie, friend, force } = req.body;
 
     if (!movie || !friend) {
       return res.status(400).json({ message: "Movie and friend required" });
@@ -264,22 +264,24 @@ router.post("/addMovieForFriend", async (req, res) => {
       return res.status(400).json({ message: "Cannot add to yourself" });
     }
 
-    // Check if friend has already watched this movie through discover
-    const watchedEvent = await SwipeEvent.findOne({
-      where: {
-        userId: friendUser.id,
-        tmdbId: movie.tmdb_id,
-        action: "watched"
-      }
-    });
-
-    if (watchedEvent) {
-      return res.status(409).json({ 
-        message: "already_watched",
-        warning: `${friendUser.name} has already watched ${movie.title} through Discover.`,
-        movieTitle: movie.title,
-        friendName: friendUser.name
+    // Check if friend has already watched this movie (unless force = true)
+    if (!force) {
+      const watchedEvent = await SwipeEvent.findOne({
+        where: {
+          userId: friendUser.id,
+          tmdbId: movie.tmdb_id,
+          action: "watched"
+        }
       });
+
+      if (watchedEvent) {
+        return res.status(409).json({ 
+          message: "already_watched",
+          warning: `${friendUser.name} has already watched ${movie.title} through Discover.`,
+          movieTitle: movie.title,
+          friendName: friendUser.name
+        });
+      }
     }
 
     const [savedMovie] = await Movie.findOrCreate({

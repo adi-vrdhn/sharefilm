@@ -6,12 +6,14 @@ const AddMovie = () => {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState(null);
-  const [friend, setFriend] = useState("");
+  const [selectedFriends, setSelectedFriends] = useState([]);
   const [friends, setFriends] = useState([]);
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [showWarningPopup, setShowWarningPopup] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
+  const [warningFriend, setWarningFriend] = useState(null);
+  const [pendingMovie, setPendingMovie] = useState(null);
 
   useEffect(() => {
     const loadFriends = async () => {
@@ -52,34 +54,130 @@ const AddMovie = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setStatus("");
-    if (!selected || !friend) {
-      setStatus("Select a movie and enter a friend username.");
+    if (!selected || selectedFriends.length === 0) {
+      setStatus("Select a movie and at least one friend.");
       return;
     }
 
     setLoading(true);
-    try {
-      await api.post("/addMovieForFriend", { movie: selected, friend });
-      setStatus("Movie sent!" );
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (const friendName of selectedFriends) {
+      try {
+        await api.post("/addMovieForFriend", { movie: selected, friend: friendName });
+        successCount++;
+      } catch (error) {
+        // Check if user has already watched this movie
+        if (error.response?.status === 409 && error.response?.data?.message === "already_watched") {
+          setWarningMessage(error.response.data.warning);
+          setWarningFriend(friendName);
+          setPendingMovie(selected);
+          setShowWarningPopup(true);
+          setLoading(false);
+          return; // Stop and show warning
+        } else {
+          failCount++;
+        }
+      }
+    }
+    
+    setLoading(false);
+    if (successCount > 0) {
+      setStatus(`Movie sent to ${successCount} friend${successCount > 1 ? 's' : ''}!`);
       setSelected(null);
       setQuery("");
-      setFriend("");
-    } catch (error) {
-      // Check if user has already watched this movie
-      if (error.response?.status === 409 && error.response?.data?.message === "already_watched") {
-        setWarningMessage(error.response.data.warning);
-        setShowWarningPopup(true);
-      } else {
-        setStatus(error.response?.data?.message || "Failed to send movie.");
-      }
-    } finally {
-      setLoading(false);
+      setSelectedFriends([]);
+    }
+    if (failCount > 0) {
+      setStatus(prev => prev + ` Failed to send to ${failCount} friend${failCount > 1 ? 's' : ''}.`);
     }
   };
 
   const closeWarningPopup = () => {
     setShowWarningPopup(false);
     setWarningMessage("");
+    setWarningFriend(null);
+    setPendingMovie(null);
+  };
+
+  const handleStillSend = async () => {
+    setShowWarningPopup(false);
+    setLoading(true);
+    
+    try {
+      await api.post("/addMovieForFriend", { 
+        movie: pendingMovie, 
+        friend: warningFriend,
+        force: true // Override the warning
+      });
+      
+      // Remove the friend we just sent to from selectedFriends
+      const remainingFriends = selectedFriends.filter(f => f !== warningFriend);
+      setSelectedFriends(remainingFriends);
+      
+      // Continue with remaining friends if any
+      if (remainingFriends.length > 0) {
+        setStatus(`Sent! Continuing with ${remainingFriends.length} more...`);
+        // Re-trigger submit for remaining friends
+        setTimeout(() => {
+          handleSubmitRest(remainingFriends);
+        }, 100);
+      } else {
+        setStatus("Movie sent!");
+        setSelected(null);
+        setQuery("");
+        setSelectedFriends([]);
+      }
+    } catch (error) {
+      setStatus("Failed to send movie.");
+    } finally {
+      setLoading(false);
+      setWarningFriend(null);
+      setPendingMovie(null);
+    }
+  };
+
+  const handleSubmitRest = async (friendsList) => {
+    setLoading(true);
+    let successCount = 1; // Already sent to 1 (the warned friend)
+    let failCount = 0;
+    
+    for (const friendName of friendsList) {
+      try {
+        await api.post("/addMovieForFriend", { movie: pendingMovie, friend: friendName });
+        successCount++;
+      } catch (error) {
+        if (error.response?.status === 409 && error.response?.data?.message === "already_watched") {
+          setWarningMessage(error.response.data.warning);
+          setWarningFriend(friendName);
+          setShowWarningPopup(true);
+          setLoading(false);
+          return;
+        } else {
+          failCount++;
+        }
+      }
+    }
+    
+    setLoading(false);
+    setStatus(`Movie sent to ${successCount} friend${successCount > 1 ? 's' : ''}!`);
+    setSelected(null);
+    setQuery("");
+    setSelectedFriends([]);
+    if (failCount > 0) {
+      setStatus(prev => prev + ` Failed to send to ${failCount}.`);
+    }
+  };
+
+  const toggleFriendSelection = (friendName) => {
+    setSelectedFriends(prev => {
+      if (prev.includes(friendName)) {
+        return prev.filter(f => f !== friendName);
+      } else {
+        return [...prev, friendName];
+      }
+    });
   };
 
   return (
@@ -118,28 +216,22 @@ const AddMovie = () => {
               )}
             </div>
             <div className="form-row">
-              <label>Friend Username</label>
+              <label>Select Friends ({selectedFriends.length} selected)</label>
               {friends.length > 0 ? (
-                <select
-                  className="input"
-                  value={friend}
-                  onChange={(event) => setFriend(event.target.value)}
-                  required
-                >
-                  <option value="">-- Select a friend --</option>
+                <div className="friends-checkbox-list">
                   {friends.map((f) => (
-                    <option key={f.id} value={f.name}>
-                      {f.name}
-                    </option>
+                    <label key={f.id} className="friend-checkbox-item">
+                      <input
+                        type="checkbox"
+                        checked={selectedFriends.includes(f.name)}
+                        onChange={() => toggleFriendSelection(f.name)}
+                      />
+                      <span>{f.name}</span>
+                    </label>
                   ))}
-                </select>
+                </div>
               ) : (
-                <input
-                  className="input"
-                  value={friend}
-                  onChange={(event) => setFriend(event.target.value)}
-                  placeholder="Type a username"
-                />
+                <p className="helper-text">No friends found. Add some friends first!</p>
               )}
             </div>
             {selected && (
@@ -171,8 +263,11 @@ const AddMovie = () => {
               <p>{warningMessage}</p>
             </div>
             <div className="modal-footer">
-              <button className="primary" onClick={closeWarningPopup}>
-                Got it
+              <button className="secondary action-btn" onClick={closeWarningPopup}>
+                Cancel
+              </button>
+              <button className="primary" onClick={handleStillSend}>
+                Still Send
               </button>
             </div>
           </div>
