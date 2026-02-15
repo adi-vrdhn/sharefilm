@@ -5,23 +5,24 @@ import App from "./App";
 import { AuthProvider } from "./context/AuthContext";
 import "./styles/global.css";
 
-// Register Service Worker for PWA support
+// Service Worker disabled temporarily to fix 404 errors
+// TODO: Re-enable with proper Vite PWA plugin configuration
+/*
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/serviceWorker.js')
       .then((registration) => {
         console.log('Service Worker registered successfully:', registration);
-        
-        // Check for updates periodically
         setInterval(() => {
           registration.update();
-        }, 60000); // Check every 60 seconds
+        }, 60000);
       })
       .catch((error) => {
         console.log('Service Worker registration failed:', error);
       });
   });
 }
+*/
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
