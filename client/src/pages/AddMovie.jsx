@@ -8,6 +8,7 @@ const AddMovie = () => {
   const [selected, setSelected] = useState(null);
   const [selectedFriends, setSelectedFriends] = useState([]);
   const [friends, setFriends] = useState([]);
+  const [friendSearch, setFriendSearch] = useState("");
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
   const [showWarningPopup, setShowWarningPopup] = useState(false);
@@ -221,18 +222,45 @@ const AddMovie = () => {
             <div className="form-row">
               <label>Select Friends ({selectedFriends.length} selected)</label>
               {friends.length > 0 ? (
-                <div className="friends-checkbox-list">
-                  {friends.map((f) => (
-                    <label key={f.id} className="friend-checkbox-item">
-                      <input
-                        type="checkbox"
-                        checked={selectedFriends.includes(f.name)}
-                        onChange={() => toggleFriendSelection(f.name)}
-                      />
-                      <span>{f.name}</span>
-                    </label>
-                  ))}
-                </div>
+                <>
+                  <input
+                    className="input"
+                    type="text"
+                    value={friendSearch}
+                    onChange={(e) => setFriendSearch(e.target.value)}
+                    placeholder="Search friends..."
+                    style={{ marginBottom: "12px" }}
+                  />
+                  <div className="friends-checkbox-list">
+                    {friendSearch.length >= 2
+                      ? // Show matching friends first, then others
+                        [
+                          ...friends.filter(f => f.name.toLowerCase().includes(friendSearch.toLowerCase())),
+                          ...friends.filter(f => !f.name.toLowerCase().includes(friendSearch.toLowerCase()))
+                        ].map((f) => (
+                          <label key={f.id} className="friend-checkbox-item">
+                            <input
+                              type="checkbox"
+                              checked={selectedFriends.includes(f.name)}
+                              onChange={() => toggleFriendSelection(f.name)}
+                            />
+                            <span>{f.name}</span>
+                          </label>
+                        ))
+                      : // Show all friends if search less than 2 characters
+                        friends.map((f) => (
+                          <label key={f.id} className="friend-checkbox-item">
+                            <input
+                              type="checkbox"
+                              checked={selectedFriends.includes(f.name)}
+                              onChange={() => toggleFriendSelection(f.name)}
+                            />
+                            <span>{f.name}</span>
+                          </label>
+                        ))
+                    }
+                  </div>
+                </>
               ) : (
                 <p className="helper-text">No friends found. Add some friends first!</p>
               )}
