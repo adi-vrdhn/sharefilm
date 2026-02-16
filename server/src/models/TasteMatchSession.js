@@ -40,8 +40,12 @@ const TasteMatchSession = sequelize.define(
       comment: "Timestamp when friend_id completed 20 votes"
     },
     session_status: {
-      type: DataTypes.ENUM("voting_in_progress", "both_voted", "report_generated"),
+      type: DataTypes.STRING,
       defaultValue: "voting_in_progress",
+      allowNull: false,
+      validate: {
+        isIn: [["voting_in_progress", "both_voted", "report_generated"]]
+      },
       comment: "Current state of voting session"
     },
     created_at: {
