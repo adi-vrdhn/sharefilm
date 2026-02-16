@@ -253,6 +253,19 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
 
   // Phase: Report ready
   if (phase === "report" && matchResult) {
+    return (
+      <div className="taste-match-modal">
+        <div className="taste-match-content">
+          <TasteMatchResult
+            matchData={matchResult}
+            friendName={friendName}
+            onClose={onClose}
+          />
+        </div>
+      </div>
+    );
+  }
+
   // Phase: Error
   if (phase === "error") {
     return (
