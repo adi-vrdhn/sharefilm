@@ -36,8 +36,35 @@ const MovieList = () => {
     try {
       await api.delete(`/deleteMovie/${id}`);
       setReceivedMovies((prev) => prev.filter((item) => item.id !== id));
+      setStatus("Movie removed from your list");
+      setTimeout(() => setStatus(""), 3000);
     } catch (error) {
       setStatus("Delete failed");
+    }
+  };
+
+  const handleDeleteFromSent = async (id) => {
+    try {
+      await api.delete(`/deleteFromSentList/${id}`);
+      setSentMovies((prev) => prev.filter((item) => item.id !== id));
+      setStatus("Movie removed from your sent list");
+      setTimeout(() => setStatus(""), 3000);
+    } catch (error) {
+      setStatus("Delete failed");
+    }
+  };
+
+  const handleClearAllSent = async () => {
+    if (!window.confirm("Are you sure you want to remove ALL sent movies from your list? (They will remain in your friends' lists)")) {
+      return;
+    }
+    try {
+      await Promise.all(sentMovies.map(movie => api.delete(`/deleteFromSentList/${movie.id}`)));
+      setSentMovies([]);
+      setStatus("All sent movies removed from your list");
+      setTimeout(() => setStatus(""), 3000);
+    } catch (error) {
+      setStatus("Clear all failed");
     }
   };
 
@@ -87,14 +114,27 @@ const MovieList = () => {
       </div>
 
       {status && <p className="helper-text">{status}</p>}
+
+      {view === "sent" && sentMovies.length > 0 && (
+        <div className="sent-actions">
+          <button 
+            className="clear-all-btn"
+            onClick={handleClearAllSent}
+            title="Remove all sent movies from your list"
+          >
+            🗑️ Clear All History
+          </button>
+        </div>
+      )}
       
       <div className="card-grid">
         {displayMovies.map((item) => (
           <MovieCard 
             key={item.id} 
             item={item} 
-            onDelete={showActions ? handleDelete : null} 
+            onDelete={showActions ? handleDelete : (view === "sent" ? handleDeleteFromSent : null)} 
             onWatched={showActions ? handleWatched : null}
+            isSentView={view === "sent"}
           />
         ))}
       </div>

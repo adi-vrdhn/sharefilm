@@ -17,8 +17,32 @@ router.get("/getFriends", async (req, res) => {
       ]
     });
 
-    const friends = friendships.map((f) => f.friend);
-    return res.json(friends);
+    // Get interaction count (movies sent/received) for each friend
+    const friendsWithInteractions = await Promise.all(
+      friendships.map(async (f) => {
+        const sentCount = await UserMovie.count({
+          where: {
+            senderId: req.user.id,
+            receiverId: f.friend.id
+          }
+        });
+        const receivedCount = await UserMovie.count({
+          where: {
+            senderId: f.friend.id,
+            receiverId: req.user.id
+          }
+        });
+        return {
+          ...f.friend.toJSON(),
+          interactionCount: sentCount + receivedCount
+        };
+      })
+    );
+
+    // Sort by interaction count (most popular first)
+    friendsWithInteractions.sort((a, b) => b.interactionCount - a.interactionCount);
+
+    return res.json(friendsWithInteractions);
   } catch (error) {
     return res.status(500).json({ message: "Failed to fetch buddies" });
   }

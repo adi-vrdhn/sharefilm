@@ -353,6 +353,26 @@ router.delete("/deleteMovie/:id", async (req, res) => {
   }
 });
 
+// Delete movie from sender's sent list (doesn't affect receiver's received list)
+router.delete("/deleteFromSentList/:id", async (req, res) => {
+  try {
+    const record = await UserMovie.findByPk(req.params.id);
+    if (!record) {
+      return res.status(404).json({ message: "Movie entry not found" });
+    }
+
+    // Only sender can delete from their sent list
+    if (record.senderId !== req.user.id) {
+      return res.status(403).json({ message: "Forbidden - only sender can delete from sent list" });
+    }
+
+    await record.destroy();
+    return res.json({ message: "Removed from your sent list" });
+  } catch (error) {
+    return res.status(500).json({ message: "Delete failed" });
+  }
+});
+
 // Mark movie as watched
 router.post("/markMovieWatched", async (req, res) => {
   try {

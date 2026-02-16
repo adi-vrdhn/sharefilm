@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import api from "../api/axios";
 
-const MovieCard = ({ item, onDelete, onWatched }) => {
+const MovieCard = ({ item, onDelete, onWatched, isSentView }) => {
   const [showRatingModal, setShowRatingModal] = useState(false);
   const [rating, setRating] = useState(0);
   const [comments, setComments] = useState("");
@@ -84,11 +84,11 @@ const MovieCard = ({ item, onDelete, onWatched }) => {
               )}
               {onDelete && (
                 <button className="secondary" onClick={() => onDelete(item.id)}>
-                  Delete
+                  {isSentView ? "Remove" : "Delete"}
                 </button>
               )}
             </div>
-            {onWatched && (
+            {onWatched && !isSentView && (
               <button 
                 className="primary full-width"
                 onClick={() => setShowRatingModal(true)}
