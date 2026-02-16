@@ -46,16 +46,29 @@ const MovieCard = ({ item, onDelete, onWatched }) => {
     }
   };
 
+  // Handle missing movie data
+  if (!item?.movie) {
+    return (
+      <div className="movie-card">
+        <div className="poster-placeholder" />
+        <div className="movie-card-body">
+          <h3>Movie Not Found</h3>
+          <p className="helper-text">This movie is no longer available.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="movie-card">
-        {item.movie.poster ? (
+        {item.movie?.poster ? (
           <img src={item.movie.poster} alt={item.movie.title} />
         ) : (
           <div className="poster-placeholder" />
         )}
         <div className="movie-card-body">
-          <h3>{item.movie.title}</h3>
+          <h3>{item.movie?.title}</h3>
           <span className="badge">
             {item.sender ? `Added by ${item.sender.name}` : `Sent to ${item.receiver?.name}`}
           </span>
@@ -94,12 +107,12 @@ const MovieCard = ({ item, onDelete, onWatched }) => {
             <h2>Rate This Movie</h2>
             <div className="rating-section">
               <div className="movie-preview">
-                {item.movie.poster && (
+                {item.movie?.poster && (
                   <img src={item.movie.poster} alt={item.movie.title} className="modal-poster" />
                 )}
                 <div className="movie-info">
-                  <h3>{item.movie.title}</h3>
-                  <p className="year">{item.movie.year}</p>
+                  <h3>{item.movie?.title}</h3>
+                  <p className="year">{item.movie?.year}</p>
                 </div>
               </div>
 

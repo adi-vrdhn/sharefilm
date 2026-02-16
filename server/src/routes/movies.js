@@ -467,7 +467,16 @@ router.get("/getSentMovies", async (req, res) => {
       order: [["dateAdded", "DESC"]]
     });
 
-    return res.json(sentMovies);
+    // Normalize response to match getUserList format
+    const mapped = sentMovies.map((item) => ({
+      id: item.id,
+      dateAdded: item.dateAdded,
+      senderId: item.senderId,
+      receiver: item.User,
+      movie: item.Movie
+    }));
+
+    return res.json(mapped);
   } catch (error) {
     console.error("Get sent movies error:", error.message);
     return res.status(500).json({ message: error.message });
