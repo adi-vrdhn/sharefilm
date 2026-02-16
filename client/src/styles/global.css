@@ -607,6 +607,7 @@ button.secondary {
   transition: background 0.2s ease;
   font-family: "Space Grotesk", sans-serif;
   font-size: 14px;
+  color: var(--ink);
 }
 
 .autocomplete-item:last-child {
@@ -763,6 +764,7 @@ button.secondary {
   border-radius: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
+  color: var(--ink);
 }
 
 .friend-checkbox-item:hover {
