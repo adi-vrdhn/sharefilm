@@ -56,7 +56,9 @@ const MovieCard = ({ item, onDelete, onWatched }) => {
         )}
         <div className="movie-card-body">
           <h3>{item.movie.title}</h3>
-          <span className="badge">Added by {item.sender?.name}</span>
+          <span className="badge">
+            {item.sender ? `Added by ${item.sender.name}` : `Sent to ${item.receiver?.name}`}
+          </span>
           <span className="helper-text">
             {new Date(item.dateAdded).toLocaleDateString()}
           </span>
