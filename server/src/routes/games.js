@@ -13,8 +13,8 @@ router.get("/api/games/guess-the-movie/random", async (req, res) => {
     }
 
     const { language = "en", yearFrom = 1900, yearTo = new Date().getFullYear() } = req.query;
-    // Fetch from TOP pages only (pages 1-2) for most popular movies
-    const popularPage = Math.random() > 0.7 ? 2 : 1; // 70% page 1, 30% page 2
+    // Fetch from pages 1-3 for diverse popular movies
+    const popularPage = Math.floor(Math.random() * 3) + 1;
 
     // Language to TMDB language code mapping
     const languageMap = {
@@ -36,16 +36,17 @@ router.get("/api/games/guess-the-movie/random", async (req, res) => {
 
     const langCode = languageMap[language] || "en";
 
-    // Fetch POPULAR & HIGHLY RATED movies (box office winners)
+    // Fetch movies with FAMOUS ACTORS (high vote count = famous/well-known)
+    // Sort by popularity for variety, not just box office
     const moviesResponse = await axios.get(
       `${TMDB_BASE_URL}/discover/movie`,
       {
         params: {
           api_key: TMDB_API_KEY,
           with_original_language: langCode,
-          sort_by: "revenue.desc",
-          "vote_count.gte": 500, // Only movies with 500+ votes (popular & trusted)
-          "vote_average.gte": 6.0, // Only highly rated movies
+          sort_by: "popularity.desc",
+          "vote_count.gte": 300, // Movies with 300+ votes = famous actors with recognition
+          "vote_average.gte": 5.5, // Lower threshold to include more famous actor movies
           page: popularPage,
           region: language === "hi" || language === "te" || language === "ta" || language === "ml" || language === "kn" || language === "bn" ? "IN" : undefined,
           ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
