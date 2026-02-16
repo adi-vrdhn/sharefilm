@@ -5,18 +5,55 @@ import TasteMatchResult from "./TasteMatchResult";
 import "../styles/tasteMatch.css";
 
 const TasteMatch = ({ friendId, friendName, onClose }) => {
-  const [phase, setPhase] = useState("loading"); // loading, voting, result, error
+  const [phase, setPhase] = useState("loading"); // loading, voting, waiting, report, error
   const [currentMovie, setCurrentMovie] = useState(null);
   const [matchResult, setMatchResult] = useState(null);
   const [votesCount, setVotesCount] = useState(0);
   const [votesRequired] = useState(20); // 20 votes to form match
   const [error, setError] = useState("");
   const [isLoadingMovie, setIsLoadingMovie] = useState(false);
+  const [friendVotesCount, setFriendVotesCount] = useState(0);
 
-  // Start voting immediately - no prerequisites
+  // Check session state on mount
   useEffect(() => {
-    startVoting();
+    checkSessionState();
   }, []);
+
+  const checkSessionState = async () => {
+    try {
+      setPhase("loading");
+      const response = await api.get(`/api/taste-match/session/${friendId}`);
+      const state = response.data;
+
+      if (state.status === "report_ready") {
+        // Show saved report
+        setMatchResult(state.report);
+        setPhase("report");
+      } else if (state.status === "waiting_for_friend") {
+        // One user is done, waiting for other
+        setVotesCount(state.your_votes);
+        setFriendVotesCount(state.friend_votes);
+        setPhase("waiting");
+      } else if (state.status === "voting_in_progress") {
+        // Continue voting
+        setVotesCount(state.votes_current_user);
+        setFriendVotesCount(state.votes_friend);
+        if (state.votes_current_user < votesRequired) {
+          fetchNextMovie();
+        } else {
+          // Completed voting, now waiting
+          setPhase("waiting");
+        }
+      } else if (state.status === "not_started") {
+        // Start fresh
+        fetchNextMovie();
+      }
+    } catch (err) {
+      console.error("Error checking session state:", err);
+      setError("Failed to load taste match data");
+      setPhase("error");
+    }
+  };
 
   const startVoting = async () => {
     try {
@@ -41,8 +78,8 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
       setPhase("voting");
     } catch (err) {
       if (err.response?.status === 404) {
-        // No more movies available, calculate match
-        calculateMatch();
+        // No more movies available
+        console.log("No more movies available");
       } else {
         console.error("Error fetching movie:", err);
         setError("Failed to load movie");
@@ -57,9 +94,22 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
     const newVoteCount = votesCount + 1;
     setVotesCount(newVoteCount);
 
-    // After 20 votes, calculate match
+    // After 20 votes, move to waiting phase
     if (newVoteCount >= votesRequired) {
-      calculateMatch();
+      setPhase("waiting");
+      // Poll for friend's votes every 3 seconds
+      const pollInterval = setInterval(async () => {
+        try {
+          const state = await api.get(`/api/taste-match/session/${friendId}`);
+          if (state.data.status === "report_ready") {
+            clearInterval(pollInterval);
+            setMatchResult(state.data.report);
+            setPhase("report");
+          }
+        } catch (err) {
+          console.error("Error polling for report:", err);
+        }
+      }, 3000);
     } else {
       // Fetch next movie
       fetchNextMovie();
@@ -96,23 +146,15 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
 
           <div className="checking-phase">
             <div className="icon-large">🎬</div>
-            <h2>Rate 20 movies!</h2>
+            <h2>Let's start!</h2>
             <p>
-              Help us understand your taste by rating <strong>{votesRequired} movies</strong> with your friend.
+              Rate <strong>{votesRequired} movies</strong> with {friendName} to see your match!
             </p>
-            <p className="current-count">
-              Progress: <strong>{votesCount}</strong>/{votesRequired}
-            </p>
-            <div className="progress-bar">
-              <div
-                className="progress-fill"
-                style={{
-                  width: `${Math.min(100, (votesCount / votesRequired) * 100)}%`
-                }}
-              />
-            </div>
-            <button className="btn btn-primary" onClick={onClose}>
-              Go Back
+            <button className="btn btn-primary" onClick={startVoting}>
+              Start Voting
+            </button>
+            <button className="btn btn-secondary" onClick={onClose} style={{ marginTop: "12px" }}>
+              Cancel
             </button>
           </div>
         </div>
@@ -133,7 +175,7 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
             <h2>Rate movies with {friendName}! 🎬</h2>
             <p>Vote on {votesRequired} movies to generate your match</p>
             <div className="votes-counter">
-              Progress: <strong>{votesCount}/{votesRequired}</strong>
+              Your progress: <strong>{votesCount}/{votesRequired}</strong>
             </div>
             <div className="progress-bar-inline">
               <div
@@ -148,6 +190,7 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
           {currentMovie ? (
             <TasteMatchCard
               movie={currentMovie}
+              friendId={friendId}
               onRate={handleMovieRated}
               isLoading={isLoadingMovie}
             />
@@ -162,21 +205,54 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
     );
   }
 
-  // Phase: Showing result
-  if (phase === "result" && matchResult) {
+  // Phase: Waiting for friend to vote
+  if (phase === "waiting") {
     return (
       <div className="taste-match-modal">
         <div className="taste-match-content">
-          <TasteMatchResult
-            matchData={matchResult}
-            friendName={friendName}
-            onClose={onClose}
-          />
+          <button className="close-btn" onClick={onClose}>
+            ×
+          </button>
+
+          <div className="waiting-state">
+            <div className="icon-large">⏳</div>
+            <h2>Voting Complete! 🎉</h2>
+            <p>You've voted on all {votesRequired} movies</p>
+            
+            <div className="voting-stats">
+              <div className="stat-item">
+                <span className="stat-label">Your Votes:</span>
+                <span className="stat-value">{votesCount}/{votesRequired}</span>
+              </div>
+              <div className="stat-item">
+                <span className="stat-label">{friendName}'s Votes:</span>
+                <span className="stat-value">{friendVotesCount}/{votesRequired}</span>
+              </div>
+            </div>
+
+            {friendVotesCount >= votesRequired ? (
+              <div className="message success">
+                <p>✓ {friendName} has completed their votes!</p>
+                <p className="small">Generating your match report...</p>
+                <div className="spinner" style={{ marginTop: "16px" }} />
+              </div>
+            ) : (
+              <div className="message info">
+                <p>Waiting for {friendName} to rate {votesRequired - friendVotesCount} more movies...</p>
+              </div>
+            )}
+
+            <button className="btn btn-primary" onClick={onClose} style={{ marginTop: "24px" }}>
+              Close
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
+  // Phase: Report ready
+  if (phase === "report" && matchResult) {
   // Phase: Error
   if (phase === "error") {
     return (

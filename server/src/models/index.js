@@ -9,6 +9,8 @@ const SharedParty = require("./SharedParty");
 const SwipeEvent = require("./SwipeEvent");
 const MovieTasteRating = require("./MovieTasteRating");
 const UserTasteVector = require("./UserTasteVector");
+const TasteMatchSession = require("./TasteMatchSession");
+const TasteMatchReport = require("./TasteMatchReport");
 
 User.hasMany(UserMovie, { foreignKey: "receiver_id", as: "receivedMovies", constraints: true });
 User.hasMany(UserMovie, { foreignKey: "sender_id", as: "sentMovies", constraints: true });
@@ -44,6 +46,16 @@ MovieTasteRating.belongsTo(User, { foreignKey: "user_id", constraints: true });
 User.hasMany(UserTasteVector, { foreignKey: "user_id", constraints: true });
 UserTasteVector.belongsTo(User, { foreignKey: "user_id", constraints: true });
 
+User.hasMany(TasteMatchSession, { foreignKey: "user_id", as: "tasteMatchSessions", constraints: true });
+User.hasMany(TasteMatchSession, { foreignKey: "friend_id", as: "tasteMatchSessionsAsFriend", constraints: true });
+TasteMatchSession.belongsTo(User, { foreignKey: "user_id", as: "user", constraints: true });
+TasteMatchSession.belongsTo(User, { foreignKey: "friend_id", as: "friend", constraints: true });
+
+User.hasMany(TasteMatchReport, { foreignKey: "user_id", as: "tasteMatchReports", constraints: true });
+User.hasMany(TasteMatchReport, { foreignKey: "friend_id", as: "tasteMatchReportsAsFriend", constraints: true });
+TasteMatchReport.belongsTo(User, { foreignKey: "user_id", as: "user", constraints: true });
+TasteMatchReport.belongsTo(User, { foreignKey: "friend_id", as: "friend", constraints: true });
+
 module.exports = {
   User,
   Movie,
@@ -55,5 +67,7 @@ module.exports = {
   SharedParty,
   SwipeEvent,
   MovieTasteRating,
-  UserTasteVector
+  UserTasteVector,
+  TasteMatchSession,
+  TasteMatchReport
 };

@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 import api from "../api/axios";
 
-const TasteMatchCard = ({ movie, onRate, isLoading }) => {
+const TasteMatchCard = ({ movie, friendId, onRate, isLoading }) => {
   const [submitting, setSubmitting] = useState(false);
 
   const handleRate = async (rating) => {
     try {
       setSubmitting(true);
 
-      // Send rating to backend
-      await api.post("/api/taste-match/rate", {
+      // Send rating to backend with friendId
+      await api.post(`/api/taste-match/rate/${friendId}`, {
         tmdb_movie_id: movie.id,
         rating: rating, // 1 for "MY TYPE", -1 for "Nahhh"
         movie_title: movie.title,

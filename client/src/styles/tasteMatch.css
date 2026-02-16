@@ -197,6 +197,18 @@
   box-shadow: 0 8px 20px rgba(224, 192, 122, 0.3);
 }
 
+.btn-secondary {
+  width: 100%;
+  background: rgba(214, 181, 111, 0.1);
+  color: var(--accent);
+  border: 1px solid var(--muted);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: rgba(214, 181, 111, 0.15);
+  transform: translateY(-2px);
+}
+
 .btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -268,6 +280,101 @@
 .current-count {
   font-size: 16px !important;
   margin: 20px 0 !important;
+}
+
+/* Waiting State */
+.waiting-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 40px 20px;
+  gap: 24px;
+}
+
+.waiting-state h2 {
+  margin: 0;
+  color: var(--accent);
+}
+
+.waiting-state > p {
+  color: var(--muted);
+  margin: 0;
+  font-size: 14px;
+}
+
+.voting-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  background: rgba(214, 181, 111, 0.08);
+  border: 1px solid var(--muted);
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(214, 181, 111, 0.1);
+}
+
+.stat-item:last-child {
+  border-bottom: none;
+}
+
+.stat-label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.stat-value {
+  color: var(--accent);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.message {
+  width: 100%;
+  padding: 16px;
+  border-radius: 8px;
+  text-align: center;
+  animation: slideIn 0.3s ease-out;
+}
+
+.message p {
+  margin: 0;
+  font-size: 14px;
+  color: white;
+}
+
+.message.success {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+}
+
+.message.success p {
+  color: #10b981;
+  font-weight: 600;
+}
+
+.message.info {
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid #3b82f6;
+}
+
+.message.info p {
+  color: #3b82f6;
+}
+
+.message .small {
+  font-size: 12px;
+  margin-top: 4px;
+  opacity: 0.8;
 }
 
 .progress-bar {

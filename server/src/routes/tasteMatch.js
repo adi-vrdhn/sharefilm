@@ -8,15 +8,22 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 const { MovieTasteRating, UserMovie } = require("../models");
 const tasteMatchService = require("../services/tasteMatchService");
+const tasteMatchSessionService = require("../services/tasteMatchSessionService");
 const tmdbMovieFetcher = require("../services/tmdbMovieFetcher");
 
 /**
- * POST /api/taste-match/rate
+ * POST /api/taste-match/rate/:friendId
  * Record a user's rating for a movie (MY TYPE or Nahhh)
+ * Tracks voting session with friend
  */
-router.post("/api/taste-match/rate", auth, async (req, res) => {
+router.post("/api/taste-match/rate/:friendId", auth, async (req, res) => {
   try {
+    const { friendId } = req.params;
     const { tmdb_movie_id, rating, movie_title, genres, popularity } = req.body;
+
+    if (!friendId || isNaN(friendId)) {
+      return res.status(400).json({ error: "Invalid friend ID" });
+    }
 
     if (!tmdb_movie_id) {
       return res.status(400).json({ error: "Movie ID is required" });
@@ -55,13 +62,17 @@ router.post("/api/taste-match/rate", auth, async (req, res) => {
       });
     }
 
+    // Track vote in session
+    const session = await tasteMatchSessionService.trackVote(req.user.id, parseInt(friendId));
+
     // Invalidate cached taste vector
     await tasteMatchService.invalidateTasteVector(req.user.id);
 
     res.json({
       success: true,
       message: existing ? "Rating updated" : "Rating saved",
-      rating: result
+      rating: result,
+      session_status: session.session_status
     });
   } catch (error) {
     console.error("Error saving taste rating:", error);
@@ -103,6 +114,30 @@ router.get("/api/taste-match/next-movie/:friendId", auth, async (req, res) => {
   } catch (error) {
     console.error("Error getting next movie:", error);
     res.status(500).json({ error: "Failed to fetch movie" });
+  }
+});
+
+/**
+ * GET /api/taste-match/session/:friendId
+ * Get current session state (voting, waiting, report ready)
+ */
+router.get("/api/taste-match/session/:friendId", auth, async (req, res) => {
+  try {
+    const { friendId } = req.params;
+
+    if (!friendId || isNaN(friendId)) {
+      return res.status(400).json({ error: "Invalid friend ID" });
+    }
+
+    const state = await tasteMatchSessionService.getSessionState(
+      req.user.id,
+      parseInt(friendId)
+    );
+
+    res.json(state);
+  } catch (error) {
+    console.error("Error getting session state:", error);
+    res.status(500).json({ error: "Failed to get session state" });
   }
 });
 
