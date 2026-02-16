@@ -208,6 +208,8 @@ a {
 .movie-card-body h3 {
   margin: 0;
   font-size: 18px;
+  font-weight: 700;
+  color: #1a1a1a;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
