@@ -181,7 +181,7 @@ const MovieCard = ({ item, onDelete, onWatched, isSentView }) => {
               ) : (
                 <>
                   <div className="rating-confirmed">
-                    <p className="success-message">✓ Rating submitted successfully!</p>
+                    <p className="success-message">Rating submitted successfully!</p>
                     <p className="submitted-rating">Your rating: <strong>{rating.toFixed(1)}/5.0</strong></p>
                     {comments && <p className="submitted-comment"><em>"{comments}"</em></p>}
                   </div>

@@ -285,7 +285,7 @@ const Watchlist = () => {
                   <span>{movie.year}</span>
                 </div>
                 <div className="watchlist-meta">
-                  <span>⭐ {movie.rating?.toFixed ? movie.rating.toFixed(1) : movie.rating}</span>
+                  <span>{movie.rating?.toFixed ? movie.rating.toFixed(1) : movie.rating}</span>
                   {movie.genre_ids?.length > 0 && (
                     <span>{formatGenres(movie.genre_ids)}</span>
                   )}

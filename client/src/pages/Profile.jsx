@@ -197,7 +197,7 @@ const Profile = () => {
             <div className="profile-header-top">
               <h1 className="profile-name">{profile.name}</h1>
               <span className="buddy-count">
-                <span className="buddies-icon">👥</span>
+                <span className="buddies-icon"></span>
                 {profile.buddyCount || 0} Buddies
               </span>
             </div>
@@ -291,7 +291,7 @@ const Profile = () => {
             className="recommendations-header"
             onClick={loadMoviesTo}
           >
-            <span className="recommendations-icon">🎬</span>
+            <span className="recommendations-icon"></span>
             Movies Recommended To {isOwnProfile ? "Me" : profile?.name} ({moviesTo.length || 0})
             <span className={`expand-icon ${showMoviesTo ? "expanded" : ""}`}>▼</span>
           </button>
@@ -358,7 +358,7 @@ const Profile = () => {
                 className="secondary"
                 onClick={() => setShowPasswordModal(true)}
               >
-                🔐 Change Password
+                Change Password
               </button>
               <button
                 className="secondary"

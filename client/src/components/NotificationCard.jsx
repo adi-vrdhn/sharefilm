@@ -41,7 +41,7 @@ const NotificationCard = ({ note, onDelete }) => {
                   disabled={deleting}
                   title="Delete notification"
                 >
-                  ✕
+                  ×
                 </button>
               </div>
             </div>
@@ -104,7 +104,7 @@ const NotificationCard = ({ note, onDelete }) => {
               disabled={deleting}
               title="Delete notification"
             >
-              ✕
+              ×
             </button>
           </div>
           <div className="helper-text">{note.read ? "Read" : "New"}</div>

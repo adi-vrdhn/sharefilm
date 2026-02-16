@@ -71,7 +71,7 @@ const Notifications = () => {
             onClick={handleClearAll}
             title="Clear all notifications"
           >
-            🗑️ Clear All
+            Clear All
           </button>
         )}
       </div>

@@ -45,7 +45,7 @@ const Analytics = () => {
   if (loading) {
     return (
       <div className="analytics-page">
-        <h1>📊 App Analytics</h1>
+        <h1>App Analytics</h1>
         <p className="loading-text">Loading statistics...</p>
       </div>
     );
@@ -67,7 +67,7 @@ const Analytics = () => {
   if (!stats || !stats.overview) {
     return (
       <div className="analytics-page">
-        <h1>📊 App Analytics</h1>
+        <h1>App Analytics</h1>
         <p className="error-text">Failed to load analytics data</p>
       </div>
     );
@@ -76,7 +76,7 @@ const Analytics = () => {
   return (
     <div className="analytics-page">
       <div className="analytics-header">
-        <h1>📊 App Analytics</h1>
+        <h1>App Analytics</h1>
         <div className="view-toggle">
           <button
             className={view === "overview" ? "active" : ""}
@@ -97,7 +97,7 @@ const Analytics = () => {
         <>
           <div className="stats-grid">
             <div className="stat-box highlight">
-              <div className="stat-icon">👥</div>
+              <div className="stat-icon"></div>
               <div className="stat-value">{stats.overview?.totalUsers || 0}</div>
               <div className="stat-label">Total Users</div>
             </div>
@@ -109,13 +109,13 @@ const Analytics = () => {
             </div>
 
             <div className="stat-box">
-              <div className="stat-icon">📅</div>
+              <div className="stat-icon"></div>
               <div className="stat-value">{stats.overview?.usersThisWeek || 0}</div>
               <div className="stat-label">This Week</div>
             </div>
 
             <div className="stat-box">
-              <div className="stat-icon">🎬</div>
+              <div className="stat-icon"></div>
               <div className="stat-value">{stats.overview?.totalMoviesShared || 0}</div>
               <div className="stat-label">Movies Shared</div>
             </div>

@@ -14,7 +14,7 @@ const Dashboard = () => {
           <p>Send a recommendation with a poster preview and a note.</p>
         </Link>
         <Link to="/list" className="section-card">
-          <div className="section-title">My Movie List</div>
+          <div className="section-title">Movie List</div>
           <p>See the movies friends gifted to you and clean up your list.</p>
         </Link>
         <Link to="/friends" className="section-card">

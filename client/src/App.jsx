@@ -27,7 +27,7 @@ const LoadingScreen = () => (
     color: '#d6b56f',
     fontFamily: '"Space Grotesk", sans-serif',
   }}>
-    <div style={{ fontSize: '2rem', marginBottom: '1rem' }}>🎬</div>
+    <div style={{ fontSize: '2rem', marginBottom: '1rem' }}></div>
     <h1 style={{ margin: '0 0 0.5rem 0', fontSize: '1.8rem', fontFamily: '"Unbounded", sans-serif' }}>FilmShare</h1>
     <p style={{ margin: '0', color: '#b4945c', fontSize: '1rem' }}>Loading your cinema...</p>
   </div>

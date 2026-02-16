@@ -122,7 +122,7 @@ const MovieList = () => {
             onClick={handleClearAllSent}
             title="Remove all sent movies from your list"
           >
-            🗑️ Clear All History
+            Clear All History
           </button>
         </div>
       )}
