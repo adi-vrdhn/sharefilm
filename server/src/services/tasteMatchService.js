@@ -8,7 +8,8 @@ const tasteVectorService = require("./tasteVectorService");
 const similarityService = require("./similarityService");
 const tmdbMovieFetcher = require("./tmdbMovieFetcher");
 
-const MINIMUM_RATED_MOVIES = 10;
+// Users must vote on 20 movies to generate a match report
+const MINIMUM_RATED_MOVIES = 20;
 
 /**
  * Calculate taste match between two users

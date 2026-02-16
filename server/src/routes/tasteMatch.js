@@ -70,38 +70,26 @@ router.post("/api/taste-match/rate", auth, async (req, res) => {
 });
 
 /**
- * GET /api/taste-match/next-movie
- * Get next movie for taste matching
- * Query params: language, year_from, year_to, genre_ids
+ * GET /api/taste-match/next-movie/:friendId
+ * Get next movie for taste matching based on friend's preferences
+ * If friend has < 20 movies: show popular movies (all genres)
+ * If friend has >= 20 movies: show movies matching friend's top genres
+ * Always excludes current user's watched + rated movies
  */
-router.get("/api/taste-match/next-movie", auth, async (req, res) => {
+router.get("/api/taste-match/next-movie/:friendId", auth, async (req, res) => {
   try {
-    const { language = "en", year_from, year_to, genre_ids } = req.query;
+    const { friendId } = req.params;
 
-    // Get watched and rated movie IDs
-    const watchedMovies = await UserMovie.findAll({
-      where: { user_id: req.user.id },
-      attributes: ["tmdb_id"]
-    });
+    if (!friendId || isNaN(friendId)) {
+      return res.status(400).json({ error: "Invalid friend ID" });
+    }
 
-    const ratedMovies = await MovieTasteRating.findAll({
-      where: { user_id: req.user.id },
-      attributes: ["tmdb_movie_id"]
-    });
-
-    const watchedIds = watchedMovies.map((m) => m.tmdb_id);
-    const ratedIds = ratedMovies.map((m) => m.tmdb_movie_id);
-
-    const userPreferences = {
-      language,
-      yearRange: year_from && year_to ? [parseInt(year_from), parseInt(year_to)] : null,
-      genreIds: genre_ids ? genre_ids.split(",").map(Number) : []
-    };
-
-    const movie = await tmdbMovieFetcher.getNextMovieForTasteMatch(
-      userPreferences,
-      watchedIds,
-      ratedIds
+    // Get next movie using friend's preference-based logic
+    const movie = await tmdbMovieFetcher.getNextMovieForTasteMatchWithFriend(
+      req.user.id,
+      parseInt(friendId),
+      MovieTasteRating,
+      UserMovie
     );
 
     if (!movie) {

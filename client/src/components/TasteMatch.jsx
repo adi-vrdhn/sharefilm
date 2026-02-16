@@ -5,43 +5,38 @@ import TasteMatchResult from "./TasteMatchResult";
 import "../styles/tasteMatch.css";
 
 const TasteMatch = ({ friendId, friendName, onClose }) => {
-  const [phase, setPhase] = useState("loading"); // loading, checking, voting, result, error
+  const [phase, setPhase] = useState("loading"); // loading, voting, result, error
   const [currentMovie, setCurrentMovie] = useState(null);
-  const [userStats, setUserStats] = useState(null);
   const [matchResult, setMatchResult] = useState(null);
   const [votesCount, setVotesCount] = useState(0);
-  const [minRequired] = useState(10);
+  const [votesRequired] = useState(20); // 20 votes to form match
   const [error, setError] = useState("");
   const [isLoadingMovie, setIsLoadingMovie] = useState(false);
 
-  // Check user's stats on mount
+  // Start voting immediately - no prerequisites
   useEffect(() => {
-    checkUserStats();
+    startVoting();
   }, []);
 
-  const checkUserStats = async () => {
+  const startVoting = async () => {
     try {
       setPhase("loading");
-      const response = await api.get("/api/taste-match/user-stats");
-      setUserStats(response.data);
-
-      if (response.data.total_rated >= minRequired) {
-        // User has enough votes, load first movie
-        fetchNextMovie();
-      } else {
-        setPhase("checking");
-      }
+      fetchNextMovie();
     } catch (err) {
-      console.error("Error checking stats:", err);
-      setError("Failed to load taste match data");
+      console.error("Error starting voting:", err);
+      setError("Failed to start taste match");
       setPhase("error");
     }
+  };
+
+  const checkUserStats = async () => {
+    // Deprecated - kept for backwards compatibility
   };
 
   const fetchNextMovie = async () => {
     try {
       setIsLoadingMovie(true);
-      const response = await api.get("/api/taste-match/next-movie");
+      const response = await api.get(`/api/taste-match/next-movie/${friendId}`);
       setCurrentMovie(response.data);
       setPhase("voting");
     } catch (err) {
@@ -59,10 +54,11 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
   };
 
   const handleMovieRated = async () => {
-    setVotesCount((prev) => prev + 1);
+    const newVoteCount = votesCount + 1;
+    setVotesCount(newVoteCount);
 
-    // After 5 votes during session, check if we can calculate match
-    if (votesCount + 1 >= 5) {
+    // After 20 votes, calculate match
+    if (newVoteCount >= votesRequired) {
       calculateMatch();
     } else {
       // Fetch next movie
@@ -100,18 +96,18 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
 
           <div className="checking-phase">
             <div className="icon-large">🎬</div>
-            <h2>Not enough data yet!</h2>
+            <h2>Rate 20 movies!</h2>
             <p>
-              You need to rate at least <strong>{minRequired} movies</strong> to compare taste.
+              Help us understand your taste by rating <strong>{votesRequired} movies</strong> with your friend.
             </p>
             <p className="current-count">
-              You've rated <strong>{userStats?.total_rated || 0}</strong> movie{userStats?.total_rated !== 1 ? "s" : ""}
+              Progress: <strong>{votesCount}</strong>/{votesRequired}
             </p>
             <div className="progress-bar">
               <div
                 className="progress-fill"
                 style={{
-                  width: `${Math.min(100, (userStats?.total_rated / minRequired) * 100)}%`
+                  width: `${Math.min(100, (votesCount / votesRequired) * 100)}%`
                 }}
               />
             </div>
@@ -133,11 +129,19 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
             ×
           </button>
 
-          <div className="voting-header">
-            <h2>Rate some movies!</h2>
-            <p>Help us find your match with {friendName}</p>
+        <div className="voting-header">
+            <h2>Rate movies with {friendName}! 🎬</h2>
+            <p>Vote on {votesRequired} movies to generate your match</p>
             <div className="votes-counter">
-              Votes this session: <strong>{votesCount}</strong>
+              Progress: <strong>{votesCount}/{votesRequired}</strong>
+            </div>
+            <div className="progress-bar-inline">
+              <div
+                className="progress-fill"
+                style={{
+                  width: `${(votesCount / votesRequired) * 100}%`
+                }}
+              />
             </div>
           </div>
 

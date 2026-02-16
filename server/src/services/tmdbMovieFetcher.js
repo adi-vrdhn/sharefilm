@@ -201,11 +201,142 @@ async function getNextMovieForTasteMatch(
   }
 }
 
+/**
+ * Get friend's top genres from their movie ratings
+ * @param {Number} friendId - Friend's user ID
+ * @param {Object} MovieTasteRating - Model reference
+ * @returns {Array} Top genre IDs sorted by frequency
+ */
+async function getFriendTopGenres(friendId, MovieTasteRatingModel) {
+  try {
+    const genreFrequency = {};
+
+    const ratings = await MovieTasteRatingModel.findAll({
+      where: { user_id: friendId },
+      attributes: ["genres"]
+    });
+
+    for (const rating of ratings) {
+      const genres = rating.genres || [];
+      for (const genre of genres) {
+        genreFrequency[genre] = (genreFrequency[genre] || 0) + 1;
+      }
+    }
+
+    // Convert to array and sort by frequency descending
+    const topGenres = Object.entries(genreFrequency)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5) // Top 5 genres
+      .map((entry) => entry[0]);
+
+    return topGenres;
+  } catch (error) {
+    console.error("Error getting friend's top genres:", error.message);
+    return [];
+  }
+}
+
+/**
+ * Get next movie for Taste Match based on friend's preferences
+ * If friend has < 20 movies: show popular movies (all genres)
+ * If friend has >= 20 movies: show movies matching friend's top genres
+ * Always excludes current user's watched + rated movies
+ *
+ * @param {Number} currentUserId - Current user ID
+ * @param {Number} friendId - Friend's user ID
+ * @param {Object} MovieTasteRating - MovieTasteRating model
+ * @param {Object} UserMovie - UserMovie model
+ * @returns {Object} Movie card ready for voting
+ */
+async function getNextMovieForTasteMatchWithFriend(
+  currentUserId,
+  friendId,
+  MovieTasteRatingModel,
+  UserMovieModel
+) {
+  try {
+    // Get current user's watched and rated movies (to exclude)
+    const watchedMovies = await UserMovieModel.findAll({
+      where: { user_id: currentUserId },
+      attributes: ["tmdb_id"]
+    });
+
+    const ratedMovies = await MovieTasteRatingModel.findAll({
+      where: { user_id: currentUserId },
+      attributes: ["tmdb_movie_id"]
+    });
+
+    const watchedIds = watchedMovies.map((m) => m.tmdb_id);
+    const ratedIds = ratedMovies.map((m) => m.tmdb_movie_id);
+    const excludeIds = new Set([...watchedIds, ...ratedIds]);
+
+    // Get friend's rated movies count
+    const friendRatingsCount = await MovieTasteRatingModel.count({
+      where: { user_id: friendId }
+    });
+
+    let fetchOptions = {
+      page: Math.floor(Math.random() * 3) + 1, // Pages 1-3
+      limit: 20
+    };
+
+    // If friend has >= 20 movies: suggest based on friend's top genres
+    if (friendRatingsCount >= 20) {
+      const topGenres = await getFriendTopGenres(friendId, MovieTasteRatingModel);
+
+      if (topGenres.length > 0) {
+        // Convert genre names to TMDB genre IDs
+        const genreMapping = await fetchGenres();
+        const genreNameToId = {};
+        Object.entries(genreMapping).forEach(([id, name]) => {
+          genreNameToId[name] = parseInt(id);
+        });
+
+        const topGenreIds = topGenres
+          .map((name) => genreNameToId[name])
+          .filter(Boolean);
+
+        if (topGenreIds.length > 0) {
+          fetchOptions.genres = topGenreIds;
+        }
+      }
+    }
+    // If friend has < 20 movies: fetch popular movies (all genres, no filter)
+
+    // Fetch candidate movies
+    const movies = await fetchMoviesFromTMDB(fetchOptions);
+
+    // Filter out current user's watched/rated movies
+    const filtered = movies.filter((movie) => !excludeIds.has(movie.id));
+
+    if (filtered.length > 0) {
+      return filtered[Math.floor(Math.random() * filtered.length)];
+    }
+
+    // If no movies found with current filters, try without genre filter
+    const fallback = await fetchMoviesFromTMDB({
+      page: Math.floor(Math.random() * 5) + 1,
+      limit: 20
+    });
+
+    const fallbackFiltered = fallback.filter((movie) => !excludeIds.has(movie.id));
+
+    return fallbackFiltered.length > 0
+      ? fallbackFiltered[Math.floor(Math.random() * fallbackFiltered.length)]
+      : null;
+  } catch (error) {
+    console.error("Error getting next movie for taste match with friend:", error.message);
+    return null;
+  }
+}
+
 module.exports = {
   fetchGenres,
   getGenreNames,
   fetchMoviesFromTMDB,
   fetchMovieDetail,
   filterMovies,
-  getNextMovieForTasteMatch
+  getNextMovieForTasteMatch,
+  getFriendTopGenres,
+  getNextMovieForTasteMatchWithFriend
 };
