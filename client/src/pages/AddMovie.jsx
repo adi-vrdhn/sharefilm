@@ -204,13 +204,20 @@ const AddMovie = () => {
               {results.length > 0 && (
                 <div className="autocomplete-list">
                   {results.map((movie) => (
-                    <div
+                    <button
+                      type="button"
                       className="autocomplete-item"
                       key={movie.tmdb_id}
                       onClick={() => handleSelect(movie)}
                     >
-                      {movie.title} {movie.year ? `(${movie.year})` : ""}
-                    </div>
+                      {movie.poster && (
+                        <img src={movie.poster} alt={movie.title} className="autocomplete-poster" />
+                      )}
+                      <div className="autocomplete-info">
+                        <div className="autocomplete-title">{movie.title}</div>
+                        {movie.year && <div className="autocomplete-year">{movie.year}</div>}
+                      </div>
+                    </button>
                   ))}
                 </div>
               )}
