@@ -18,12 +18,17 @@ const Rating = sequelize.define(
       allowNull: false
     },
     rating: {
-      type: DataTypes.INTEGER,
+      type: DataTypes.DECIMAL(2, 1),
       allowNull: false,
       validate: {
-        min: 1,
+        min: 0,
         max: 5
       }
+    },
+    comments: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+      field: "comments"
     }
   },
   {

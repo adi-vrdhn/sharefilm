@@ -8,8 +8,25 @@ const Notifications = () => {
 
   const loadNotes = async () => {
     try {
-      const response = await api.get("/getNotifications");
-      setNotes(response.data);
+      const [notesRes, ratingRes] = await Promise.all([
+        api.get("/getNotifications"),
+        api.get("/getRatingNotifications").catch(() => ({ data: [] }))
+      ]);
+
+      // Combine regular notifications with rating notifications
+      const regularNotes = notesRes.data || [];
+      const ratingNotes = (ratingRes.data || []).map(rating => ({
+        id: `rating_${rating.userMovieId}`,
+        type: "rating",
+        movie: rating.movie,
+        ratings: rating.ratings,
+        text: `Friends have rated "${rating.movie?.title}"`,
+        read: false
+      }));
+
+      // Merge and sort by most recent
+      const allNotes = [...ratingNotes, ...regularNotes];
+      setNotes(allNotes);
     } catch (error) {
       setStatus("Failed to load notifications");
     }
@@ -24,7 +41,7 @@ const Notifications = () => {
   return (
     <div className="container">
       <h1>Notifications</h1>
-      <p className="helper-text">Live feed of new film shares.</p>
+      <p className="helper-text">Live feed of new film shares and ratings.</p>
       {status && <p className="helper-text">{status}</p>}
       <div className="card-grid">
         {notes.map((note) => (

@@ -1,0 +1,63 @@
+.movies-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.toggle-btn {
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(38, 44, 51, 0.7);
+  border: 1px solid rgba(200, 160, 72, 0.2);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.toggle-btn:hover {
+  border-color: rgba(200, 160, 72, 0.4);
+  background: rgba(38, 44, 51, 0.95);
+}
+
+.toggle-btn.active {
+  background: linear-gradient(135deg, #c8a048, #e1b65a);
+  border-color: #c8a048;
+  color: var(--bg-1);
+  box-shadow: 0 4px 12px rgba(200, 160, 72, 0.3);
+}
+
+@media (max-width: 768px) {
+  .movies-header {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .view-toggle {
+    width: 100%;
+  }
+
+  .toggle-btn {
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .movies-header {
+    gap: 12px;
+  }
+
+  .toggle-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}

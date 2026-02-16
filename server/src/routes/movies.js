@@ -391,14 +391,14 @@ router.post("/markMovieWatched", async (req, res) => {
 // Rate a movie
 router.post("/rateMovie", async (req, res) => {
   try {
-    const { userMovieId, rating } = req.body;
+    const { userMovieId, rating, comments } = req.body;
 
-    if (!userMovieId || !rating) {
+    if (!userMovieId || rating === undefined || rating === null) {
       return res.status(400).json({ message: "userMovieId and rating required" });
     }
 
-    if (rating < 1 || rating > 5) {
-      return res.status(400).json({ message: "Rating must be between 1 and 5" });
+    if (rating < 0 || rating > 5) {
+      return res.status(400).json({ message: "Rating must be between 0 and 5" });
     }
 
     // Check if user is the receiver of this movie
@@ -410,11 +410,12 @@ router.post("/rateMovie", async (req, res) => {
     // Find or create rating
     const [ratingRecord] = await Rating.findOrCreate({
       where: { user_id: req.user.id, user_movie_id: userMovieId },
-      defaults: { rating }
+      defaults: { rating, comments: comments || null }
     });
 
-    if (ratingRecord.rating !== rating) {
+    if (ratingRecord.rating !== rating || ratingRecord.comments !== comments) {
       ratingRecord.rating = rating;
+      ratingRecord.comments = comments || null;
       await ratingRecord.save();
     }
 
@@ -447,4 +448,74 @@ router.get("/getMovieRatings/:userMovieId", async (req, res) => {
   }
 });
 
-module.exports = router;
+// Get movies sent by current user
+router.get("/getSentMovies", async (req, res) => {
+  try {
+    const sentMovies = await UserMovie.findAll({
+      where: { senderId: req.user.id },
+      include: [
+        {
+          model: Movie,
+          attributes: ["id", "title", "poster", "year"]
+        },
+        {
+          model: User,
+          as: "receiver",
+          attributes: ["id", "name", "profilePicture"]
+        }
+      ],
+      order: [["dateAdded", "DESC"]]
+    });
+
+    return res.json(sentMovies);
+  } catch (error) {
+    console.error("Get sent movies error:", error.message);
+    return res.status(500).json({ message: error.message });
+  }
+});
+
+// Get rating notifications (movies you sent that were rated)
+router.get("/getRatingNotifications", async (req, res) => {
+  try {
+    const sentMovies = await UserMovie.findAll({
+      where: { senderId: req.user.id },
+      include: [
+        {
+          model: Rating,
+          attributes: ["id", "rating", "comments", "user_id"],
+          include: [
+            {
+              model: User,
+              attributes: ["id", "name", "profilePicture"],
+              as: "User"
+            }
+          ]
+        },
+        {
+          model: Movie,
+          attributes: ["id", "title", "poster", "year"]
+        },
+        {
+          model: User,
+          as: "receiver",
+          attributes: ["id", "name"]
+        }
+      ]
+    });
+
+    // Filter and transform to only include movies with ratings
+    const ratedMovies = sentMovies
+      .filter(um => um.Ratings && um.Ratings.length > 0)
+      .map(um => ({
+        userMovieId: um.id,
+        movie: um.Movie,
+        receiver: um.receiver,
+        ratings: um.Ratings
+      }));
+
+    return res.json(ratedMovies);
+  } catch (error) {
+    console.error("Get rating notifications error:", error.message);
+    return res.status(500).json({ message: error.message });
+  }
+});
