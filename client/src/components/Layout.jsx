@@ -9,6 +9,10 @@ const Layout = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [showDownloadModal, setShowDownloadModal] = useState(false);
+
+  // Check if running as PWA or in browser
+  const isInPWA = window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
 
   // Admin emails - only these users can see Analytics
   const ADMIN_EMAILS = ["avrdhn28@gmail.com"];
@@ -74,6 +78,11 @@ const Layout = ({ children }) => {
         </nav>
 
         <div className="sidebar-footer">
+          {!isInPWA && (
+            <button className="download-app-btn" onClick={() => setShowDownloadModal(true)}>
+              📥 Download the App
+            </button>
+          )}
           <button className="logout-btn" onClick={handleLogout}>
             🚪 Logout
           </button>
@@ -100,6 +109,34 @@ const Layout = ({ children }) => {
           className="sidebar-overlay"
           onClick={() => setSidebarOpen(false)}
         />
+      )}
+
+      {/* Download App Modal */}
+      {showDownloadModal && (
+        <div className="modal-overlay" onClick={() => setShowDownloadModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Add FilmShare to Your Home Screen</h3>
+            </div>
+            <div className="modal-body">
+              <p>To access FilmShare like a native app:</p>
+              <ol style={{ paddingLeft: "20px", lineHeight: "1.8" }}>
+                <li><strong>Open this page in your browser</strong></li>
+                <li><strong>Tap the share button</strong> (usually at the top or bottom)</li>
+                <li><strong>Select "Add to Home Screen"</strong></li>
+                <li>Confirm and enjoy FilmShare as an app!</li>
+              </ol>
+              <p style={{ marginTop: "16px", fontSize: "12px", opacity: 0.7 }}>
+                This works on most mobile browsers including Chrome, Safari, and Firefox.
+              </p>
+            </div>
+            <div className="modal-footer">
+              <button className="primary" onClick={() => setShowDownloadModal(false)}>
+                Got it!
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -171,6 +171,26 @@
   box-shadow: 0 6px 12px rgba(31, 26, 22, 0.18);
 }
 
+.download-app-btn {
+  width: 100%;
+  padding: 12px;
+  background: rgba(52, 152, 219, 0.15);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+  border-radius: 8px;
+  color: var(--ink);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 8px;
+}
+
+.download-app-btn:hover {
+  background: rgba(52, 152, 219, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(52, 152, 219, 0.2);
+}
+
 /* Main content */
 .main-content {
   flex: 1;
