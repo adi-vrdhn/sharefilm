@@ -1,11 +1,26 @@
 import React, { useState } from "react";
+import api from "../api/axios";
 import "../styles/notificationcard.css";
 
-const NotificationCard = ({ note }) => {
+const NotificationCard = ({ note, onDelete }) => {
   const [expanded, setExpanded] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   // Check if this is a rating notification (has movie data)
   const isRatingNotification = note.movie && note.ratings;
+
+  const handleDelete = async (e) => {
+    e.stopPropagation();
+    
+    try {
+      setDeleting(true);
+      await api.delete(`/notification/${note.id}`);
+      onDelete?.(note.id);
+    } catch (error) {
+      console.error("Failed to delete notification:", error);
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="notice-card">
@@ -18,7 +33,17 @@ const NotificationCard = ({ note }) => {
           >
             <div className="notification-header">
               <strong>{note.text || "Friend rated your movie recommendation"}</strong>
-              <span className="badge">{note.ratings?.length || 0} Rating{(note.ratings?.length || 0) !== 1 ? "s" : ""}</span>
+              <div className="notification-actions">
+                <span className="badge">{note.ratings?.length || 0} Rating{(note.ratings?.length || 0) !== 1 ? "s" : ""}</span>
+                <button 
+                  className="delete-btn"
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  title="Delete notification"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
             <div className="helper-text">{note.read ? "Read" : "New"}</div>
           </div>
@@ -71,7 +96,17 @@ const NotificationCard = ({ note }) => {
       ) : (
         // Regular text notification
         <div className="notification-content">
-          <strong>{note.text}</strong>
+          <div className="notification-header">
+            <strong>{note.text}</strong>
+            <button 
+              className="delete-btn"
+              onClick={handleDelete}
+              disabled={deleting}
+              title="Delete notification"
+            >
+              ✕
+            </button>
+          </div>
           <div className="helper-text">{note.read ? "Read" : "New"}</div>
         </div>
       )}

@@ -37,4 +37,43 @@ router.post("/addNotification", async (req, res) => {
   }
 });
 
+router.delete("/clearNotifications", async (req, res) => {
+  try {
+    const result = await Notification.destroy({
+      where: { userId: req.user.id }
+    });
+
+    return res.json({ 
+      message: "Notifications cleared", 
+      deletedCount: result 
+    });
+  } catch (error) {
+    console.error("Error clearing notifications:", error);
+    return res.status(500).json({ message: "Failed to clear notifications" });
+  }
+});
+
+router.delete("/notification/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const notification = await Notification.findByPk(id);
+    
+    if (!notification) {
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    if (notification.userId !== req.user.id) {
+      return res.status(403).json({ message: "Not authorized to delete this notification" });
+    }
+
+    await notification.destroy();
+
+    return res.json({ message: "Notification deleted" });
+  } catch (error) {
+    console.error("Error deleting notification:", error);
+    return res.status(500).json({ message: "Failed to delete notification" });
+  }
+});
+
 module.exports = router;
