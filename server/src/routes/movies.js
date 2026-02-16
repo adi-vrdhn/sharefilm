@@ -472,7 +472,7 @@ router.get("/getSentMovies", async (req, res) => {
       id: item.id,
       dateAdded: item.dateAdded,
       senderId: item.senderId,
-      receiver: item.User,
+      receiver: item.receiver,
       movie: item.Movie
     }));
 
