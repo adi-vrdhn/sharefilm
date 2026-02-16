@@ -7,6 +7,8 @@ const Message = require("./Message");
 const Rating = require("./Rating");
 const SharedParty = require("./SharedParty");
 const SwipeEvent = require("./SwipeEvent");
+const MovieTasteRating = require("./MovieTasteRating");
+const UserTasteVector = require("./UserTasteVector");
 
 User.hasMany(UserMovie, { foreignKey: "receiver_id", as: "receivedMovies", constraints: true });
 User.hasMany(UserMovie, { foreignKey: "sender_id", as: "sentMovies", constraints: true });
@@ -36,6 +38,12 @@ Rating.belongsTo(UserMovie, { foreignKey: "user_movie_id", constraints: true });
 User.hasMany(SwipeEvent, { foreignKey: "user_id", constraints: true });
 SwipeEvent.belongsTo(User, { foreignKey: "user_id", constraints: true });
 
+User.hasMany(MovieTasteRating, { foreignKey: "user_id", constraints: true });
+MovieTasteRating.belongsTo(User, { foreignKey: "user_id", constraints: true });
+
+User.hasMany(UserTasteVector, { foreignKey: "user_id", constraints: true });
+UserTasteVector.belongsTo(User, { foreignKey: "user_id", constraints: true });
+
 module.exports = {
   User,
   Movie,
@@ -45,5 +53,7 @@ module.exports = {
   Message,
   Rating,
   SharedParty,
-  SwipeEvent
+  SwipeEvent,
+  MovieTasteRating,
+  UserTasteVector
 };
