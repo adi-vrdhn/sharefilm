@@ -181,7 +181,7 @@ a {
   flex-direction: column;
   border: 1px solid rgba(200, 160, 72, 0.18);
   width: 280px;
-  height: 520px;
+  height: 580px;
 }
 
 .movie-card img,
@@ -207,15 +207,16 @@ a {
 
 .movie-card-body h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 700;
   color: #1a1a1a;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
-  line-height: 1.3;
+  line-height: 1.4;
+  min-height: 50px;
 }
 
 .movie-card-actions {
@@ -249,14 +250,71 @@ a {
 
 /* Rating Modal Styles */
 .rating-modal {
-  max-width: 500px;
-  width: 90%;
+  max-width: 600px;
+  width: 95%;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .rating-section {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+}
+
+.post-rating-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(200, 160, 72, 0.2);
+}
+
+.post-rating-options h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.post-rating-buttons {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.post-rating-buttons button {
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.post-rating-buttons .keep-btn {
+  background: linear-gradient(135deg, #c8a048, #e1b65a);
+  color: var(--bg-1);
+  box-shadow: 0 4px 12px rgba(200, 160, 72, 0.3);
+}
+
+.post-rating-buttons .keep-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(200, 160, 72, 0.4);
+}
+
+.post-rating-buttons .remove-btn {
+  background: rgba(231, 76, 60, 0.15);
+  color: #e74c3c;
+  border: 1px solid rgba(231, 76, 60, 0.3);
+}
+
+.post-rating-buttons .remove-btn:hover {
+  background: rgba(231, 76, 60, 0.25);
+  border-color: rgba(231, 76, 60, 0.5);
+  transform: translateY(-2px);
 }
 
 .movie-preview {
@@ -310,7 +368,7 @@ a {
 .slider-container {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .rating-slider {
@@ -402,6 +460,42 @@ a {
   font-size: 11px;
   color: var(--muted);
   text-align: right;
+}
+
+.rating-confirmed {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  text-align: center;
+  padding: 20px;
+  background: rgba(39, 174, 96, 0.1);
+  border: 1px solid rgba(39, 174, 96, 0.3);
+  border-radius: 12px;
+}
+
+.success-message {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #27ae60;
+}
+
+.submitted-rating {
+  margin: 0;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.submitted-rating strong {
+  color: var(--accent-2);
+}
+
+.submitted-comment {
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+  max-height: 100px;
+  overflow-y: auto;
 }
 
 .badge {
