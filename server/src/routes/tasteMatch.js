@@ -5,7 +5,7 @@
 
 const express = require("express");
 const router = express.Router();
-const { auth } = require("../middleware/auth");
+const auth = require("../middleware/auth");
 const { MovieTasteRating, UserMovie } = require("../models");
 const tasteMatchService = require("../services/tasteMatchService");
 const tmdbMovieFetcher = require("../services/tmdbMovieFetcher");
