@@ -3,7 +3,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
 import ImageEditor from "../components/ImageEditor";
+import GameGuessMovie from "../components/GameGuessMovie";
 import "../styles/profile.css";
+import "../styles/games.css";
 
 const Profile = () => {
   const { userId } = useParams();
@@ -27,6 +29,8 @@ const Profile = () => {
   const [moviesTo, setMoviesTo] = useState([]);
   const [showMoviesFrom, setShowMoviesFrom] = useState(false);
   const [moviesFrom, setMoviesFrom] = useState([]);
+  const [showGames, setShowGames] = useState(false);
+  const [selectedGame, setSelectedGame] = useState(null);
 
   const isOwnProfile = !userId;
 
@@ -285,6 +289,34 @@ const Profile = () => {
           </div>
         )}
 
+        {/* Games Section */}
+        {isOwnProfile && (
+          <div className="games-section">
+            <button
+              className="games-header"
+              onClick={() => setShowGames(!showGames)}
+            >
+              <span className="games-icon">🎮</span>
+              Play Games
+              <span className={`expand-icon ${showGames ? "expanded" : ""}`}>▼</span>
+            </button>
+            {showGames && (
+              <div className="games-list">
+                <div 
+                  className="game-card"
+                  onClick={() => setSelectedGame("guess-movie")}
+                >
+                  <div className="game-card-icon">🎬</div>
+                  <div className="game-card-info">
+                    <p className="game-card-title">Guess the Movie by Cast</p>
+                    <p className="game-card-description">Identify movies from actor faces</p>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Movies Recommended To This User */}
         <div className="recommendations-section">
           <button
@@ -493,6 +525,26 @@ const Profile = () => {
                   Cancel
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Game Modal */}
+      {selectedGame && (
+        <div className="game-modal-overlay" onClick={() => setSelectedGame(null)}>
+          <div className="game-modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="game-modal-header">
+              <h2>{selectedGame === "guess-movie" ? "Guess the Movie" : "Game"}</h2>
+              <button 
+                className="close-game-button"
+                onClick={() => setSelectedGame(null)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="game-modal-body">
+              {selectedGame === "guess-movie" && <GameGuessMovie />}
             </div>
           </div>
         </div>
