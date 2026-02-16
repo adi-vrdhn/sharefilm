@@ -35,7 +35,9 @@ router.get("/profile/me", async (req, res) => {
 router.get("/profile/user/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    const user = await User.findByPk(userId, {
+    const parsedUserId = parseInt(userId);
+    
+    const user = await User.findByPk(parsedUserId, {
       attributes: ["id", "name", "bio", "profilePicture"]
     });
 
@@ -43,22 +45,26 @@ router.get("/profile/user/:userId", async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Get buddy count
+    // Get buddy count using proper OR condition
     const buddyCount = await Friendship.count({
-      where: [
-        { userId: parseInt(userId) },
-        { friendId: parseInt(userId) }
-      ]
+      where: {
+        [Op.or]: [
+          { userId: parsedUserId },
+          { friendId: parsedUserId }
+        ]
+      }
     });
 
     // Check if requester is a buddy of this user
     let isBuddy = false;
-    if (req.user.id !== parseInt(userId)) {
+    if (req.user.id !== parsedUserId) {
       const friendship = await Friendship.findOne({
-        where: [
-          { userId: req.user.id, friendId: parseInt(userId) },
-          { userId: parseInt(userId), friendId: req.user.id }
-        ]
+        where: {
+          [Op.or]: [
+            { userId: req.user.id, friendId: parsedUserId },
+            { userId: parsedUserId, friendId: req.user.id }
+          ]
+        }
       });
       isBuddy = !!friendship;
     }
@@ -67,7 +73,7 @@ router.get("/profile/user/:userId", async (req, res) => {
       ...user.toJSON(),
       buddyCount: Math.floor(buddyCount / 2),
       isBuddy,
-      isOwnProfile: req.user.id === parseInt(userId)
+      isOwnProfile: req.user.id === parsedUserId
     });
   } catch (error) {
     console.error("Public profile fetch error:", error.message);
