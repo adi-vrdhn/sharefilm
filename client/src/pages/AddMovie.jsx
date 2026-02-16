@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import api from "../api/axios";
 
 const AddMovie = () => {
-  const [showForm, setShowForm] = useState(false);
+  const [showForm, setShowForm] = useState(true);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -184,14 +184,10 @@ const AddMovie = () => {
     <div className="container">
       <h1>Add a movie for a friend</h1>
       <p className="helper-text">
-        Tap the plus to open the form and share a recommendation.
+        Share a movie recommendation with your friends.
       </p>
-      <button className="plus-button" onClick={() => setShowForm((prev) => !prev)}>
-        +
-      </button>
 
-      {showForm && (
-        <div className="form-card" style={{ marginTop: 20 }}>
+      <div className="form-card" style={{ marginTop: 20 }}>
           <form onSubmit={handleSubmit}>
             <div className="form-row autocomplete">
               <label>TMDB Search</label>
@@ -257,7 +253,6 @@ const AddMovie = () => {
             </button>
           </form>
         </div>
-      )}
 
       {/* Warning Popup */}
       {showWarningPopup && (
