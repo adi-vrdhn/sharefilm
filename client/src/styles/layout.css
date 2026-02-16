@@ -177,7 +177,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  padding: 28px 32px 40px;
+  padding: 12px 32px 40px;
 }
 
 .main-content > * {

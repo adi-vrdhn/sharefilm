@@ -88,7 +88,7 @@ a {
 .container {
   width: min(1100px, 92vw);
   margin: 0 auto;
-  padding: 24px 0 48px;
+  padding: 8px 0 48px;
   flex: 1;
 }
 
