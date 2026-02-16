@@ -14,6 +14,7 @@ const messageRoutes = require("./routes/messages");
 const sharedPartyRoutes = require("./routes/sharedParty");
 const profileRoutes = require("./routes/profile");
 const analyticsRoutes = require("./routes/analytics");
+const gamesRoutes = require("./routes/games");
 const authMiddleware = require("./middleware/auth");
 
 const app = express();
@@ -43,6 +44,9 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/auth", authRoutes);
+
+// Games routes (no auth required, public endpoints)
+app.use(gamesRoutes);
 
 // Serve static files from React build BEFORE auth middleware
 const buildPath = path.join(__dirname, "../../client/dist");

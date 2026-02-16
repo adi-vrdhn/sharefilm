@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../api/axios";
-import GameGuessMovie from "../components/GameGuessMovie";
 import "../styles/discover.css";
 import "../styles/games.css";
 
@@ -16,6 +16,7 @@ const LANGUAGE_OPTIONS = [
 ];
 
 const Discover = () => {
+  const navigate = useNavigate();
   const [genres, setGenres] = useState([]);
   const [providers, setProviders] = useState([]);
   const [filters, setFilters] = useState({
@@ -47,8 +48,6 @@ const Discover = () => {
     language: ""
   });
   const [cardHistory, setCardHistory] = useState([]); // Track viewed cards for back button
-  const [showGames, setShowGames] = useState(false);
-  const [selectedGame, setSelectedGame] = useState(null);
 
   const pointerStart = useRef(null);
   const swipeCardRef = useRef(null);
@@ -433,32 +432,6 @@ const Discover = () => {
 
       {view === "discover" ? (
         <>
-          {/* Games Section */}
-          <div className="games-section">
-            <button
-              className="games-header"
-              onClick={() => setShowGames(!showGames)}
-            >
-              <span className="games-icon">🎮</span>
-              Play Games
-              <span className={`expand-icon ${showGames ? "expanded" : ""}`}>▼</span>
-            </button>
-            {showGames && (
-              <div className="games-list">
-                <div 
-                  className="game-card"
-                  onClick={() => setSelectedGame("guess-movie")}
-                >
-                  <div className="game-card-icon">🎬</div>
-                  <div className="game-card-info">
-                    <p className="game-card-title">Guess the Movie by Cast</p>
-                    <p className="game-card-description">Identify movies from actor faces</p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
           <div className="filter-panel">
         <div className="filter-row">
           <div className="filter-group">
@@ -808,26 +781,6 @@ const Discover = () => {
         </div>
       )}
         </>
-      )}
-
-      {/* Game Modal */}
-      {selectedGame && (
-        <div className="game-modal-overlay" onClick={() => setSelectedGame(null)}>
-          <div className="game-modal-content" onClick={(e) => e.stopPropagation()}>
-            <div className="game-modal-header">
-              <h2>{selectedGame === "guess-movie" ? "Guess the Movie" : "Game"}</h2>
-              <button 
-                className="close-game-button"
-                onClick={() => setSelectedGame(null)}
-              >
-                ✕
-              </button>
-            </div>
-            <div className="game-modal-body">
-              {selectedGame === "guess-movie" && <GameGuessMovie />}
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

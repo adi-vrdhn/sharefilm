@@ -2,11 +2,13 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/games.css";
 
-const TMDB_API_KEY = import.meta.env.VITE_TMDB_KEY;
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
 
 const GameGuessMovie = () => {
   const [gameState, setGameState] = useState("language-select"); // language-select, playing, won, lost
   const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [yearFrom, setYearFrom] = useState(1990);
+  const [yearTo, setYearTo] = useState(new Date().getFullYear());
   const [currentMovie, setCurrentMovie] = useState(null);
   const [currentActorIndex, setCurrentActorIndex] = useState(4); // Start with last actor (index 4)
   const [searchQuery, setSearchQuery] = useState("");
@@ -16,15 +18,20 @@ const GameGuessMovie = () => {
   const [loadingMovie, setLoadingMovie] = useState(false);
 
   const languages = [
-    { code: "en", name: "English" },
-    { code: "es", name: "Spanish" },
-    { code: "fr", name: "French" },
-    { code: "de", name: "German" },
-    { code: "it", name: "Italian" },
-    { code: "pt", name: "Portuguese" },
-    { code: "ja", name: "Japanese" },
-    { code: "hi", name: "Hindi" },
-    { code: "ko", name: "Korean" },
+    { code: "en", name: "🌍 English" },
+    { code: "es", name: "🇪🇸 Spanish" },
+    { code: "fr", name: "🇫🇷 French" },
+    { code: "de", name: "🇩🇪 German" },
+    { code: "it", name: "🇮🇹 Italian" },
+    { code: "pt", name: "🇵🇹 Portuguese" },
+    { code: "ja", name: "🇯🇵 Japanese" },
+    { code: "ko", name: "🇰🇷 Korean" },
+    { code: "hi", name: "🇮🇳 Hindi (Bollywood)" },
+    { code: "te", name: "🇮🇳 Telugu (Tollywood)" },
+    { code: "ta", name: "🇮🇳 Tamil (Kollywood)" },
+    { code: "ml", name: "🇮🇳 Malayalam (Mollywood)" },
+    { code: "kn", name: "🇮🇳 Kannada (Sandalwood)" },
+    { code: "bn", name: "🇮🇳 Bengali" },
   ];
 
   // Fetch random movie with cast
@@ -32,33 +39,16 @@ const GameGuessMovie = () => {
     try {
       setLoadingMovie(true);
       const response = await axios.get(
-        `https://api.themoviedb.org/3/discover/movie?api_key=${TMDB_API_KEY}&language=${lang}-${lang.toUpperCase()}&sort_by=popularity.desc&page=${Math.floor(Math.random() * 50) + 1}`
+        `${API_BASE_URL}/api/games/guess-the-movie/random?language=${lang}&yearFrom=${yearFrom}&yearTo=${yearTo}`
       );
-      
-      if (response.data.results.length === 0) {
+
+      if (!response.data) {
         fetchRandomMovie(lang);
+        setLoadingMovie(false);
         return;
       }
 
-      const randomMovie = response.data.results[Math.floor(Math.random() * response.data.results.length)];
-
-      // Get full details and credits
-      const creditsResponse = await axios.get(
-        `https://api.themoviedb.org/3/movie/${randomMovie.id}/credits?api_key=${TMDB_API_KEY}`
-      );
-
-      const topCast = creditsResponse.data.cast.slice(0, 5);
-      
-      if (topCast.length < 2) {
-        fetchRandomMovie(lang);
-        return;
-      }
-
-      setCurrentMovie({
-        ...randomMovie,
-        cast: topCast,
-      });
-
+      setCurrentMovie(response.data);
       setCurrentActorIndex(4); // Start with last actor
       setSearchQuery("");
       setSearchResults([]);
@@ -86,9 +76,9 @@ const GameGuessMovie = () => {
     const searchTimeout = setTimeout(async () => {
       try {
         const response = await axios.get(
-          `https://api.themoviedb.org/3/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(searchQuery)}&language=${selectedLanguage}`
+          `${API_BASE_URL}/api/games/guess-the-movie/search?query=${encodeURIComponent(searchQuery)}&language=${selectedLanguage}`
         );
-        setSearchResults(response.data.results.slice(0, 8));
+        setSearchResults(response.data.results || []);
       } catch (error) {
         console.error("Error searching:", error);
       }
@@ -127,25 +117,14 @@ const GameGuessMovie = () => {
   };
 
   // Language Selection
-  if (!TMDB_API_KEY) {
-    return (
-      <div className="game-container">
-        <h2>Game Not Available</h2>
-        <p className="game-description" style={{ color: "#ff6b6b" }}>
-          TMDB API key is not configured. Please add VITE_TMDB_KEY to your .env file.
-        </p>
-      </div>
-    );
-  }
-
   if (gameState === "language-select") {
     return (
       <div className="game-container">
         <h2>Guess the Movie by Cast</h2>
-        <p className="game-description">Select a language and try to guess the movie from the cast faces!</p>
+        <p className="game-description">Select a language and movie year range, then try to guess the movie from the cast faces!</p>
         
         <div className="language-selector">
-          <label>Choose Language:</label>
+          <label>🎬 Choose Film Industry:</label>
           <select 
             value={selectedLanguage} 
             onChange={(e) => setSelectedLanguage(e.target.value)}
@@ -157,6 +136,72 @@ const GameGuessMovie = () => {
               </option>
             ))}
           </select>
+
+          <div className="year-range-selector">
+            <label>📅 Movie Year Range:</label>
+            <div className="year-inputs">
+              <div className="year-input-group">
+                <label>From:</label>
+                <input
+                  type="number"
+                  min="1900"
+                  max={new Date().getFullYear()}
+                  value={yearFrom}
+                  onChange={(e) => {
+                    const val = Math.min(parseInt(e.target.value) || 1900, yearTo);
+                    setYearFrom(val);
+                  }}
+                  className="year-input"
+                />
+              </div>
+              <div className="year-input-group">
+                <label>To:</label>
+                <input
+                  type="number"
+                  min="1900"
+                  max={new Date().getFullYear()}
+                  value={yearTo}
+                  onChange={(e) => {
+                    const val = Math.max(parseInt(e.target.value) || new Date().getFullYear(), yearFrom);
+                    setYearTo(val);
+                  }}
+                  className="year-input"
+                />
+              </div>
+            </div>
+
+            <div className="year-slider">
+              <input
+                type="range"
+                min="1900"
+                max={new Date().getFullYear()}
+                value={yearFrom}
+                onChange={(e) => {
+                  const val = Math.min(parseInt(e.target.value), yearTo);
+                  setYearFrom(val);
+                }}
+                className="slider slider-from"
+              />
+              <input
+                type="range"
+                min="1900"
+                max={new Date().getFullYear()}
+                value={yearTo}
+                onChange={(e) => {
+                  const val = Math.max(parseInt(e.target.value), yearFrom);
+                  setYearTo(val);
+                }}
+                className="slider slider-to"
+              />
+            </div>
+
+            <div className="year-display">
+              <p className="year-text">
+                Showing movies from <span className="year-highlight">{yearFrom}</span> to <span className="year-highlight">{yearTo}</span>
+              </p>
+            </div>
+          </div>
+
           <button onClick={startGame} className="start-button" disabled={loadingMovie}>
             {loadingMovie ? "Loading..." : "Start Game"}
           </button>
@@ -238,7 +283,20 @@ const GameGuessMovie = () => {
 
         {/* Buttons */}
         <div className="game-buttons">
-          <button onClick={skipGame} className="skip-button">Skip</button>
+          <button 
+            onClick={() => {
+              if (currentActorIndex > 0) {
+                setCurrentActorIndex(currentActorIndex - 1);
+                setSearchQuery("");
+                setSearchResults([]);
+              }
+            }} 
+            className="see-cast-button"
+            disabled={currentActorIndex === 0}
+          >
+            See Other Cast ({currentActorIndex} left)
+          </button>
+          <button onClick={skipGame} className="reveal-button">Reveal Movie</button>
         </div>
       </div>
     );
