@@ -1,6 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const { User, Friendship, UserMovie } = require("../models");
+const { User, Friendship, UserMovie, Movie } = require("../models");
 const { Op } = require("sequelize");
 
 const router = express.Router();
@@ -212,6 +212,70 @@ router.put("/profile/change-username", async (req, res) => {
   } catch (error) {
     console.error("Username change error:", error.message);
     return res.status(500).json({ message: "Failed to change username" });
+  }
+});
+
+// Get movies recommended to a user (they are receivers)
+router.get("/profile/user/:userId/movies-to", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const parsedUserId = parseInt(userId);
+
+    const movies = await UserMovie.findAll({
+      where: { receiverId: parsedUserId },
+      include: [
+        {
+          model: Movie,
+          attributes: ["id", "title", "poster", "year"],
+          required: true
+        },
+        {
+          model: User,
+          as: "sender",
+          attributes: ["id", "name", "profilePicture"],
+          required: true
+        }
+      ],
+      order: [["dateAdded", "DESC"]],
+      attributes: ["id", "dateAdded"]
+    });
+
+    return res.json(movies);
+  } catch (error) {
+    console.error("Movies-to fetch error:", error.message);
+    return res.status(500).json({ message: "Failed to fetch movies" });
+  }
+});
+
+// Get movies recommended by a user (they are senders)
+router.get("/profile/user/:userId/movies-from", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const parsedUserId = parseInt(userId);
+
+    const movies = await UserMovie.findAll({
+      where: { senderId: parsedUserId },
+      include: [
+        {
+          model: Movie,
+          attributes: ["id", "title", "poster", "year"],
+          required: true
+        },
+        {
+          model: User,
+          as: "receiver",
+          attributes: ["id", "name", "profilePicture"],
+          required: true
+        }
+      ],
+      order: [["dateAdded", "DESC"]],
+      attributes: ["id", "dateAdded"]
+    });
+
+    return res.json(movies);
+  } catch (error) {
+    console.error("Movies-from fetch error:", error.message);
+    return res.status(500).json({ message: "Failed to fetch movies" });
   }
 });
 

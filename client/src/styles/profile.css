@@ -349,6 +349,88 @@
   font-style: italic;
 }
 
+/* Recommendations Section */
+.recommendations-section {
+  margin: 30px 0;
+  background: var(--card);
+  border: 1px solid rgba(200, 160, 72, 0.2);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.recommendations-header {
+  width: 100%;
+  padding: 16px;
+  background: rgba(17, 20, 25, 0.9);
+  border: none;
+  border-bottom: 1px solid rgba(200, 160, 72, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--accent-2);
+  cursor: pointer;
+  transition: background 0.3s ease;
+  font-family: inherit;
+}
+
+.recommendations-header:hover {
+  background: rgba(200, 160, 72, 0.15);
+}
+
+.recommendations-icon {
+  margin-right: 8px;
+}
+
+.recommendations-list {
+  padding: 16px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.recommendations-table {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.table-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(200, 160, 72, 0.1);
+  align-items: center;
+}
+
+.table-row:last-child {
+  border-bottom: none;
+}
+
+.table-cell {
+  font-size: 14px;
+  color: var(--text);
+}
+
+.movie-name {
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.date-added {
+  text-align: right;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.no-recommendations {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 20px;
+  font-style: italic;
+}
+
 /* Account Settings Section */
 .account-settings-section {
   margin: 30px 0;

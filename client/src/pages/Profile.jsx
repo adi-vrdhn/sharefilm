@@ -23,6 +23,10 @@ const Profile = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [newUsername, setNewUsername] = useState("");
+  const [showMoviesTo, setShowMoviesTo] = useState(false);
+  const [moviesTo, setMoviesTo] = useState([]);
+  const [showMoviesFrom, setShowMoviesFrom] = useState(false);
+  const [moviesFrom, setMoviesFrom] = useState([]);
 
   const isOwnProfile = !userId;
 
@@ -75,6 +79,28 @@ const Profile = () => {
       setShowBuddies(true);
     } catch (error) {
       setStatus("Failed to load buddies");
+    }
+  };
+
+  const loadMoviesTo = async () => {
+    try {
+      const endpoint = isOwnProfile ? `/profile/user/${authUser.id}/movies-to` : `/profile/user/${userId}/movies-to`;
+      const response = await api.get(endpoint);
+      setMoviesTo(response.data);
+      setShowMoviesTo(true);
+    } catch (error) {
+      setStatus("Failed to load recommendations");
+    }
+  };
+
+  const loadMoviesFrom = async () => {
+    try {
+      const endpoint = isOwnProfile ? `/profile/user/${authUser.id}/movies-from` : `/profile/user/${userId}/movies-from`;
+      const response = await api.get(endpoint);
+      setMoviesFrom(response.data);
+      setShowMoviesFrom(true);
+    } catch (error) {
+      setStatus("Failed to load recommendations");
     }
   };
 
@@ -258,6 +284,70 @@ const Profile = () => {
             )}
           </div>
         )}
+
+        {/* Movies Recommended To This User */}
+        <div className="recommendations-section">
+          <button
+            className="recommendations-header"
+            onClick={loadMoviesTo}
+          >
+            <span className="recommendations-icon">🎬</span>
+            Movies Recommended To {isOwnProfile ? "Me" : profile?.name} ({moviesTo.length || 0})
+            <span className={`expand-icon ${showMoviesTo ? "expanded" : ""}`}>▼</span>
+          </button>
+          {showMoviesTo && (
+            <div className="recommendations-list">
+              {moviesTo.length > 0 ? (
+                <div className="recommendations-table">
+                  {moviesTo.map((item) => (
+                    <div key={item.id} className="table-row">
+                      <div className="table-cell movie-name">
+                        {item.Movie?.title || "Unknown Movie"}
+                      </div>
+                      <div className="table-cell date-added">
+                        {item.dateAdded ? new Date(item.dateAdded).toLocaleDateString() : "N/A"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="no-recommendations">No recommendations yet</p>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Movies Recommended By This User */}
+        <div className="recommendations-section">
+          <button
+            className="recommendations-header"
+            onClick={loadMoviesFrom}
+          >
+            <span className="recommendations-icon">🎬</span>
+            Movies {isOwnProfile ? "I've" : `${profile?.name} has`} Recommended ({moviesFrom.length || 0})
+            <span className={`expand-icon ${showMoviesFrom ? "expanded" : ""}`}>▼</span>
+          </button>
+          {showMoviesFrom && (
+            <div className="recommendations-list">
+              {moviesFrom.length > 0 ? (
+                <div className="recommendations-table">
+                  {moviesFrom.map((item) => (
+                    <div key={item.id} className="table-row">
+                      <div className="table-cell movie-name">
+                        {item.Movie?.title || "Unknown Movie"}
+                      </div>
+                      <div className="table-cell date-added">
+                        {item.dateAdded ? new Date(item.dateAdded).toLocaleDateString() : "N/A"}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="no-recommendations">No recommendations yet</p>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Account Settings - Own Profile Only */}
         {isOwnProfile && (
