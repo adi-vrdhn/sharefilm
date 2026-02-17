@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const { User, Friendship, UserMovie, Movie, SwipeEvent } = require("../models");
 const { Op } = require("sequelize");
+const { getMovieDetails } = require("../services/tmdb");
 
 const router = express.Router();
 
@@ -271,20 +272,44 @@ router.get("/profile/watched-movies", async (req, res) => {
 
     // Get movie details for each watched movie
     const movieDetailsPromises = uniqueMovies.map(async (event) => {
-      // Try to find in Movie table first
-      let movie = await Movie.findOne({
-        where: { tmdbId: event.tmdbId }
-      });
+      try {
+        // Try to find in Movie table first
+        let movie = await Movie.findOne({
+          where: { tmdbId: event.tmdbId }
+        });
 
-      // If not in our db, return minimal info from TMDB (already cached in event)
-      return {
-        id: event.id,
-        tmdbId: event.tmdbId,
-        title: movie?.title || "Unknown Movie",
-        posterPath: movie?.poster || null,
-        year: movie?.year || null,
-        watchedAt: event.createdAt
-      };
+        // If not in our db, fetch from TMDB
+        if (!movie) {
+          const tmdbData = await getMovieDetails(event.tmdbId);
+          return {
+            id: event.id,
+            tmdbId: event.tmdbId,
+            title: tmdbData?.title || "Unknown Movie",
+            posterPath: tmdbData?.poster_path || null,
+            year: tmdbData?.release_date?.split("-")[0] || null,
+            watchedAt: event.createdAt
+          };
+        }
+
+        return {
+          id: event.id,
+          tmdbId: event.tmdbId,
+          title: movie.title,
+          posterPath: movie.poster,
+          year: movie.year,
+          watchedAt: event.createdAt
+        };
+      } catch (error) {
+        console.error(`Error fetching movie details for ${event.tmdbId}:`, error.message);
+        return {
+          id: event.id,
+          tmdbId: event.tmdbId,
+          title: "Movie",
+          posterPath: null,
+          year: null,
+          watchedAt: event.createdAt
+        };
+      }
     });
 
     const movies = await Promise.all(movieDetailsPromises);
@@ -330,20 +355,44 @@ router.get("/profile/user/:userId/watched-movies", async (req, res) => {
 
     // Get movie details for each watched movie
     const movieDetailsPromises = uniqueMovies.map(async (event) => {
-      // Try to find in Movie table first
-      let movie = await Movie.findOne({
-        where: { tmdbId: event.tmdbId }
-      });
+      try {
+        // Try to find in Movie table first
+        let movie = await Movie.findOne({
+          where: { tmdbId: event.tmdbId }
+        });
 
-      // If not in our db, return minimal info from TMDB (already cached in event)
-      return {
-        id: event.id,
-        tmdbId: event.tmdbId,
-        title: movie?.title || "Unknown Movie",
-        posterPath: movie?.poster || null,
-        year: movie?.year || null,
-        watchedAt: event.createdAt
-      };
+        // If not in our db, fetch from TMDB
+        if (!movie) {
+          const tmdbData = await getMovieDetails(event.tmdbId);
+          return {
+            id: event.id,
+            tmdbId: event.tmdbId,
+            title: tmdbData?.title || "Unknown Movie",
+            posterPath: tmdbData?.poster_path || null,
+            year: tmdbData?.release_date?.split("-")[0] || null,
+            watchedAt: event.createdAt
+          };
+        }
+
+        return {
+          id: event.id,
+          tmdbId: event.tmdbId,
+          title: movie.title,
+          posterPath: movie.poster,
+          year: movie.year,
+          watchedAt: event.createdAt
+        };
+      } catch (error) {
+        console.error(`Error fetching movie details for ${event.tmdbId}:`, error.message);
+        return {
+          id: event.id,
+          tmdbId: event.tmdbId,
+          title: "Movie",
+          posterPath: null,
+          year: null,
+          watchedAt: event.createdAt
+        };
+      }
     });
 
     const movies = await Promise.all(movieDetailsPromises);
