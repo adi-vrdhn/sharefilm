@@ -17,6 +17,8 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
   const [searchMovieQuery, setSearchMovieQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState("");
+  const searchTimeoutRef = React.useRef(null);
 
   // Drag and drop state
   const [draggingMovie, setDraggingMovie] = useState(null);
@@ -43,6 +45,15 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
     10752: "War",
     37: "Western"
   };
+
+  // Cleanup timeout on unmount or modal close
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Fetch watched movies
   useEffect(() => {
@@ -115,33 +126,47 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
     setFilteredMovies(filtered);
   }, [searchQuery, selectedLanguage, selectedGenre, watchedMovies]);
 
-  // Search movies on TMDB
+  // Search movies on TMDB with debouncing
   const handleSearchMovies = async (query) => {
     setSearchMovieQuery(query);
+    setSearchError("");
     
     if (query.trim().length < 2) {
       setSearchResults([]);
       return;
     }
 
-    try {
-      setSearchLoading(true);
-      setSearchResults([]); // Clear previous results while loading
-      const response = await api.get(`/search-movies?query=${encodeURIComponent(query)}`);
-      const movies = response.data.movies || [];
-      setSearchResults(movies);
-      
-      if (movies.length === 0) {
-        console.warn("No movies found for query:", query);
-      }
-    } catch (error) {
-      console.error("Error searching movies:", error);
-      const errorMsg = error.response?.data?.message || error.message || "Failed to search movies";
-      alert(`Search failed: ${errorMsg}`);
-      setSearchResults([]);
-    } finally {
-      setSearchLoading(false);
+    // Clear existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
     }
+
+    // Add debounce delay to avoid too many API calls
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        setSearchLoading(true);
+        console.log("Searching for:", query);
+        
+        const response = await api.get(`/search-movies`, {
+          params: { query: query.trim() }
+        });
+        
+        console.log("Search response:", response.data);
+        const movies = response.data.movies || [];
+        setSearchResults(movies);
+        
+        if (movies.length === 0) {
+          console.warn("No movies found for query:", query);
+        }
+      } catch (error) {
+        console.error("Error searching movies:", error);
+        const errorMsg = error.response?.data?.message || error.message || "Failed to search movies";
+        setSearchError(errorMsg);
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300); // Wait 300ms after user stops typing
   };
 
   // Add movie to watched
@@ -397,16 +422,31 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
 
         {/* Add Movie Modal */}
         {showAddModal && (
-          <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+          <div className="modal-overlay" onClick={() => {
+            setShowAddModal(false);
+            setSearchMovieQuery("");
+            setSearchResults([]);
+            setSearchError("");
+            if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+          }}>
             <div className="search-modal" onClick={(e) => e.stopPropagation()}>
               <div className="modal-header">
-                <h3>Search and Add Movies</h3>
-                <button className="modal-close" onClick={() => setShowAddModal(false)}>✕</button>
+                <h3>🔍 Search and Add Movies</h3>
+                <button 
+                  className="modal-close" 
+                  onClick={() => {
+                    setShowAddModal(false);
+                    setSearchMovieQuery("");
+                    setSearchResults([]);
+                    setSearchError("");
+                    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+                  }}
+                >✕</button>
               </div>
               
               <input
                 type="text"
-                placeholder="Search TMDB for movies..."
+                placeholder="Search TMDB for movies... (e.g., Inception, Avatar)"
                 value={searchMovieQuery}
                 onChange={(e) => handleSearchMovies(e.target.value)}
                 className="modal-search-input"
@@ -414,9 +454,17 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
               />
 
               <div className="search-results">
-                {searchLoading && <div className="search-loading">Searching...</div>}
-                {!searchLoading && searchMovieQuery.length >= 2 && searchResults.length === 0 && (
-                  <div className="no-results">No movies found</div>
+                {searchError && (
+                  <div className="search-error">
+                    ⚠️ {searchError}
+                  </div>
+                )}
+                {searchLoading && <div className="search-loading">🔄 Searching...</div>}
+                {!searchLoading && searchMovieQuery.length >= 2 && searchResults.length === 0 && !searchError && (
+                  <div className="no-results">📭 No movies found</div>
+                )}
+                {!searchLoading && searchMovieQuery.length === 0 && (
+                  <div className="no-results">💬 Start typing to search for movies...</div>
                 )}
                 {searchResults.map((movie) => (
                   <div key={movie.id} className="search-result-item">
@@ -424,21 +472,26 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
                       src={
                         movie.poster_path
                           ? `https://image.tmdb.org/t/p/w92${movie.poster_path}`
-                          : "https://via.placeholder.com/92x138"
+                          : "https://via.placeholder.com/92x138?text=No+Poster"
                       }
                       alt={movie.title}
                       className="search-result-poster"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.src = "https://via.placeholder.com/92x138?text=No+Poster";
+                      }}
                     />
                     <div className="search-result-info">
                       <h4>{movie.title}</h4>
                       <p>{movie.release_date?.split("-")[0] || "N/A"}</p>
-                      <p className="result-description">{movie.overview?.substring(0, 100)}...</p>
+                      <p className="result-description">{movie.overview?.substring(0, 100) || "No description"}...</p>
                     </div>
                     <button
                       className="btn-add-from-search"
                       onClick={() => handleAddMovie(movie)}
+                      title="Add to watched"
                     >
-                      +
+                      ➕
                     </button>
                   </div>
                 ))}

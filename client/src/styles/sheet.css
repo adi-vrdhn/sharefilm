@@ -479,16 +479,22 @@
 
 .modal-search-input {
   padding: 12px 20px;
-  border: 1px solid #e2e8f0;
+  border: 2px solid #e2e8f0;
   font-size: 14px;
   outline: none;
   background-color: #ffffff;
   transition: all 0.2s ease;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .modal-search-input:focus {
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.modal-search-input::placeholder {
+  color: #cbd5e1;
 }
 
 .search-results {
@@ -515,6 +521,21 @@
   font-size: 14px;
 }
 
+.search-error {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  padding: 15px;
+  margin: 10px;
+  background-color: #fee2e2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #991b1b;
+  font-size: 13px;
+  font-weight: 500;
+}
+
 .search-result-item {
   display: flex;
   gap: 12px;
@@ -524,10 +545,14 @@
   background-color: #f9fafb;
   transition: all 0.2s ease;
   align-items: flex-start;
+  border: 1px solid #e2e8f0;
 }
 
 .search-result-item:hover {
   background-color: #f1f5f9;
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transform: translateX(2px);
 }
 
 .search-result-poster {
@@ -536,6 +561,8 @@
   border-radius: 6px;
   object-fit: cover;
   flex-shrink: 0;
+  background-color: #e2e8f0;
+  border: 1px solid #cbd5e1;
 }
 
 .search-result-info {
@@ -567,24 +594,30 @@
 }
 
 .btn-add-from-search {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   background-color: #3b82f6;
   color: white;
   border: none;
-  font-size: 18px;
+  font-size: 20px;
   cursor: pointer;
   transition: all 0.2s ease;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
 }
 
 .btn-add-from-search:hover {
   background-color: #2563eb;
   transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+}
+
+.btn-add-from-search:active {
+  transform: scale(0.95);
 }
 
 /* Movie Overlay with Pin and Delete */

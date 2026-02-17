@@ -63,15 +63,23 @@ app.get("/search-movies", async (req, res) => {
     const { query } = req.query;
     
     if (!query || query.trim().length < 2) {
-      return res.status(400).json({ message: "Search query must be at least 2 characters" });
+      return res.status(400).json({ 
+        message: "Search query must be at least 2 characters",
+        movies: []
+      });
     }
 
+    console.log(`[SEARCH] Query: "${query}"`);
     const { searchMovies } = require("./services/tmdb");
     const results = await searchMovies(query);
     
-    return res.json({ movies: results });
+    console.log(`[SEARCH] Returning ${results.length} results for "${query}"`);
+    return res.json({ 
+      movies: results,
+      count: results.length
+    });
   } catch (error) {
-    console.error("Search movies error:", {
+    console.error("[SEARCH] Error:", {
       message: error.message,
       stack: error.stack,
       response: error.response?.data
@@ -80,13 +88,24 @@ app.get("/search-movies", async (req, res) => {
     if (error.message.includes("TMDB_API_KEY")) {
       return res.status(500).json({ 
         message: "Server configuration error: TMDB API key not set",
-        error: error.message 
+        error: error.message,
+        movies: []
+      });
+    }
+    
+    // Check for specific TMDB API errors
+    if (error.response?.status === 401) {
+      return res.status(500).json({ 
+        message: "TMDB API key is invalid",
+        error: "Authentication failed",
+        movies: []
       });
     }
     
     return res.status(500).json({ 
       message: "Failed to search movies",
-      error: error.message 
+      error: error.message,
+      movies: []
     });
   }
 });

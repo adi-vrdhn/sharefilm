@@ -11,6 +11,7 @@ const searchMovies = async (query) => {
   }
 
   try {
+    console.log(`Searching TMDB for: "${query}"`);
     const response = await axios.get(`${TMDB_BASE}/search/movie`, {
       params: {
         api_key: apiKey,
@@ -19,8 +20,16 @@ const searchMovies = async (query) => {
       }
     });
 
-    return response.data.results.map((movie) => ({
+    const results = response.data.results || [];
+    console.log(`Found ${results.length} movies for "${query}"`);
+    
+    if (results.length === 0) {
+      console.warn(`No results found for query: "${query}"`);
+    }
+
+    return results.map((movie) => ({
       id: movie.id,
+      tmdbId: movie.id, // Add tmdbId for consistency
       title: movie.title,
       poster_path: movie.poster_path,
       release_date: movie.release_date,
@@ -29,7 +38,12 @@ const searchMovies = async (query) => {
       original_language: movie.original_language
     }));
   } catch (error) {
-    console.error("TMDB API search error:", error.response?.data || error.message);
+    console.error("TMDB API search error:", {
+      query,
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
     throw error;
   }
 };
