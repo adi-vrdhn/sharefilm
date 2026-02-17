@@ -148,22 +148,32 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
     searchTimeoutRef.current = setTimeout(async () => {
       try {
         setSearchLoading(true);
-        console.log("Searching for:", query);
+        setSearchError(""); // Clear previous errors
+        console.log("[SEARCH] Searching for:", query);
         
         const response = await api.get(`/search-movies`, {
           params: { query: query.trim() }
         });
         
-        console.log("Search response:", response.data);
+        console.log("[SEARCH] Response status:", response.status);
+        console.log("[SEARCH] Response data:", response.data);
+        console.log("[SEARCH] Response movies count:", response.data?.movies?.length);
+        
         const movies = response.data.movies || [];
         setSearchResults(movies);
         
         if (movies.length === 0) {
-          console.warn("No movies found for query:", query);
+          console.warn("[SEARCH] No movies found for query:", query);
+          setSearchError("No movies found. Try a different search term.");
         }
       } catch (error) {
-        console.error("Error searching movies:", error);
-        const errorMsg = error.response?.data?.message || error.message || "Failed to search movies";
+        console.error("[SEARCH] Error searching movies:", {
+          status: error.response?.status,
+          statusText: error.response?.statusText,
+          data: error.response?.data,
+          message: error.message
+        });
+        const errorMsg = error.response?.data?.message || error.response?.data?.error || error.message || "Failed to search movies";
         setSearchError(errorMsg);
         setSearchResults([]);
       } finally {
@@ -473,9 +483,8 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
                   <div key={movie.id} className="search-result-item">
                     <img
                       src={
-                        movie.poster_path
-                          ? `https://image.tmdb.org/t/p/w92${movie.poster_path}`
-                          : PLACEHOLDER_IMAGE
+                        movie.poster ||
+                        (movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : PLACEHOLDER_IMAGE)
                       }
                       alt={movie.title}
                       className="search-result-poster"
@@ -486,7 +495,7 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
                     />
                     <div className="search-result-info">
                       <h4>{movie.title}</h4>
-                      <p>{movie.release_date?.split("-")[0] || "N/A"}</p>
+                      <p>{movie.year || movie.release_date?.split("-")[0] || "N/A"}</p>
                       <p className="result-description">{movie.overview?.substring(0, 100) || "No description"}...</p>
                     </div>
                     <button
