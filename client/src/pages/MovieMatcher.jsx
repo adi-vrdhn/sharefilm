@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import api from "../api/axios";
 
 const LANGUAGES = [
@@ -34,6 +34,20 @@ const MovieMatcher = () => {
   // Friend match state
   const [friends, setFriends] = useState([]);
   const [matchReport, setMatchReport] = useState(null);
+
+  // Load Google AdSense ads when component mounts or step changes to selection
+  useEffect(() => {
+    if (step === "selection" && typeof window !== "undefined") {
+      // Load AdSense ad script
+      if (window.adsbygoogle) {
+        try {
+          window.adsbygoogle.push({});
+        } catch (error) {
+          console.log("AdSense not yet loaded");
+        }
+      }
+    }
+  }, [step]);
 
   // STEP 1: Onboarding
   const handleOnboardingComplete = async () => {
@@ -260,6 +274,13 @@ const MovieMatcher = () => {
                 )}
               </div>
             ))}
+          </div>
+
+          {/* Google AdSense Ad Space */}
+          <div style={styles.adSpace} id="movie-matcher-ad">
+            <div style={styles.adPlaceholder}>
+              <p style={{ margin: 0, fontSize: "12px", color: "#9ca3af" }}>Ad Space - Google AdSense</p>
+            </div>
           </div>
 
           <div style={styles.selectedCount}>
@@ -595,6 +616,25 @@ const styles = {
     color: "#d1d5db",
     fontSize: "12px",
     wordWrap: "break-word"
+  },
+  adSpace: {
+    margin: "30px 0",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    minHeight: "280px"
+  },
+  adPlaceholder: {
+    width: "100%",
+    maxWidth: "300px",
+    height: "250px",
+    background: "#111",
+    border: "2px dashed #374151",
+    borderRadius: "8px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#6b7280"
   }
 };
 
