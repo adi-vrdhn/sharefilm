@@ -548,4 +548,29 @@
   .movie-title-compact {
     color: #e2e8f0;
   }
+
+  .sheet-filters {
+    background-color: #0f1419;
+    border-bottom-color: #2d3748;
+  }
+
+  .filter-select {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+
+  .filter-select:hover {
+    background-color: #374151;
+    border-color: #6b7280;
+  }
+
+  .filter-select:focus {
+    border-color: #63b3ed;
+    box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.1);
+  }
+
+  .movie-year-compact {
+    color: #a0aec0;
+  }
 }
