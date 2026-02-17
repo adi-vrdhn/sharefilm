@@ -2,6 +2,9 @@ import React, { useState, useEffect } from "react";
 import api from "../api/axios";
 import "../styles/sheet.css";
 
+// Placeholder image as data URI (SVG)
+const PLACEHOLDER_IMAGE = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='92' height='138' viewBox='0 0 92 138'%3E%3Crect width='92' height='138' fill='%23e2e8f0'/%3E%3Ctext x='50%25' y='50%25' font-size='12' font-family='sans-serif' fill='%2394a3b8' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E";
+
 const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
   const [watchedMovies, setWatchedMovies] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -472,13 +475,13 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
                       src={
                         movie.poster_path
                           ? `https://image.tmdb.org/t/p/w92${movie.poster_path}`
-                          : "https://via.placeholder.com/92x138?text=No+Poster"
+                          : PLACEHOLDER_IMAGE
                       }
                       alt={movie.title}
                       className="search-result-poster"
                       loading="lazy"
                       onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/92x138?text=No+Poster";
+                        e.target.src = PLACEHOLDER_IMAGE;
                       }}
                     />
                     <div className="search-result-info">
@@ -533,12 +536,12 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
                       src={
                         movie.posterPath
                           ? `https://image.tmdb.org/t/p/w300${movie.posterPath}`
-                          : "https://via.placeholder.com/100x150"
+                          : PLACEHOLDER_IMAGE
                       }
                       alt={movie.title}
                       className="movie-poster-compact"
                       onError={(e) => {
-                        e.target.src = "https://via.placeholder.com/100x150?text=No+Image";
+                        e.target.src = PLACEHOLDER_IMAGE;
                       }}
                     />
                     {isOwnProfile && (
