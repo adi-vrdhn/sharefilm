@@ -1,6 +1,5 @@
 import React, { useState, useRef } from "react";
 import api from "../api/axios";
-import ComingSoonModal from "../components/ComingSoonModal";
 
 const LANGUAGES = [
   { code: "en", name: "English" },
@@ -20,7 +19,6 @@ const MovieMatcher = () => {
   const [step, setStep] = useState("onboarding"); // onboarding | selection | matching | report
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showComingSoon, setShowComingSoon] = useState(true);
 
   // Onboarding state
   const [selectedLanguages, setSelectedLanguages] = useState([]);
@@ -175,14 +173,6 @@ const MovieMatcher = () => {
   return (
     <div style={styles.container}>
       <style>{cssStyles}</style>
-
-      {/* Coming Soon Modal */}
-      {showComingSoon && (
-        <ComingSoonModal 
-          featureName="Movie Matcher" 
-          onClose={() => setShowComingSoon(false)} 
-        />
-      )}
 
       {/* STEP 1: Language Onboarding */}
       {step === "onboarding" && (
