@@ -208,6 +208,25 @@ const AddMovie = () => {
         Share a movie recommendation with your friends.
       </p>
 
+      {/* Google AdSense Ad Space */}
+      <div style={{
+        margin: "20px 0 30px 0",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        minHeight: "280px"
+      }}>
+        <ins className="adsbygoogle"
+          style={{
+            display: "block",
+            textAlign: "center"
+          }}
+          data-ad-layout="in-article"
+          data-ad-format="fluid"
+          data-ad-client="ca-pub-6890987360770257"
+          data-ad-slot="1234567890"></ins>
+      </div>
+
       <div className="form-card" style={{ marginTop: 20 }}>
           <form onSubmit={handleSubmit}>
             <div className="form-row autocomplete">
@@ -244,25 +263,6 @@ const AddMovie = () => {
                   })}
                 </div>
               )}
-            </div>
-            
-            {/* Google AdSense Ad Space */}
-            <div style={{
-              margin: "30px 0",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              minHeight: "280px"
-            }}>
-              <ins className="adsbygoogle"
-                style={{
-                  display: "block",
-                  textAlign: "center"
-                }}
-                data-ad-layout="in-article"
-                data-ad-format="fluid"
-                data-ad-client="ca-pub-6890987360770257"
-                data-ad-slot="1234567890"></ins>
             </div>
 
             <div className="form-row">
