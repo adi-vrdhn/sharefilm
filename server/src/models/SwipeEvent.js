@@ -36,6 +36,11 @@ const SwipeEvent = sequelize.define(
     language: {
       type: DataTypes.STRING,
       allowNull: true
+    },
+    isPinned: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+      field: "is_pinned"
     }
   },
   {

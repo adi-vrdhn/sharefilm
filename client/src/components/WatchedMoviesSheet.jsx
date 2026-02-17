@@ -12,6 +12,12 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
   const [genres, setGenres] = useState([]);
   const [selectedGenre, setSelectedGenre] = useState("");
 
+  // Add movie modal state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [searchMovieQuery, setSearchMovieQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+
   // Genre mapping (TMDB genre IDs to names)
   const genreMap = {
     28: "Action",
@@ -47,8 +53,17 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
           : `/profile/user/${userId}/watched-movies`;
         const response = await api.get(endpoint);
         const movies = response.data.movies || [];
-        setWatchedMovies(movies);
-        setFilteredMovies(movies);
+        
+        // Sort: pinned first, then by date
+        const sortedMovies = movies.sort((a, b) => {
+          if (a.isPinned !== b.isPinned) {
+            return b.isPinned ? 1 : -1;
+          }
+          return new Date(b.watchedAt) - new Date(a.watchedAt);
+        });
+        
+        setWatchedMovies(sortedMovies);
+        setFilteredMovies(sortedMovies);
         
         // Extract unique languages
         const uniqueLangs = [...new Set(movies.map(m => m.language).filter(Boolean))];
@@ -93,6 +108,59 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
     setFilteredMovies(filtered);
   }, [searchQuery, selectedLanguage, selectedGenre, watchedMovies]);
 
+  // Search movies on TMDB
+  const handleSearchMovies = async (query) => {
+    setSearchMovieQuery(query);
+    
+    if (query.trim().length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    try {
+      setSearchLoading(true);
+      const response = await api.get(`/search-movies?query=${encodeURIComponent(query)}`);
+      setSearchResults(response.data.movies || []);
+    } catch (error) {
+      console.error("Error searching movies:", error);
+      setSearchResults([]);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  // Add movie to watched
+  const handleAddMovie = async (movie) => {
+    try {
+      await api.post("/watched-movie/add", {
+        tmdbId: movie.id,
+        title: movie.title,
+        posterPath: movie.poster_path,
+        year: movie.release_date?.split("-")[0],
+        language: movie.original_language,
+        genreIds: movie.genre_ids || []
+      });
+      
+      // Refresh watched movies
+      const endpoint = "/profile/watched-movies";
+      const response = await api.get(endpoint);
+      const movies = response.data.movies || [];
+      const sortedMovies = movies.sort((a, b) => {
+        if (a.isPinned !== b.isPinned) {
+          return b.isPinned ? 1 : -1;
+        }
+        return new Date(b.watchedAt) - new Date(a.watchedAt);
+      });
+      setWatchedMovies(sortedMovies);
+      setFilteredMovies(sortedMovies);
+      setSearchMovieQuery("");
+      setSearchResults([]);
+    } catch (error) {
+      console.error("Error adding movie:", error);
+      alert(error.response?.data?.message || "Failed to add movie");
+    }
+  };
+
   const handleDeleteMovie = async (tmdbId) => {
     if (window.confirm("Remove this movie from your watched list?")) {
       try {
@@ -101,6 +169,43 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
       } catch (error) {
         console.error("Error deleting movie:", error);
       }
+    }
+  };
+
+  const handleDeleteAll = async () => {
+    if (window.confirm("Delete ALL watched movies? This cannot be undone.")) {
+      try {
+        await api.delete("/watched-movies/delete-all");
+        setWatchedMovies([]);
+        setFilteredMovies([]);
+      } catch (error) {
+        console.error("Error deleting all movies:", error);
+        alert("Failed to delete all movies");
+      }
+    }
+  };
+
+  const handlePinMovie = async (tmdbId, currentPin) => {
+    try {
+      await api.put(`/watched-movie/${tmdbId}/pin`, {
+        isPinned: !currentPin
+      });
+      
+      // Update locally
+      setWatchedMovies((prev) => {
+        const updated = prev.map((m) => 
+          m.tmdbId === tmdbId ? { ...m, isPinned: !currentPin } : m
+        );
+        // Re-sort with pinned first
+        return updated.sort((a, b) => {
+          if (a.isPinned !== b.isPinned) {
+            return b.isPinned ? 1 : -1;
+          }
+          return new Date(b.watchedAt) - new Date(a.watchedAt);
+        });
+      });
+    } catch (error) {
+      console.error("Error pinning movie:", error);
     }
   };
 
@@ -116,13 +221,35 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
         </div>
 
         <div className="sheet-search">
-          <input
-            type="text"
-            placeholder="🔍 Search movies..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="sheet-search-input"
-          />
+          <div className="search-controls">
+            <input
+              type="text"
+              placeholder="🔍 Search movies..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="sheet-search-input"
+            />
+            {isOwnProfile && (
+              <>
+                <button 
+                  className="btn-add-movie"
+                  onClick={() => setShowAddModal(true)}
+                  title="Search and add movies"
+                >
+                  ➕ Add Movie
+                </button>
+                {watchedMovies.length > 0 && (
+                  <button 
+                    className="btn-delete-all"
+                    onClick={handleDeleteAll}
+                    title="Delete all watched movies"
+                  >
+                    🗑️ Delete All
+                  </button>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         {/* Filters - only show for other users' profiles */}
@@ -160,6 +287,58 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
           </div>
         )}
 
+        {/* Add Movie Modal */}
+        {showAddModal && (
+          <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
+            <div className="search-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header">
+                <h3>Search and Add Movies</h3>
+                <button className="modal-close" onClick={() => setShowAddModal(false)}>✕</button>
+              </div>
+              
+              <input
+                type="text"
+                placeholder="Search TMDB for movies..."
+                value={searchMovieQuery}
+                onChange={(e) => handleSearchMovies(e.target.value)}
+                className="modal-search-input"
+                autoFocus
+              />
+
+              <div className="search-results">
+                {searchLoading && <div className="search-loading">Searching...</div>}
+                {!searchLoading && searchMovieQuery.length >= 2 && searchResults.length === 0 && (
+                  <div className="no-results">No movies found</div>
+                )}
+                {searchResults.map((movie) => (
+                  <div key={movie.id} className="search-result-item">
+                    <img
+                      src={
+                        movie.poster_path
+                          ? `https://image.tmdb.org/t/p/w92${movie.poster_path}`
+                          : "https://via.placeholder.com/92x138"
+                      }
+                      alt={movie.title}
+                      className="search-result-poster"
+                    />
+                    <div className="search-result-info">
+                      <h4>{movie.title}</h4>
+                      <p>{movie.release_date?.split("-")[0] || "N/A"}</p>
+                      <p className="result-description">{movie.overview?.substring(0, 100)}...</p>
+                    </div>
+                    <button
+                      className="btn-add-from-search"
+                      onClick={() => handleAddMovie(movie)}
+                    >
+                      +
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="sheet-content">
           {loading ? (
             <div className="sheet-loading">Loading movies...</div>
@@ -172,7 +351,10 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
           ) : (
             <div className="movies-grid">
               {filteredMovies.map((movie) => (
-                <div key={movie.id} className="movie-card-compact">
+                <div 
+                  key={movie.id} 
+                  className={`movie-card-compact ${movie.isPinned ? "pinned" : ""}`}
+                >
                   <div className="movie-poster-wrapper">
                     <img
                       src={
@@ -182,16 +364,29 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
                       }
                       alt={movie.title}
                       className="movie-poster-compact"
+                      onError={(e) => {
+                        e.target.src = "https://via.placeholder.com/100x150?text=No+Image";
+                      }}
                     />
                     {isOwnProfile && (
-                      <button
-                        className="movie-delete-btn"
-                        onClick={() => handleDeleteMovie(movie.tmdbId)}
-                        title="Remove from watched"
-                      >
-                        ✕
-                      </button>
+                      <div className="movie-overlay">
+                        <button
+                          className={`movie-pin-btn ${movie.isPinned ? "pinned" : ""}`}
+                          onClick={() => handlePinMovie(movie.tmdbId, movie.isPinned)}
+                          title={movie.isPinned ? "Unpin movie" : "Pin movie"}
+                        >
+                          {movie.isPinned ? "📌" : "📍"}
+                        </button>
+                        <button
+                          className="movie-delete-btn"
+                          onClick={() => handleDeleteMovie(movie.tmdbId)}
+                          title="Remove from watched"
+                        >
+                          ✕
+                        </button>
+                      </div>
                     )}
+                    {movie.isPinned && <div className="pinned-badge">📌</div>}
                   </div>
                   <p className="movie-title-compact">{movie.title}</p>
                   {movie.year && (

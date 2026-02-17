@@ -576,4 +576,125 @@ router.delete("/watched-movie/:tmdbId", async (req, res) => {
   }
 });
 
+// Delete all watched movies
+router.delete("/watched-movies/delete-all", async (req, res) => {
+  try {
+    const result = await SwipeEvent.destroy({
+      where: {
+        userId: req.user.id,
+        action: "watched"
+      }
+    });
+
+    return res.json({ message: "All watched movies deleted", deleted: result });
+  } catch (error) {
+    console.error("Delete all watched movies error:", error.message);
+    return res.status(500).json({ message: "Failed to delete all watched movies" });
+  }
+});
+
+// Search movies by title (TMDB)
+router.get("/search-movies", async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.trim().length < 2) {
+      return res.status(400).json({ message: "Search query must be at least 2 characters" });
+    }
+
+    const results = await searchMovies(query);
+    
+    return res.json({ movies: results });
+  } catch (error) {
+    console.error("Search movies error:", error.message);
+    return res.status(500).json({ message: "Failed to search movies" });
+  }
+});
+
+// Add movie to watched list
+router.post("/watched-movie/add", async (req, res) => {
+  try {
+    const { tmdbId, title, posterPath, year, language, genreIds } = req.body;
+
+    if (!tmdbId || !title) {
+      return res.status(400).json({ message: "Missing required fields: tmdbId, title" });
+    }
+
+    const parsedTmdbId = parseInt(tmdbId);
+
+    // Check if already in watched
+    const existing = await SwipeEvent.findOne({
+      where: {
+        userId: req.user.id,
+        tmdbId: parsedTmdbId,
+        action: "watched"
+      }
+    });
+
+    if (existing) {
+      return res.status(400).json({ message: "Movie already in watched list" });
+    }
+
+    // Add to watched
+    const watchedEvent = await SwipeEvent.create({
+      userId: req.user.id,
+      tmdbId: parsedTmdbId,
+      action: "watched",
+      language: language || null,
+      genreIds: genreIds || []
+    });
+
+    // Try to add to Movie table if not exists
+    const existingMovie = await Movie.findOne({ where: { tmdbId: parsedTmdbId } });
+    if (!existingMovie && posterPath) {
+      await Movie.create({
+        tmdbId: parsedTmdbId,
+        title,
+        poster: posterPath,
+        year: year || null
+      });
+    }
+
+    return res.json({ 
+      message: "Movie added to watched list",
+      watchedEvent 
+    });
+  } catch (error) {
+    console.error("Add watched movie error:", error.message);
+    return res.status(500).json({ message: "Failed to add movie to watched" });
+  }
+});
+
+// Pin/Unpin movie
+router.put("/watched-movie/:tmdbId/pin", async (req, res) => {
+  try {
+    const { tmdbId } = req.params;
+    const { isPinned } = req.body;
+    const parsedTmdbId = parseInt(tmdbId);
+
+    const watchedMovie = await SwipeEvent.findOne({
+      where: {
+        userId: req.user.id,
+        tmdbId: parsedTmdbId,
+        action: "watched"
+      }
+    });
+
+    if (!watchedMovie) {
+      return res.status(404).json({ message: "Watched movie not found" });
+    }
+
+    watchedMovie.isPinned = isPinned || false;
+    await watchedMovie.save();
+
+    return res.json({ 
+      message: isPinned ? "Movie pinned" : "Movie unpinned",
+      watchedMovie 
+    });
+  } catch (error) {
+    console.error("Pin movie error:", error.message);
+    return res.status(500).json({ message: "Failed to pin/unpin movie" });
+  }
+});
+
 module.exports = router;
