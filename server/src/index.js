@@ -18,6 +18,7 @@ const profileRoutes = require("./routes/profile");
 const analyticsRoutes = require("./routes/analytics");
 const gamesRoutes = require("./routes/games");
 const matcherRoutes = require("./routes/matcher");
+const tasteRoutes = require("./routes/taste");
 const authMiddleware = require("./middleware/auth");
 const { initializeSocket } = require("./services/socket");
 
@@ -145,6 +146,7 @@ app.use(express.static(buildPath));
 app.use(authMiddleware);
 app.use(movieRoutes);
 app.use(matcherRoutes);
+app.use(tasteRoutes);
 app.use(notificationRoutes);
 app.use(friendRoutes);
 app.use(messageRoutes);
