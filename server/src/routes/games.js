@@ -13,9 +13,6 @@ router.get("/api/games/guess-the-movie/random", async (req, res) => {
     }
 
     const { language = "en", yearFrom = 1900, yearTo = new Date().getFullYear() } = req.query;
-    // Fetch from pages 1-50 for much more diverse movie selection
-    // Randomize heavily to avoid same movies showing up repeatedly
-    const popularPage = Math.floor(Math.random() * 50) + 1;
 
     // Language to TMDB language code mapping
     const languageMap = {
@@ -36,102 +33,158 @@ router.get("/api/games/guess-the-movie/random", async (req, res) => {
     };
 
     const langCode = languageMap[language] || "en";
-
-    // For Indian languages, use lower vote thresholds due to smaller catalog
     const isIndianLanguage = ["hi", "te", "ta", "ml", "kn", "bn"].includes(language);
-    const voteCountThreshold = isIndianLanguage ? 100 : 300;
-    const ratingThreshold = isIndianLanguage ? 5.0 : 5.5;
 
-    // Fetch movies with FAMOUS ACTORS (high vote count = famous/well-known)
-    // Sort by popularity for variety, not just box office
-    const moviesResponse = await axios.get(
-      `${TMDB_BASE_URL}/discover/movie`,
-      {
-        params: {
+    // Helper function to fetch movie with valid cast
+    const fetchMovieWithCast = async (params) => {
+      try {
+        const moviesResponse = await axios.get(
+          `${TMDB_BASE_URL}/discover/movie`,
+          { params }
+        );
+
+        if (!moviesResponse.data.results.length) {
+          return null;
+        }
+
+        // Try to find first movie with sufficient cast
+        for (const movie of moviesResponse.data.results) {
+          try {
+            const creditsResponse = await axios.get(
+              `${TMDB_BASE_URL}/movie/${movie.id}/credits?api_key=${TMDB_API_KEY}`
+            );
+            const topCast = creditsResponse.data.cast.slice(0, 5);
+
+            if (topCast.length >= 2) {
+              return {
+                id: movie.id,
+                title: movie.title,
+                poster_path: movie.poster_path,
+                release_date: movie.release_date,
+                overview: movie.overview,
+                rating: movie.vote_average,
+                genres: movie.genres || [],
+                cast: topCast.map((actor) => ({
+                  id: actor.id,
+                  name: actor.name,
+                  profile_path: actor.profile_path,
+                  character: actor.character,
+                })),
+              };
+            }
+          } catch (error) {
+            // Skip this movie and try next
+            continue;
+          }
+        }
+
+        return null;
+      } catch (error) {
+        return null;
+      }
+    };
+
+    // Strategy 1: Try with original language and low thresholds
+    let movie = null;
+    let attemptPage = Math.floor(Math.random() * 10) + 1; // Start with lower page range
+
+    // For Indian languages, try lower thresholds first
+    if (isIndianLanguage) {
+      const params = {
+        api_key: TMDB_API_KEY,
+        with_original_language: langCode,
+        sort_by: "popularity.desc",
+        "vote_count.gte": 50, // Very low threshold for Indian content
+        "vote_average.gte": 4.5,
+        page: attemptPage,
+        ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
+        ...(yearTo && { "primary_release_date.lte": `${yearTo}-12-31` })
+      };
+
+      movie = await fetchMovieWithCast(params);
+
+      // Strategy 2: If failed, try consecutive pages instead of random
+      if (!movie) {
+        for (let i = 1; i <= 5; i++) {
+          const params2 = {
+            api_key: TMDB_API_KEY,
+            with_original_language: langCode,
+            sort_by: "popularity.desc",
+            "vote_count.gte": 30,
+            "vote_average.gte": 4.0,
+            page: i,
+            ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
+            ...(yearTo && { "primary_release_date.lte": `${yearTo}-12-31` })
+          };
+          movie = await fetchMovieWithCast(params2);
+          if (movie) break;
+        }
+      }
+
+      // Strategy 3: If still failed, try NO vote threshold at all for Indian languages
+      if (!movie) {
+        const params3 = {
           api_key: TMDB_API_KEY,
           with_original_language: langCode,
           sort_by: "popularity.desc",
-          "vote_count.gte": voteCountThreshold, // Lower threshold for Indian languages
-          "vote_average.gte": ratingThreshold,
-          page: popularPage,
-          // Removed region filter - too restrictive for TMDB's Indian movie data
+          page: Math.floor(Math.random() * 20) + 1,
           ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
           ...(yearTo && { "primary_release_date.lte": `${yearTo}-12-31` })
+        };
+        movie = await fetchMovieWithCast(params3);
+      }
+
+      // Strategy 4: Last resort - fetch any movie in that language 
+      if (!movie) {
+        const params4 = {
+          api_key: TMDB_API_KEY,
+          with_original_language: langCode,
+          sort_by: "popularity.desc",
+          page: 1
+        };
+        movie = await fetchMovieWithCast(params4);
+      }
+    } else {
+      // For non-Indian languages, use standard approach
+      const params = {
+        api_key: TMDB_API_KEY,
+        with_original_language: langCode,
+        sort_by: "popularity.desc",
+        "vote_count.gte": 300,
+        "vote_average.gte": 5.5,
+        page: attemptPage,
+        ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
+        ...(yearTo && { "primary_release_date.lte": `${yearTo}-12-31` })
+      };
+
+      movie = await fetchMovieWithCast(params);
+
+      // Fallback for non-Indian
+      if (!movie) {
+        for (let i = 1; i <= 5; i++) {
+          const params2 = {
+            api_key: TMDB_API_KEY,
+            with_original_language: langCode,
+            sort_by: "popularity.desc",
+            "vote_count.gte": 100,
+            "vote_average.gte": 5.0,
+            page: i,
+            ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
+            ...(yearTo && { "primary_release_date.lte": `${yearTo}-12-31` })
+          };
+          movie = await fetchMovieWithCast(params2);
+          if (movie) break;
         }
       }
-    );
-
-    if (!moviesResponse.data.results.length) {
-      return res.status(404).json({ error: "No movies found for selected filters" });
     }
 
-    const randomMovie = moviesResponse.data.results[
-      Math.floor(Math.random() * moviesResponse.data.results.length)
-    ];
-
-    // Get credits (cast) for the movie
-    const creditsResponse = await axios.get(
-      `${TMDB_BASE_URL}/movie/${randomMovie.id}/credits?api_key=${TMDB_API_KEY}`
-    );
-
-    const topCast = creditsResponse.data.cast.slice(0, 5);
-
-    if (topCast.length < 2) {
-      // If not enough cast, try another movie from results instead of failing
-      const availableMovies = moviesResponse.data.results.filter(async (movie) => {
-        try {
-          const credits = await axios.get(
-            `${TMDB_BASE_URL}/movie/${movie.id}/credits?api_key=${TMDB_API_KEY}`
-          );
-          return credits.data.cast.length >= 2;
-        } catch {
-          return false;
-        }
+    if (!movie) {
+      return res.status(404).json({ 
+        error: `No movies found for ${language}. Try a different language or year range.` 
       });
-
-      if (availableMovies.length > 0) {
-        const fallbackMovie = availableMovies[Math.floor(Math.random() * availableMovies.length)];
-        const fallbackCredits = await axios.get(
-          `${TMDB_BASE_URL}/movie/${fallbackMovie.id}/credits?api_key=${TMDB_API_KEY}`
-        );
-        const fallbackCast = fallbackCredits.data.cast.slice(0, 5);
-        
-        return res.status(200).json({
-          id: fallbackMovie.id,
-          title: fallbackMovie.title,
-          poster_path: fallbackMovie.poster_path,
-          release_date: fallbackMovie.release_date,
-          overview: fallbackMovie.overview,
-          rating: fallbackMovie.vote_average,
-          genres: fallbackMovie.genres || [],
-          cast: fallbackCast.map((actor) => ({
-            id: actor.id,
-            name: actor.name,
-            profile_path: actor.profile_path,
-            character: actor.character,
-          })),
-        });
-      }
-
-      // If still no valid movie, try fetching from a different page
-      return res.status(404).json({ error: "No movies with cast found. Please try again!" });
     }
 
-    res.json({
-      id: randomMovie.id,
-      title: randomMovie.title,
-      poster_path: randomMovie.poster_path,
-      release_date: randomMovie.release_date,
-      overview: randomMovie.overview,
-      rating: randomMovie.vote_average,
-      genres: randomMovie.genres || [], // Include genres for feature matching
-      cast: topCast.map((actor) => ({
-        id: actor.id,
-        name: actor.name,
-        profile_path: actor.profile_path,
-        character: actor.character,
-      })),
-    });
+    res.json(movie);
   } catch (error) {
     console.error("Error fetching random movie:", error.message);
     res.status(500).json({ error: "Failed to fetch movie" });
