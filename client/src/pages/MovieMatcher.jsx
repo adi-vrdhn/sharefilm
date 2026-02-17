@@ -100,7 +100,23 @@ const MovieMatcher = () => {
 
     try {
       setLoading(true);
-      await api.post("/matcher/add-movies", { movies: selectedMovies });
+      
+      // Format movies with required fields for backend
+      const formattedMovies = selectedMovies.map(m => ({
+        tmdb_id: m.tmdb_id || m.id,
+        title: m.title,
+        poster: m.poster,
+        year: m.year || m.release_date?.split('-')[0],
+        overview: m.overview || '',
+        genres: m.genres || m.genre_ids || [],
+        language: m.original_language || 'en',
+        cast: m.cast || [],
+        director: m.director || ''
+      }));
+
+      console.log("Saving formatted movies:", formattedMovies);
+
+      await api.post("/matcher/add-movies", { movies: formattedMovies });
 
       // Fetch friends
       const friendsResponse = await api.get("/getFriends");
