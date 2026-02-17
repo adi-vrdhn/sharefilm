@@ -190,6 +190,108 @@ const getSimilarMovies = async (tmdbId) => {
   }));
 };
 
+
+const getMoviesByPreference = async (languages, preference, genres) => {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) {
+    throw new Error("TMDB_API_KEY is required");
+  }
+
+  try {
+    console.log(`[PREFERENCE] Fetching movies - Languages: ${languages}, Preference: ${preference}, Genres: ${genres}`);
+
+    let sortBy = "popularity.desc";
+    let minVoteAverage = 0;
+    let maxPopularity = 10000;
+    let minPopularity = 0;
+
+    // Configure based on preference type
+    if (preference === "blockbuster") {
+      // High popularity, big budget
+      sortBy = "popularity.desc";
+      minPopularity = 50; // Minimum popularity for blockbuster
+      minVoteAverage = 6;
+    } else if (preference === "niche") {
+      // Low budget, high rating, less popularity
+      sortBy = "vote_average.desc";
+      minVoteAverage = 7.5; // High rating for quality niche films
+      maxPopularity = 100; // Lower popularity
+      minPopularity = 1;
+    } else if (preference === "mixed") {
+      // Both types
+      sortBy = "popularity.desc";
+      minPopularity = 10;
+      minVoteAverage = 6;
+    }
+
+    // Format languages - convert to pipe-separated string for TMDB API
+    const languageString = languages.join("|");
+
+    // Format genres - TMDB needs genre IDs, but we're passing genre names
+    // We'll just pass what we get for now
+    const genreString = genres.join("|");
+
+    const params = {
+      api_key: apiKey,
+      language: "en-US",
+      sort_by: sortBy,
+      page: 1,
+      per_page: 20, // Get more to filter and return 15
+      vote_average_gte: minVoteAverage,
+      "vote_count.gte": 100 // Only movies with enough votes
+    };
+
+    // Add optional filters
+    if (languageString) {
+      params.with_original_language = languageString;
+    }
+    if (genreString) {
+      params.with_genres = genreString;
+    }
+
+    const response = await axios.get(`${TMDB_BASE}/discover/movie`, {
+      params
+    });
+
+    let movies = response.data.results || [];
+    console.log(`[PREFERENCE] Found ${movies.length} movies from TMDB`);
+
+    // Filter based on popularity constraints
+    if (preference === "niche") {
+      movies = movies.filter(m => m.popularity < 100);
+    } else if (preference === "blockbuster") {
+      movies = movies.filter(m => m.popularity > 50);
+    }
+
+    // Take top 15 movies
+    movies = movies.slice(0, 15);
+
+    console.log(`[PREFERENCE] Returning ${movies.length} movies`);
+
+    return movies.map((movie) => ({
+      tmdb_id: movie.id,
+      id: movie.id,
+      title: movie.title,
+      poster: movie.poster_path ? `${POSTER_BASE}${movie.poster_path}` : "",
+      poster_path: movie.poster_path,
+      release_date: movie.release_date,
+      year: movie.release_date ? movie.release_date.split("-")[0] : "",
+      overview: movie.overview,
+      genre_ids: movie.genre_ids || [],
+      original_language: movie.original_language,
+      popularity: movie.popularity,
+      vote_average: movie.vote_average
+    }));
+  } catch (error) {
+    console.error("[PREFERENCE] Error fetching movies:", {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message
+    });
+    throw error;
+  }
+};
+
 module.exports = {
   searchMovies,
   getPopularMovies,
@@ -197,5 +299,6 @@ module.exports = {
   getGenres,
   getWatchProviders,
   discoverMovies,
-  getSimilarMovies
+  getSimilarMovies,
+  getMoviesByPreference
 };

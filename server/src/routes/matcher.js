@@ -1,8 +1,52 @@
 const express = require("express");
 const { User, UserTasteProfile, UserMovieProfile } = require("../models");
 const { calculateMatchScore, getMatchingMovies, getFriendRecommendations } = require("../services/movieMatcher");
+const { getMoviesByPreference } = require("../services/tmdb");
 
 const router = express.Router();
+
+// POST: Get 15 movies based on user preferences
+router.post("/matcher/get-movies-by-preference", async (req, res) => {
+  try {
+    const { languages, preference, genres } = req.body;
+
+    if (!languages || !Array.isArray(languages) || languages.length === 0) {
+      return res.status(400).json({ message: "Select at least one language" });
+    }
+
+    if (!preference || !["blockbuster", "niche", "mixed"].includes(preference)) {
+      return res.status(400).json({ message: "Invalid preference: blockbuster, niche, or mixed" });
+    }
+
+    if (!genres || !Array.isArray(genres) || genres.length === 0) {
+      return res.status(400).json({ message: "Select at least one genre" });
+    }
+
+    console.log(`[MATCHER] Fetching movies for user ${req.user?.id}:`, {
+      languages,
+      preference,
+      genres
+    });
+
+    const movies = await getMoviesByPreference(languages, preference, genres);
+
+    if (movies.length < 15) {
+      console.warn(`[MATCHER] Only found ${movies.length} movies, expected 15`);
+    }
+
+    return res.json({
+      message: "Movies fetched successfully",
+      count: movies.length,
+      movies
+    });
+  } catch (error) {
+    console.error("[MATCHER] Error fetching movies:", error.message);
+    return res.status(500).json({
+      message: "Failed to fetch movies",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
+  }
+});
 
 // POST: Create/Update taste profile
 router.post("/matcher/taste-profile", async (req, res) => {
