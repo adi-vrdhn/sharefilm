@@ -13,8 +13,9 @@ router.get("/api/games/guess-the-movie/random", async (req, res) => {
     }
 
     const { language = "en", yearFrom = 1900, yearTo = new Date().getFullYear() } = req.query;
-    // Fetch from pages 1-3 for diverse popular movies
-    const popularPage = Math.floor(Math.random() * 3) + 1;
+    // Fetch from pages 1-50 for much more diverse movie selection
+    // Randomize heavily to avoid same movies showing up repeatedly
+    const popularPage = Math.floor(Math.random() * 50) + 1;
 
     // Language to TMDB language code mapping
     const languageMap = {
