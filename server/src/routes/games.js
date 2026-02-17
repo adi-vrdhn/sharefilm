@@ -37,6 +37,11 @@ router.get("/api/games/guess-the-movie/random", async (req, res) => {
 
     const langCode = languageMap[language] || "en";
 
+    // For Indian languages, use lower vote thresholds due to smaller catalog
+    const isIndianLanguage = ["hi", "te", "ta", "ml", "kn", "bn"].includes(language);
+    const voteCountThreshold = isIndianLanguage ? 100 : 300;
+    const ratingThreshold = isIndianLanguage ? 5.0 : 5.5;
+
     // Fetch movies with FAMOUS ACTORS (high vote count = famous/well-known)
     // Sort by popularity for variety, not just box office
     const moviesResponse = await axios.get(
@@ -46,10 +51,10 @@ router.get("/api/games/guess-the-movie/random", async (req, res) => {
           api_key: TMDB_API_KEY,
           with_original_language: langCode,
           sort_by: "popularity.desc",
-          "vote_count.gte": 300, // Movies with 300+ votes = famous actors with recognition
-          "vote_average.gte": 5.5, // Lower threshold to include more famous actor movies
+          "vote_count.gte": voteCountThreshold, // Lower threshold for Indian languages
+          "vote_average.gte": ratingThreshold,
           page: popularPage,
-          region: language === "hi" || language === "te" || language === "ta" || language === "ml" || language === "kn" || language === "bn" ? "IN" : undefined,
+          // Removed region filter - too restrictive for TMDB's Indian movie data
           ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
           ...(yearTo && { "primary_release_date.lte": `${yearTo}-12-31` })
         }
@@ -72,8 +77,44 @@ router.get("/api/games/guess-the-movie/random", async (req, res) => {
     const topCast = creditsResponse.data.cast.slice(0, 5);
 
     if (topCast.length < 2) {
-      // If not enough cast, just return an error - user can try again
-      return res.status(404).json({ error: "Movie doesn't have enough cast information. Try again!" });
+      // If not enough cast, try another movie from results instead of failing
+      const availableMovies = moviesResponse.data.results.filter(async (movie) => {
+        try {
+          const credits = await axios.get(
+            `${TMDB_BASE_URL}/movie/${movie.id}/credits?api_key=${TMDB_API_KEY}`
+          );
+          return credits.data.cast.length >= 2;
+        } catch {
+          return false;
+        }
+      });
+
+      if (availableMovies.length > 0) {
+        const fallbackMovie = availableMovies[Math.floor(Math.random() * availableMovies.length)];
+        const fallbackCredits = await axios.get(
+          `${TMDB_BASE_URL}/movie/${fallbackMovie.id}/credits?api_key=${TMDB_API_KEY}`
+        );
+        const fallbackCast = fallbackCredits.data.cast.slice(0, 5);
+        
+        return res.status(200).json({
+          id: fallbackMovie.id,
+          title: fallbackMovie.title,
+          poster_path: fallbackMovie.poster_path,
+          release_date: fallbackMovie.release_date,
+          overview: fallbackMovie.overview,
+          rating: fallbackMovie.vote_average,
+          genres: fallbackMovie.genres || [],
+          cast: fallbackCast.map((actor) => ({
+            id: actor.id,
+            name: actor.name,
+            profile_path: actor.profile_path,
+            character: actor.character,
+          })),
+        });
+      }
+
+      // If still no valid movie, try fetching from a different page
+      return res.status(404).json({ error: "No movies with cast found. Please try again!" });
     }
 
     res.json({
@@ -114,16 +155,37 @@ router.get("/api/games/guess-the-movie/search", async (req, res) => {
       `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(query)}&language=${language}`
     );
 
-    const results = searchResponse.data.results.slice(0, 8).map((movie) => ({
-      id: movie.id,
-      title: movie.title,
-      poster_path: movie.poster_path,
-      release_date: movie.release_date,
-      year: new Date(movie.release_date).getFullYear(),
-      genres: movie.genres || [], // Include genres for feature matching
-    }));
+    // Fetch full details for top 8 results to get genre data for points system
+    const topResults = searchResponse.data.results.slice(0, 8);
+    const resultsWithGenres = await Promise.all(
+      topResults.map(async (movie) => {
+        try {
+          const detailsResponse = await axios.get(
+            `${TMDB_BASE_URL}/movie/${movie.id}?api_key=${TMDB_API_KEY}`
+          );
+          return {
+            id: movie.id,
+            title: movie.title,
+            poster_path: movie.poster_path,
+            release_date: movie.release_date,
+            year: new Date(movie.release_date).getFullYear(),
+            genres: detailsResponse.data.genres || [], // Full genre data for matching
+          };
+        } catch (error) {
+          // Fallback if detail fetch fails
+          return {
+            id: movie.id,
+            title: movie.title,
+            poster_path: movie.poster_path,
+            release_date: movie.release_date,
+            year: new Date(movie.release_date).getFullYear(),
+            genres: [],
+          };
+        }
+      })
+    );
 
-    res.json({ results });
+    res.json({ results: resultsWithGenres });
   } catch (error) {
     console.error("Error searching movies:", error.message);
     res.status(500).json({ error: "Failed to search movies" });

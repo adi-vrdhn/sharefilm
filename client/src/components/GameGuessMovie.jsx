@@ -40,7 +40,7 @@ const GameGuessMovie = () => {
   ];
 
   // Fetch random movie with cast
-  const fetchRandomMovie = async (lang) => {
+  const fetchRandomMovie = async (lang, retryCount = 0) => {
     try {
       setLoadingMovie(true);
       const response = await axios.get(
@@ -48,7 +48,10 @@ const GameGuessMovie = () => {
       );
 
       if (!response.data) {
-        fetchRandomMovie(lang);
+        // If no data, retry up to 5 times
+        if (retryCount < 5) {
+          await fetchRandomMovie(lang, retryCount + 1);
+        }
         setLoadingMovie(false);
         return;
       }
@@ -67,7 +70,12 @@ const GameGuessMovie = () => {
       setLoadingMovie(false);
     } catch (error) {
       console.error("Error fetching movie:", error);
-      setLoadingMovie(false);
+      // Retry on error up to 5 times for endless loading
+      if (retryCount < 5) {
+        setTimeout(() => fetchRandomMovie(lang, retryCount + 1), 500);
+      } else {
+        setLoadingMovie(false);
+      };
     }
   };
 
