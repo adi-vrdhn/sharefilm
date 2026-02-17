@@ -9,6 +9,8 @@ const SharedParty = require("./SharedParty");
 const SwipeEvent = require("./SwipeEvent");
 const MovieTasteRating = require("./MovieTasteRating");
 const UserTasteVector = require("./UserTasteVector");
+const UserTasteProfile = require("./UserTasteProfile");
+const UserMovieProfile = require("./UserMovieProfile");
 
 User.hasMany(UserMovie, { foreignKey: "receiver_id", as: "receivedMovies", constraints: true });
 User.hasMany(UserMovie, { foreignKey: "sender_id", as: "sentMovies", constraints: true });
@@ -55,5 +57,7 @@ module.exports = {
   SharedParty,
   SwipeEvent,
   MovieTasteRating,
-  UserTasteVector
+  UserTasteVector,
+  UserTasteProfile,
+  UserMovieProfile
 };

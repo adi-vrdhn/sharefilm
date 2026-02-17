@@ -17,6 +17,7 @@ const sharedPartyRoutes = require("./routes/sharedParty");
 const profileRoutes = require("./routes/profile");
 const analyticsRoutes = require("./routes/analytics");
 const gamesRoutes = require("./routes/games");
+const matcherRoutes = require("./routes/matcher");
 const authMiddleware = require("./middleware/auth");
 const { initializeSocket } = require("./services/socket");
 
@@ -120,6 +121,7 @@ app.use(express.static(buildPath));
 // Apply auth middleware only to API routes
 app.use(authMiddleware);
 app.use(movieRoutes);
+app.use(matcherRoutes);
 app.use(notificationRoutes);
 app.use(friendRoutes);
 app.use(messageRoutes);
