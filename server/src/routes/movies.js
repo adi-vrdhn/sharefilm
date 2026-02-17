@@ -687,13 +687,34 @@ router.put("/watched-movie/:tmdbId/pin", async (req, res) => {
     watchedMovie.isPinned = isPinned || false;
     await watchedMovie.save();
 
-    return res.json({ 
-      message: isPinned ? "Movie pinned" : "Movie unpinned",
-      watchedMovie 
-    });
+// Reorder pinned movies
+router.put("/watched-movies/reorder", async (req, res) => {
+  try {
+    const { orderedTmdbIds } = req.body;
+
+    if (!Array.isArray(orderedTmdbIds)) {
+      return res.status(400).json({ message: "orderedTmdbIds must be an array" });
+    }
+
+    // Update pin order for each movie
+    for (let i = 0; i < orderedTmdbIds.length; i++) {
+      await SwipeEvent.update(
+        { pinOrder: i },
+        {
+          where: {
+            userId: req.user.id,
+            tmdbId: orderedTmdbIds[i],
+            action: "watched",
+            isPinned: true
+          }
+        }
+      );
+    }
+
+    return res.json({ message: "Movies reordered successfully" });
   } catch (error) {
-    console.error("Pin movie error:", error.message);
-    return res.status(500).json({ message: "Failed to pin/unpin movie" });
+    console.error("Reorder movies error:", error.message);
+    return res.status(500).json({ message: "Failed to reorder movies" });
   }
 });
 

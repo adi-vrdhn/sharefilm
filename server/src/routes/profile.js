@@ -290,6 +290,7 @@ router.get("/profile/watched-movies", async (req, res) => {
             language: event.language || null,
             genreIds: event.genreIds || [],
             isPinned: event.isPinned || false,
+            pinOrder: event.pinOrder,
             watchedAt: event.createdAt
           };
         }
@@ -303,6 +304,7 @@ router.get("/profile/watched-movies", async (req, res) => {
           language: event.language || null,
           genreIds: event.genreIds || [],
           isPinned: event.isPinned || false,
+          pinOrder: event.pinOrder,
           watchedAt: event.createdAt
         };
       } catch (error) {
@@ -316,6 +318,7 @@ router.get("/profile/watched-movies", async (req, res) => {
           language: event.language || null,
           genreIds: event.genreIds || [],
           isPinned: event.isPinned || false,
+          pinOrder: event.pinOrder,
           watchedAt: event.createdAt
         };
       }
@@ -382,6 +385,7 @@ router.get("/profile/user/:userId/watched-movies", async (req, res) => {
             language: event.language || null,
             genreIds: event.genreIds || [],
             isPinned: event.isPinned || false,
+            pinOrder: event.pinOrder,
             watchedAt: event.createdAt
           };
         }
@@ -395,6 +399,7 @@ router.get("/profile/user/:userId/watched-movies", async (req, res) => {
           language: event.language || null,
           genreIds: event.genreIds || [],
           isPinned: event.isPinned || false,
+          pinOrder: event.pinOrder,
           watchedAt: event.createdAt
         };
       } catch (error) {
@@ -408,6 +413,7 @@ router.get("/profile/user/:userId/watched-movies", async (req, res) => {
           language: event.language || null,
           genreIds: event.genreIds || [],
           isPinned: event.isPinned || false,
+          pinOrder: event.pinOrder,
           watchedAt: event.createdAt
         };
       }

@@ -666,6 +666,20 @@
   border-radius: 8px;
 }
 
+/* Drag and Drop Styles */
+.movie-card-compact[draggable="true"] {
+  cursor: grab;
+}
+
+.movie-card-compact[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.movie-card-compact.pinned[draggable="true"]:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(251, 146, 60, 0.3);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .sheet-container {

@@ -41,6 +41,11 @@ const SwipeEvent = sequelize.define(
       type: DataTypes.BOOLEAN,
       defaultValue: false,
       field: "is_pinned"
+    },
+    pinOrder: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: "pin_order"
     }
   },
   {

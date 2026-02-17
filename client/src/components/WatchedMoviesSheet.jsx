@@ -18,6 +18,9 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
 
+  // Drag and drop state
+  const [draggingMovie, setDraggingMovie] = useState(null);
+
   // Genre mapping (TMDB genre IDs to names)
   const genreMap = {
     28: "Action",
@@ -54,8 +57,12 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
         const response = await api.get(endpoint);
         const movies = response.data.movies || [];
         
-        // Sort: pinned first, then by date
+        // Sort: pinned first by pinOrder, then by date
         const sortedMovies = movies.sort((a, b) => {
+          if (a.isPinned && b.isPinned) {
+            // Both pinned - sort by pinOrder
+            return (a.pinOrder ?? 999) - (b.pinOrder ?? 999);
+          }
           if (a.isPinned !== b.isPinned) {
             return b.isPinned ? 1 : -1;
           }
@@ -146,6 +153,9 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
       const response = await api.get(endpoint);
       const movies = response.data.movies || [];
       const sortedMovies = movies.sort((a, b) => {
+        if (a.isPinned && b.isPinned) {
+          return (a.pinOrder ?? 999) - (b.pinOrder ?? 999);
+        }
         if (a.isPinned !== b.isPinned) {
           return b.isPinned ? 1 : -1;
         }
@@ -194,10 +204,13 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
       // Update locally
       setWatchedMovies((prev) => {
         const updated = prev.map((m) => 
-          m.tmdbId === tmdbId ? { ...m, isPinned: !currentPin } : m
+          m.tmdbId === tmdbId ? { ...m, isPinned: !currentPin, pinOrder: !currentPin ? 0 : null } : m
         );
         // Re-sort with pinned first
         return updated.sort((a, b) => {
+          if (a.isPinned && b.isPinned) {
+            return (a.pinOrder ?? 999) - (b.pinOrder ?? 999);
+          }
           if (a.isPinned !== b.isPinned) {
             return b.isPinned ? 1 : -1;
           }
@@ -206,6 +219,70 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
       });
     } catch (error) {
       console.error("Error pinning movie:", error);
+    }
+  };
+
+  // Drag and drop handlers
+  const handleDragStart = (e, movie) => {
+    if (!movie.isPinned) return;
+    setDraggingMovie(movie);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e, targetMovie) => {
+    e.preventDefault();
+    if (!draggingMovie || !targetMovie.isPinned || !draggingMovie.isPinned) return;
+
+    // Find indices
+    const dragIndex = filteredMovies.findIndex((m) => m.id === draggingMovie.id);
+    const targetIndex = filteredMovies.findIndex((m) => m.id === targetMovie.id);
+
+    if (dragIndex === targetIndex) {
+      setDraggingMovie(null);
+      return;
+    }
+
+    // Reorder locally
+    const newMovies = [...filteredMovies];
+    const [moved] = newMovies.splice(dragIndex, 1);
+    newMovies.splice(targetIndex, 0, moved);
+
+    // Get only pinned movies for reordering
+    const pinnedMovies = newMovies.filter((m) => m.isPinned);
+    const orderedTmdbIds = pinnedMovies.map((m) => m.tmdbId);
+
+    setFilteredMovies(newMovies);
+    setDraggingMovie(null);
+
+    // Send to server
+    try {
+      await api.put("/watched-movies/reorder", {
+        orderedTmdbIds
+      });
+    } catch (error) {
+      console.error("Error reordering movies:", error);
+      // Refresh on error
+      const endpoint = isOwnProfile
+        ? "/profile/watched-movies"
+        : `/profile/user/${userId}/watched-movies`;
+      const response = await api.get(endpoint);
+      const movies = response.data.movies || [];
+      const sortedMovies = movies.sort((a, b) => {
+        if (a.isPinned && b.isPinned) {
+          return (a.pinOrder ?? 999) - (b.pinOrder ?? 999);
+        }
+        if (a.isPinned !== b.isPinned) {
+          return b.isPinned ? 1 : -1;
+        }
+        return new Date(b.watchedAt) - new Date(a.watchedAt);
+      });
+      setWatchedMovies(sortedMovies);
+      setFilteredMovies(sortedMovies);
     }
   };
 
@@ -354,6 +431,14 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
                 <div 
                   key={movie.id} 
                   className={`movie-card-compact ${movie.isPinned ? "pinned" : ""}`}
+                  draggable={movie.isPinned && isOwnProfile}
+                  onDragStart={(e) => handleDragStart(e, movie)}
+                  onDragOver={handleDragOver}
+                  onDrop={(e) => handleDrop(e, movie)}
+                  style={{
+                    opacity: draggingMovie?.id === movie.id ? 0.5 : 1,
+                    cursor: movie.isPinned && isOwnProfile ? "grab" : "default"
+                  }}
                 >
                   <div className="movie-poster-wrapper">
                     <img
@@ -386,7 +471,11 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
                         </button>
                       </div>
                     )}
-                    {movie.isPinned && <div className="pinned-badge">📌</div>}
+                    {movie.isPinned && (
+                      <div className="pinned-badge" title="Drag to reorder">
+                        📌
+                      </div>
+                    )}
                   </div>
                   <p className="movie-title-compact">{movie.title}</p>
                   {movie.year && (
