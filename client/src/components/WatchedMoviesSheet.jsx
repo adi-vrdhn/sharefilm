@@ -230,20 +230,8 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
     }
   };
 
-  // Drag and drop handlers
-  const handleDragStart = (e, movie) => {
-    if (!movie.isPinned) return;
-    setDraggingMovie(movie);
-    e.dataTransfer.effectAllowed = "move";
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = "move";
-  };
-
-  const handleDrop = async (e, targetMovie) => {
-    e.preventDefault();
+  // Reorder logic shared between mouse and touch
+  const performReorder = async (targetMovie) => {
     if (!draggingMovie || !targetMovie.isPinned || !draggingMovie.isPinned) return;
 
     // Find indices
@@ -292,6 +280,41 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
       setWatchedMovies(sortedMovies);
       setFilteredMovies(sortedMovies);
     }
+  };
+
+  // Mouse drag and drop handlers
+  const handleDragStart = (e, movie) => {
+    if (!movie.isPinned) return;
+    setDraggingMovie(movie);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = "move";
+  };
+
+  const handleDrop = async (e, targetMovie) => {
+    e.preventDefault();
+    await performReorder(targetMovie);
+  };
+
+  // Touch handlers for mobile drag and drop
+  const handleTouchStart = (e, movie) => {
+    if (!movie.isPinned) return;
+    setDraggingMovie(movie);
+  };
+
+  const handleTouchMove = (e) => {
+    // Prevent default scroll behavior while dragging
+    if (draggingMovie) {
+      e.preventDefault();
+    }
+  };
+
+  const handleTouchEnd = async (e, targetMovie) => {
+    e.preventDefault();
+    await performReorder(targetMovie);
   };
 
   if (!isOpen) return null;
@@ -443,9 +466,13 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
                   onDragStart={(e) => handleDragStart(e, movie)}
                   onDragOver={handleDragOver}
                   onDrop={(e) => handleDrop(e, movie)}
+                  onTouchStart={(e) => handleTouchStart(e, movie)}
+                  onTouchMove={handleTouchMove}
+                  onTouchEnd={(e) => handleTouchEnd(e, movie)}
                   style={{
                     opacity: draggingMovie?.id === movie.id ? 0.5 : 1,
-                    cursor: movie.isPinned && isOwnProfile ? "grab" : "default"
+                    cursor: movie.isPinned && isOwnProfile ? "grab" : "default",
+                    touchAction: "none"
                   }}
                 >
                   <div className="movie-poster-wrapper">

@@ -21,12 +21,13 @@
   }
 }
 
-/* Sheet Container - Bottom sliding panel */
+/* Sheet Container - Fullscreen */
 .sheet-container {
   background-color: #ffffff;
   border-radius: 20px 20px 0 0;
   width: 100%;
-  max-height: 85vh;
+  height: 100vh;
+  max-height: 100vh;
   display: flex;
   flex-direction: column;
   box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.15);
@@ -669,6 +670,11 @@
 /* Drag and Drop Styles */
 .movie-card-compact[draggable="true"] {
   cursor: grab;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .movie-card-compact[draggable="true"]:active {
@@ -678,6 +684,20 @@
 .movie-card-compact.pinned[draggable="true"]:hover {
   transform: scale(1.05);
   box-shadow: 0 4px 12px rgba(251, 146, 60, 0.3);
+}
+
+/* Touch drag styles */
+.movie-card-compact {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+@supports (touch-action: none) {
+  .movie-card-compact[draggable="true"] {
+    touch-action: none;
+  }
 }
 
 /* Responsive Design */
