@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "../styles/games.css";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "https://sharefilm.onrender.com";
 
 const GameGuessMovie = () => {
   const [gameState, setGameState] = useState("language-select"); // language-select, playing, won, lost
