@@ -16,6 +16,11 @@ const GameGuessMovie = () => {
   const [guessedWrong, setGuessedWrong] = useState(false);
   const [showMovie, setShowMovie] = useState(false);
   const [loadingMovie, setLoadingMovie] = useState(false);
+  // New features
+  const [showClueActors, setShowClueActors] = useState(false);
+  const [score, setScore] = useState(0);
+  const [genreMatchFeedback, setGenreMatchFeedback] = useState(null);
+  const [wrongGuessCount, setWrongGuessCount] = useState(0);
 
   const languages = [
     { code: "en", name: "🌍 English" },
@@ -54,6 +59,10 @@ const GameGuessMovie = () => {
       setSearchResults([]);
       setGuessedWrong(false);
       setShowMovie(false);
+      setShowClueActors(false); // Reset clue
+      setScore(0); // Reset score
+      setGenreMatchFeedback(null); // Reset genre feedback
+      setWrongGuessCount(0); // Reset wrong guess count
       setGameState("playing");
       setLoadingMovie(false);
     } catch (error) {
@@ -87,12 +96,38 @@ const GameGuessMovie = () => {
     return () => clearTimeout(searchTimeout);
   }, [searchQuery, selectedLanguage]);
 
-  const makeGuess = (movieId) => {
-    if (movieId === currentMovie.id) {
+  // Calculate score based on wrong guesses
+  const calculateScore = (wrongGuesses) => {
+    const baseScore = 100 - (wrongGuesses * 20);
+    return Math.max(baseScore, 20); // Minimum score = 20
+  };
+
+  // Check if guessed movie has same genre as current movie
+  const checkGenreMatch = (guessedMovie) => {
+    if (!currentMovie.genres || !guessedMovie.genres) return false;
+    return guessedMovie.genres.some((genre) =>
+      currentMovie.genres.some((mGenre) => mGenre.id === genre.id)
+    );
+  };
+
+  const makeGuess = (guessedMovie) => {
+    if (guessedMovie.id === currentMovie.id) {
       // Correct guess!
+      const finalScore = calculateScore(wrongGuessCount);
+      setScore(finalScore);
       setGameState("won");
     } else {
       // Wrong guess
+      const newWrongCount = wrongGuessCount + 1;
+      setWrongGuessCount(newWrongCount);
+
+      // Check genre match for feedback
+      const isGenreMatch = checkGenreMatch(guessedMovie);
+      setGenreMatchFeedback(isGenreMatch ? "🔥 Close! Same genre." : "❌ Not the same vibe.");
+
+      // Clear feedback after 2 seconds
+      setTimeout(() => setGenreMatchFeedback(null), 2000);
+
       if (currentActorIndex > 0) {
         setCurrentActorIndex(currentActorIndex - 1);
         setGuessedWrong(true);
@@ -105,6 +140,21 @@ const GameGuessMovie = () => {
         setShowMovie(true);
       }
     }
+  };
+
+  // Handle clue button - show current + previous actor
+  const handleShowClue = () => {
+    setShowClueActors(true);
+    setTimeout(() => setShowClueActors(false), 3000); // Auto hide after 3 seconds
+  };
+
+  const getVisibleActors = () => {
+    if (!showClueActors) {
+      return currentMovie.cast.slice(currentActorIndex, currentActorIndex + 1);
+    }
+    // Show current + previous actor (or just current if at index 0)
+    const startIdx = Math.max(currentActorIndex - 1, 0);
+    return currentMovie.cast.slice(startIdx, currentActorIndex + 1);
   };
 
   const skipGame = () => {
@@ -216,30 +266,47 @@ const GameGuessMovie = () => {
 
   // Game Playing
   if (gameState === "playing") {
-    const currentActor = currentMovie.cast[currentActorIndex];
     const cluesRemaining = currentActorIndex + 1;
     const totalClues = 5;
+    const potentialScore = calculateScore(wrongGuessCount);
+    const visibleActors = getVisibleActors();
 
     return (
       <div className="game-container">
         <div className="game-header">
-          <h2>Guess the Movie</h2>
-          <span className="clues-counter">Clue {totalClues - cluesRemaining + 1}/{totalClues}</span>
+          <div className="header-left">
+            <h2>Guess the Movie</h2>
+            <span className="clues-counter">Clue {totalClues - cluesRemaining + 1}/{totalClues}</span>
+          </div>
+          <div className="header-right">
+            <span className="potential-score">⭐ Score: {potentialScore}</span>
+          </div>
         </div>
 
-        {/* Actor Face */}
-        <div className={`actor-display ${guessedWrong ? "shake" : ""}`}>
-          {currentActor?.profile_path ? (
-            <img 
-              src={`https://image.tmdb.org/t/p/w300${currentActor.profile_path}`}
-              alt={currentActor.name}
-              className="actor-image"
-            />
-          ) : (
-            <div className="actor-placeholder">No Image</div>
-          )}
-          <p className="actor-name">{currentActor?.name}</p>
+        {/* Multiple Actor Faces */}
+        <div className={`actors-display ${guessedWrong ? "shake" : ""}`}>
+          {visibleActors.map((actor, idx) => (
+            <div key={idx} className="actor-card">
+              {actor?.profile_path ? (
+                <img 
+                  src={`https://image.tmdb.org/t/p/w300${actor.profile_path}`}
+                  alt={actor.name}
+                  className="actor-image"
+                />
+              ) : (
+                <div className="actor-placeholder">No Image</div>
+              )}
+              <p className="actor-name">{actor?.name}</p>
+            </div>
+          ))}
         </div>
+
+        {/* Genre Match Feedback */}
+        {genreMatchFeedback && (
+          <div className="genre-feedback">
+            {genreMatchFeedback}
+          </div>
+        )}
 
         {/* Search Box */}
         <div className="search-box">
@@ -258,7 +325,7 @@ const GameGuessMovie = () => {
                 <button
                   key={movie.id}
                   className="search-result"
-                  onClick={() => makeGuess(movie.id)}
+                  onClick={() => makeGuess(movie)}
                 >
                   <img 
                     src={movie.poster_path ? `https://image.tmdb.org/t/p/w92${movie.poster_path}` : ""}
@@ -284,6 +351,12 @@ const GameGuessMovie = () => {
         {/* Buttons */}
         <div className="game-buttons">
           <button 
+            onClick={handleShowClue}
+            className="clue-button"
+          >
+            🔍 Clue
+          </button>
+          <button 
             onClick={() => {
               if (currentActorIndex > 0) {
                 setCurrentActorIndex(currentActorIndex - 1);
@@ -307,6 +380,9 @@ const GameGuessMovie = () => {
     return (
       <div className="game-container result-screen">
         <h2>🎉 You Won!</h2>
+        <div className="score-display">
+          <p className="final-score">Score: {score} points</p>
+        </div>
         <div className="movie-reveal">
           {currentMovie.poster_path && (
             <img 
@@ -328,6 +404,9 @@ const GameGuessMovie = () => {
     return (
       <div className="game-container result-screen">
         <h2>Game Over</h2>
+        <div className="score-display">
+          <p className="final-score">Score: 0 points</p>
+        </div>
         <div className="movie-reveal">
           {currentMovie.poster_path && (
             <img 

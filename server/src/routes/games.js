@@ -82,6 +82,7 @@ router.get("/api/games/guess-the-movie/random", async (req, res) => {
       release_date: randomMovie.release_date,
       overview: randomMovie.overview,
       rating: randomMovie.vote_average,
+      genres: randomMovie.genres || [], // Include genres for feature matching
       cast: topCast.map((actor) => ({
         id: actor.id,
         name: actor.name,
@@ -118,6 +119,7 @@ router.get("/api/games/guess-the-movie/search", async (req, res) => {
       poster_path: movie.poster_path,
       release_date: movie.release_date,
       year: new Date(movie.release_date).getFullYear(),
+      genres: movie.genres || [], // Include genres for feature matching
     }));
 
     res.json({ results });
