@@ -28,11 +28,13 @@ const searchMovies = async (query) => {
     }
 
     return results.map((movie) => ({
+      tmdb_id: movie.id,
       id: movie.id,
-      tmdbId: movie.id, // Add tmdbId for consistency
       title: movie.title,
+      poster: movie.poster_path ? `${POSTER_BASE}${movie.poster_path}` : "",
       poster_path: movie.poster_path,
       release_date: movie.release_date,
+      year: movie.release_date ? movie.release_date.split("-")[0] : "",
       overview: movie.overview,
       genre_ids: movie.genre_ids || [],
       original_language: movie.original_language
