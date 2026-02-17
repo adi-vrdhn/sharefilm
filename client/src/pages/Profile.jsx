@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
 import ImageEditor from "../components/ImageEditor";
-import TasteMatch from "../components/TasteMatch";
 import "../styles/profile.css";
 
 const Profile = () => {
@@ -28,7 +27,7 @@ const Profile = () => {
   const [moviesTo, setMoviesTo] = useState([]);
   const [showMoviesFrom, setShowMoviesFrom] = useState(false);
   const [moviesFrom, setMoviesFrom] = useState([]);
-  const [showTasteMatch, setShowTasteMatch] = useState(false);
+
 
   const isOwnProfile = !userId;
 
@@ -384,13 +383,6 @@ const Profile = () => {
             >
               View Buddies
             </button>
-            <button
-              className="primary"
-              onClick={() => setShowTasteMatch(true)}
-              style={{ marginLeft: "12px" }}
-            >
-              🎬 Movie Taste Match
-            </button>
           </div>
         )}
       </div>
@@ -507,14 +499,6 @@ const Profile = () => {
         </div>
       )}
 
-      {/* Taste Match Modal */}
-      {showTasteMatch && !isOwnProfile && profile && (
-        <TasteMatch
-          friendId={userId}
-          friendName={profile.name}
-          onClose={() => setShowTasteMatch(false)}
-        />
-      )}
     </div>
   );
 };
