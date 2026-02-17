@@ -159,9 +159,12 @@ const MovieMatcher = () => {
                     src={
                       movie.poster_path
                         ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
-                        : "https://via.placeholder.com/200x300?text=No+Poster"
+                        : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23374151' width='200' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%239ca3af'%3ENo Poster%3C/text%3E%3C/svg%3E"
                     }
                     alt={movie.title}
+                    onError={(e) => {
+                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23374151' width='200' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%239ca3af'%3ENo Poster%3C/text%3E%3C/svg%3E";
+                    }}
                   />
                   <div className="movie-overlay">
                     <button
@@ -233,11 +236,15 @@ const MovieMatcher = () => {
           />
         </div>
 
-        {searching && <p className="loading">🔄 Searching...</p>}
+        {searchQuery.length > 0 && searching && <p className="loading">🔄 Searching...</p>}
+        
+        {searchQuery.length > 0 && !searching && searchResults.length === 0 && (
+          <p className="no-results">📭 No movies found for "{searchQuery}"</p>
+        )}
 
         {searchResults.length > 0 && (
           <div className="search-results">
-            <h3>Search Results</h3>
+            <h3>Search Results ({searchResults.length})</h3>
             <div className="movies-grid">
               {searchResults.map((movie) => (
                 <div key={movie.id} className="search-result-card">
@@ -245,9 +252,14 @@ const MovieMatcher = () => {
                     src={
                       movie.poster
                         ? movie.poster
-                        : "https://via.placeholder.com/200x300?text=No+Poster"
+                        : movie.poster_path
+                        ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
+                        : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23374151' width='200' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%239ca3af'%3ENo Poster%3C/text%3E%3C/svg%3E"
                     }
                     alt={movie.title}
+                    onError={(e) => {
+                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23374151' width='200' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%239ca3af'%3ENo Poster%3C/text%3E%3C/svg%3E";
+                    }}
                   />
                   <div className="movie-info">
                     <h4>{movie.title}</h4>
@@ -255,10 +267,10 @@ const MovieMatcher = () => {
                   </div>
                   <button
                     onClick={() => handleAddMovie(movie)}
-                    disabled={loading}
+                    disabled={loading || myMovies.some(m => m.tmdb_id === (movie.id || movie.tmdb_id))}
                     className="btn-add"
                   >
-                    {loading ? "Adding..." : "➕ Add"}
+                    {myMovies.some(m => m.tmdb_id === (movie.id || movie.tmdb_id)) ? "✓ Added" : "➕ Add"}
                   </button>
                 </div>
               ))}
@@ -312,9 +324,12 @@ const MovieMatcher = () => {
                           src={
                             pair.movie1.poster_path
                               ? `https://image.tmdb.org/t/p/w200${pair.movie1.poster_path}`
-                              : "https://via.placeholder.com/150x225?text=No+Poster"
+                              : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='225'%3E%3Crect fill='%23374151' width='150' height='225'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='12' fill='%239ca3af'%3ENo Poster%3C/text%3E%3C/svg%3E"
                           }
                           alt={pair.movie1.title}
+                          onError={(e) => {
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='225'%3E%3Crect fill='%23374151' width='150' height='225'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='12' fill='%239ca3af'%3ENo Poster%3C/text%3E%3C/svg%3E";
+                          }}
                         />
                         <p>{pair.movie1.title}</p>
                       </div>
@@ -324,9 +339,12 @@ const MovieMatcher = () => {
                           src={
                             pair.movie2.poster_path
                               ? `https://image.tmdb.org/t/p/w200${pair.movie2.poster_path}`
-                              : "https://via.placeholder.com/150x225?text=No+Poster"
+                              : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='225'%3E%3Crect fill='%23374151' width='150' height='225'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='12' fill='%239ca3af'%3ENo Poster%3C/text%3E%3C/svg%3E"
                           }
                           alt={pair.movie2.title}
+                          onError={(e) => {
+                            e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='225'%3E%3Crect fill='%23374151' width='150' height='225'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='12' fill='%239ca3af'%3ENo Poster%3C/text%3E%3C/svg%3E";
+                          }}
                         />
                         <p>{pair.movie2.title}</p>
                       </div>
