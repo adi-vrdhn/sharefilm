@@ -594,23 +594,6 @@ router.delete("/watched-movies/delete-all", async (req, res) => {
 });
 
 // Search movies by title (TMDB)
-router.get("/search-movies", async (req, res) => {
-  try {
-    const { query } = req.query;
-    
-    if (!query || query.trim().length < 2) {
-      return res.status(400).json({ message: "Search query must be at least 2 characters" });
-    }
-
-    const results = await searchMovies(query);
-    
-    return res.json({ movies: results });
-  } catch (error) {
-    console.error("Search movies error:", error.message);
-    return res.status(500).json({ message: "Failed to search movies" });
-  }
-});
-
 // Add movie to watched list
 router.post("/watched-movie/add", async (req, res) => {
   try {

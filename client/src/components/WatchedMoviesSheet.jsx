@@ -126,10 +126,18 @@ const WatchedMoviesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
 
     try {
       setSearchLoading(true);
+      setSearchResults([]); // Clear previous results while loading
       const response = await api.get(`/search-movies?query=${encodeURIComponent(query)}`);
-      setSearchResults(response.data.movies || []);
+      const movies = response.data.movies || [];
+      setSearchResults(movies);
+      
+      if (movies.length === 0) {
+        console.warn("No movies found for query:", query);
+      }
     } catch (error) {
       console.error("Error searching movies:", error);
+      const errorMsg = error.response?.data?.message || error.message || "Failed to search movies";
+      alert(`Search failed: ${errorMsg}`);
       setSearchResults([]);
     } finally {
       setSearchLoading(false);

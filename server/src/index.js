@@ -57,6 +57,40 @@ app.get("/health", (req, res) => {
 
 app.use("/auth", authRoutes);
 
+// Public search endpoint (no auth required)
+app.get("/search-movies", async (req, res) => {
+  try {
+    const { query } = req.query;
+    
+    if (!query || query.trim().length < 2) {
+      return res.status(400).json({ message: "Search query must be at least 2 characters" });
+    }
+
+    const { searchMovies } = require("./services/tmdb");
+    const results = await searchMovies(query);
+    
+    return res.json({ movies: results });
+  } catch (error) {
+    console.error("Search movies error:", {
+      message: error.message,
+      stack: error.stack,
+      response: error.response?.data
+    });
+    
+    if (error.message.includes("TMDB_API_KEY")) {
+      return res.status(500).json({ 
+        message: "Server configuration error: TMDB API key not set",
+        error: error.message 
+      });
+    }
+    
+    return res.status(500).json({ 
+      message: "Failed to search movies",
+      error: error.message 
+    });
+  }
+});
+
 // Games routes (no auth required, public endpoints)
 app.use(gamesRoutes);
 

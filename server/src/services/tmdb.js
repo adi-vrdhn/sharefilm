@@ -6,26 +6,32 @@ const POSTER_BASE = "https://image.tmdb.org/t/p/w500";
 const searchMovies = async (query) => {
   const apiKey = process.env.TMDB_API_KEY;
   if (!apiKey) {
-    throw new Error("TMDB_API_KEY is required");
+    console.error("TMDB_API_KEY not set in environment variables");
+    throw new Error("TMDB_API_KEY is required - please check server environment variables");
   }
 
-  const response = await axios.get(`${TMDB_BASE}/search/movie`, {
-    params: {
-      api_key: apiKey,
-      query,
-      page: 1
-    }
-  });
+  try {
+    const response = await axios.get(`${TMDB_BASE}/search/movie`, {
+      params: {
+        api_key: apiKey,
+        query,
+        page: 1
+      }
+    });
 
-  return response.data.results.map((movie) => ({
-    id: movie.id,
-    title: movie.title,
-    poster_path: movie.poster_path,
-    release_date: movie.release_date,
-    overview: movie.overview,
-    genre_ids: movie.genre_ids || [],
-    original_language: movie.original_language
-  }));
+    return response.data.results.map((movie) => ({
+      id: movie.id,
+      title: movie.title,
+      poster_path: movie.poster_path,
+      release_date: movie.release_date,
+      overview: movie.overview,
+      genre_ids: movie.genre_ids || [],
+      original_language: movie.original_language
+    }));
+  } catch (error) {
+    console.error("TMDB API search error:", error.response?.data || error.message);
+    throw error;
+  }
 };
 
 const getPopularMovies = async () => {
