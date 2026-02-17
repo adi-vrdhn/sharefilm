@@ -71,10 +71,23 @@ app.get("/search-movies", async (req, res) => {
     }
 
     console.log(`[SEARCH] Query: "${query}"`);
+    
+    // Test TMDB API key first
+    if (!process.env.TMDB_API_KEY) {
+      console.error("[SEARCH] TMDB_API_KEY is not set!");
+      return res.status(500).json({ 
+        message: "Server configuration error: TMDB API key not set",
+        movies: [],
+        error: "TMDB_API_KEY missing"
+      });
+    }
+
     const { searchMovies } = require("./services/tmdb");
     const results = await searchMovies(query);
     
     console.log(`[SEARCH] Returning ${results.length} results for "${query}"`);
+    console.log(`[SEARCH] Sample result:`, results[0]);
+    
     return res.json({ 
       movies: results,
       count: results.length
