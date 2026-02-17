@@ -292,10 +292,70 @@ const getMoviesByPreference = async (languages, preference, genres) => {
   }
 };
 
+const getMovieDetailsWithCrew = async (tmdbId) => {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) {
+    throw new Error("TMDB_API_KEY is required");
+  }
+
+  try {
+    // Fetch movie details and credits in parallel
+    const [detailsResponse, creditsResponse] = await Promise.all([
+      axios.get(`${TMDB_BASE}/movie/${tmdbId}`, {
+        params: {
+          api_key: apiKey
+        }
+      }),
+      axios.get(`${TMDB_BASE}/movie/${tmdbId}/credits`, {
+        params: {
+          api_key: apiKey
+        }
+      })
+    ]);
+
+    const movie = detailsResponse.data;
+    const credits = creditsResponse.data;
+
+    // Extract directors from crew
+    const directors = credits.crew
+      .filter(person => person.job === 'Director')
+      .map(person => person.name);
+
+    // Extract cast (top 10)
+    const cast = credits.cast
+      .slice(0, 10)
+      .map(person => person.name);
+
+    // Get genre names
+    const genre_names = movie.genres ? movie.genres.map(g => g.name) : [];
+
+    return {
+      tmdb_id: movie.id,
+      title: movie.title,
+      poster_path: movie.poster_path,
+      backdrop_path: movie.backdrop_path,
+      year: movie.release_date ? movie.release_date.split("-")[0] : "",
+      overview: movie.overview || "No overview available",
+      rating: movie.vote_average || 0,
+      runtime: movie.runtime || 0,
+      genres: movie.genre_ids || [],
+      genre_names,
+      directors,
+      cast,
+      release_date: movie.release_date,
+      popularity: movie.popularity || 0
+    };
+  } catch (error) {
+    console.error("Error fetching movie details with crew:", error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   searchMovies,
   getPopularMovies,
   getMovieDetails,
+  getMovieDetailsWithCrew,
   getGenres,
   getWatchProviders,
   discoverMovies,

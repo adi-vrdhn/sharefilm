@@ -135,6 +135,51 @@ app.get("/search-movies", async (req, res) => {
   }
 });
 
+// Public endpoint to get movie details with crew (directors, cast)
+app.get("/movie-details/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ 
+        message: "Invalid movie ID",
+        directors: [],
+        cast: [],
+        genre_names: []
+      });
+    }
+
+    console.log(`[MOVIE-DETAILS] Fetching details for movie ID: ${id}`);
+    
+    if (!process.env.TMDB_API_KEY) {
+      console.error("[MOVIE-DETAILS] TMDB_API_KEY is not set!");
+      return res.status(500).json({ 
+        message: "Server configuration error",
+        directors: [],
+        cast: [],
+        genre_names: []
+      });
+    }
+
+    const { getMovieDetailsWithCrew } = require("./services/tmdb");
+    const details = await getMovieDetailsWithCrew(id);
+    
+    console.log(`[MOVIE-DETAILS] Got details for: ${details.title}`);
+    
+    return res.json(details);
+  } catch (error) {
+    console.error("[MOVIE-DETAILS] Error:", error.message);
+    
+    return res.status(500).json({ 
+      message: "Failed to fetch movie details",
+      error: error.message,
+      directors: [],
+      cast: [],
+      genre_names: []
+    });
+  }
+});
+
 // Games routes (no auth required, public endpoints)
 app.use(gamesRoutes);
 

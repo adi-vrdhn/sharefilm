@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import api from "../api/axios";
 import { useAuth } from "../context/AuthContext";
 import "../styles/tasteProfile.css";
@@ -15,6 +15,7 @@ const MovieMatcher = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const searchDebounceRef = useRef(null);
 
   // Match Result State
   const [selectedFriend, setSelectedFriend] = useState(null);
@@ -25,6 +26,29 @@ const MovieMatcher = () => {
     loadMyTasteMovies();
     loadFriends();
   }, []);
+
+  // Debounced search
+  useEffect(() => {
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+
+    if (searchQuery.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+
+    setSearching(true);
+    searchDebounceRef.current = setTimeout(() => {
+      performSearch(searchQuery);
+    }, 300); // 300ms debounce
+
+    return () => {
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+      }
+    };
+  }, [searchQuery]);
 
   const loadMyTasteMovies = async () => {
     try {
@@ -45,22 +69,24 @@ const MovieMatcher = () => {
   };
 
   // Search TMDB movies
-  const handleSearchMovies = async (query) => {
-    setSearchQuery(query);
-
+  const performSearch = async (query) => {
     if (query.length < 2) {
       setSearchResults([]);
+      setSearching(false);
       return;
     }
 
-    setSearching(true);
     try {
+      console.log("🔍 Searching for:", query);
       const response = await api.get("/search-movies", {
         params: { query }
       });
+      
+      console.log("✅ Found movies:", response.data.movies?.length || 0);
       setSearchResults(response.data.movies || []);
     } catch (err) {
-      console.error("Error searching movies:", err);
+      console.error("❌ Search error:", err);
+      setError(`Search failed: ${err.message}`);
       setSearchResults([]);
     } finally {
       setSearching(false);
@@ -71,7 +97,12 @@ const MovieMatcher = () => {
   const handleAddMovie = async (movie) => {
     setLoading(true);
     try {
-      // Extract only needed fields, fetch full details if needed
+      console.log("➕ Adding movie:", movie.title);
+      
+      // Get full movie details from backend
+      const detailsResponse = await api.get(`/movie-details/${movie.id || movie.tmdb_id}`);
+      const fullDetails = detailsResponse.data;
+      
       const movieData = {
         tmdb_id: movie.id || movie.tmdb_id,
         title: movie.title,
@@ -79,15 +110,16 @@ const MovieMatcher = () => {
         year: movie.year || movie.release_date?.split("-")[0],
         overview: movie.overview,
         genres: movie.genre_ids || [],
-        genre_names: movie.genre_names || [],
-        directors: movie.directors || [],
-        cast: movie.cast || [],
+        genre_names: fullDetails.genre_names || [],
+        directors: fullDetails.directors || [],
+        cast: fullDetails.cast || [],
         vote_average: movie.vote_average || 0,
         popularity: movie.popularity || 0,
         release_date: movie.release_date
       };
 
-      await api.post("/taste/add-movie", movieData);
+      const addResponse = await api.post("/taste/add-movie", movieData);
+      console.log("✅ Movie added successfully");
 
       // Reload movies
       loadMyTasteMovies();
@@ -95,6 +127,7 @@ const MovieMatcher = () => {
       setSearchResults([]);
       setError("");
     } catch (err) {
+      console.error("❌ Error adding movie:", err);
       setError(err.response?.data?.message || "Failed to add movie");
     } finally {
       setLoading(false);
@@ -230,10 +263,11 @@ const MovieMatcher = () => {
             type="text"
             placeholder="Search for movies... (e.g., Inception, Avatar)"
             value={searchQuery}
-            onChange={(e) => handleSearchMovies(e.target.value)}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
             autoFocus
           />
+          {searchQuery.length > 0 && searching && <span className="search-hint">🔄 Searching...</span>}
         </div>
 
         {searchQuery.length > 0 && searching && <p className="loading">🔄 Searching...</p>}
