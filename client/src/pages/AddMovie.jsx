@@ -47,7 +47,15 @@ const AddMovie = () => {
   }, [query]);
 
   const handleSelect = (movie) => {
-    setSelected(movie);
+    // Ensure poster is a full URL
+    const posterUrl = movie.poster ? 
+      (movie.poster.startsWith('http') ? movie.poster : `https://image.tmdb.org/t/p/w500${movie.poster}`)
+      : null;
+    
+    setSelected({
+      ...movie,
+      poster: posterUrl
+    });
     setQuery(movie.title);
     setResults([]);
   };
@@ -200,22 +208,28 @@ const AddMovie = () => {
               />
               {results.length > 0 && (
                 <div className="autocomplete-list">
-                  {results.map((movie) => (
-                    <button
-                      type="button"
-                      className="autocomplete-item"
-                      key={movie.tmdb_id}
-                      onClick={() => handleSelect(movie)}
-                    >
-                      {movie.poster && (
-                        <img src={movie.poster} alt={movie.title} className="autocomplete-poster" />
-                      )}
-                      <div className="autocomplete-info">
-                        <div className="autocomplete-title">{movie.title}</div>
-                        {movie.year && <div className="autocomplete-year">{movie.year}</div>}
-                      </div>
-                    </button>
-                  ))}
+                  {results.map((movie) => {
+                    const posterUrl = movie.poster ? 
+                      (movie.poster.startsWith('http') ? movie.poster : `https://image.tmdb.org/t/p/w500${movie.poster}`)
+                      : null;
+                    
+                    return (
+                      <button
+                        type="button"
+                        className="autocomplete-item"
+                        key={movie.tmdb_id}
+                        onClick={() => handleSelect(movie)}
+                      >
+                        {posterUrl && (
+                          <img src={posterUrl} alt={movie.title} className="autocomplete-poster" />
+                        )}
+                        <div className="autocomplete-info">
+                          <div className="autocomplete-title">{movie.title}</div>
+                          {movie.year && <div className="autocomplete-year">{movie.year}</div>}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
