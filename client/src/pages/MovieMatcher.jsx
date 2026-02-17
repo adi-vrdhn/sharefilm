@@ -61,10 +61,11 @@ const MovieMatcher = () => {
 
   const loadFriends = async () => {
     try {
-      const response = await api.get("/friends/my-friends");
-      setFriends(response.data.friends || []);
+      const response = await api.get("/getFriends");
+      setFriends(response.data || []);
     } catch (err) {
       console.error("Error loading friends:", err);
+      setFriends([]); // Continue without friends
     }
   };
 
