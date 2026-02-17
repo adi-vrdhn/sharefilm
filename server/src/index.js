@@ -3,6 +3,8 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const path = require("path");
+const http = require("http");
+const { Server } = require("socket.io");
 const sequelize = require("./config/db");
 require("./models");
 
@@ -16,9 +18,19 @@ const profileRoutes = require("./routes/profile");
 const analyticsRoutes = require("./routes/analytics");
 const gamesRoutes = require("./routes/games");
 const authMiddleware = require("./middleware/auth");
+const { initializeSocket } = require("./services/socket");
 
 const app = express();
-app.set("trust proxy", 1);
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: (process.env.CLIENT_ORIGIN || "").split(",").map((origin) => origin.trim()).filter(Boolean),
+    credentials: true
+  }
+});
+
+// Make io accessible to routes
+app.locals.io = io;
 
 const allowedOrigins = (process.env.CLIENT_ORIGIN || "")
   .split(",")
@@ -67,6 +79,9 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(buildPath, "index.html"));
 });
 
+// Initialize Socket.io
+initializeSocket(io);
+
 const start = async () => {
   try {
     await sequelize.authenticate();
@@ -74,7 +89,7 @@ const start = async () => {
     await sequelize.sync({ alter: true });
 
     const port = process.env.PORT || 4000;
-    app.listen(port, () => {
+    server.listen(port, () => {
       console.log(`Server running on ${port}`);
     });
   } catch (error) {

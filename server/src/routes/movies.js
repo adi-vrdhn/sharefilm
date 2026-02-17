@@ -9,6 +9,7 @@ const {
   discoverMovies,
   getSimilarMovies
 } = require("../services/tmdb");
+const { sendNotificationToUser } = require("../services/socket");
 
 const router = express.Router();
 
@@ -546,6 +547,32 @@ router.get("/getRatingNotifications", async (req, res) => {
   } catch (error) {
     console.error("Get rating notifications error:", error.message);
     return res.status(500).json({ message: error.message });
+  }
+});
+
+// Delete watched movie
+router.delete("/watched-movie/:tmdbId", async (req, res) => {
+  try {
+    const { tmdbId } = req.params;
+    const parsedTmdbId = parseInt(tmdbId);
+
+    // Find and delete the watched event
+    const result = await SwipeEvent.destroy({
+      where: {
+        userId: req.user.id,
+        tmdbId: parsedTmdbId,
+        action: "watched"
+      }
+    });
+
+    if (result === 0) {
+      return res.status(404).json({ message: "Watched movie not found" });
+    }
+
+    return res.json({ message: "Movie removed from watched", deleted: result });
+  } catch (error) {
+    console.error("Delete watched movie error:", error.message);
+    return res.status(500).json({ message: "Failed to delete movie" });
   }
 });
 

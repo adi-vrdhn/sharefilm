@@ -287,6 +287,8 @@ router.get("/profile/watched-movies", async (req, res) => {
             title: tmdbData?.title || "Unknown Movie",
             posterPath: tmdbData?.poster_path || null,
             year: tmdbData?.release_date?.split("-")[0] || null,
+            language: event.language || null,
+            genreIds: event.genreIds || [],
             watchedAt: event.createdAt
           };
         }
@@ -297,6 +299,8 @@ router.get("/profile/watched-movies", async (req, res) => {
           title: movie.title,
           posterPath: movie.poster,
           year: movie.year,
+          language: event.language || null,
+          genreIds: event.genreIds || [],
           watchedAt: event.createdAt
         };
       } catch (error) {
@@ -307,6 +311,8 @@ router.get("/profile/watched-movies", async (req, res) => {
           title: "Movie",
           posterPath: null,
           year: null,
+          language: event.language || null,
+          genreIds: event.genreIds || [],
           watchedAt: event.createdAt
         };
       }
@@ -370,6 +376,8 @@ router.get("/profile/user/:userId/watched-movies", async (req, res) => {
             title: tmdbData?.title || "Unknown Movie",
             posterPath: tmdbData?.poster_path || null,
             year: tmdbData?.release_date?.split("-")[0] || null,
+            language: event.language || null,
+            genreIds: event.genreIds || [],
             watchedAt: event.createdAt
           };
         }
@@ -380,6 +388,8 @@ router.get("/profile/user/:userId/watched-movies", async (req, res) => {
           title: movie.title,
           posterPath: movie.poster,
           year: movie.year,
+          language: event.language || null,
+          genreIds: event.genreIds || [],
           watchedAt: event.createdAt
         };
       } catch (error) {
@@ -390,6 +400,8 @@ router.get("/profile/user/:userId/watched-movies", async (req, res) => {
           title: "Movie",
           posterPath: null,
           year: null,
+          language: event.language || null,
+          genreIds: event.genreIds || [],
           watchedAt: event.createdAt
         };
       }
