@@ -687,6 +687,16 @@ router.put("/watched-movie/:tmdbId/pin", async (req, res) => {
     watchedMovie.isPinned = isPinned || false;
     await watchedMovie.save();
 
+    return res.json({ 
+      message: isPinned ? "Movie pinned" : "Movie unpinned",
+      watchedMovie 
+    });
+  } catch (error) {
+    console.error("Pin movie error:", error.message);
+    return res.status(500).json({ message: "Failed to pin/unpin movie" });
+  }
+});
+
 // Reorder pinned movies
 router.put("/watched-movies/reorder", async (req, res) => {
   try {
