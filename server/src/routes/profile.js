@@ -247,7 +247,7 @@ router.get("/profile/user/:userId/movies-to", async (req, res) => {
   }
 });
 
-// Get current user's watched movies
+// Get current user's watched movies (with deduplication by tmdbId)
 router.get("/profile/watched-movies", async (req, res) => {
   try {
     const watchedMovies = await SwipeEvent.findAll({
@@ -256,11 +256,21 @@ router.get("/profile/watched-movies", async (req, res) => {
         action: "watched"
       },
       order: [["createdAt", "DESC"]],
-      limit: 50
+      limit: 100
+    });
+
+    // Deduplicate by tmdbId - keep only the most recent for each movie
+    const seenMovies = new Set();
+    const uniqueMovies = watchedMovies.filter((event) => {
+      if (seenMovies.has(event.tmdbId)) {
+        return false;
+      }
+      seenMovies.add(event.tmdbId);
+      return true;
     });
 
     // Get movie details for each watched movie
-    const movieDetailsPromises = watchedMovies.map(async (event) => {
+    const movieDetailsPromises = uniqueMovies.map(async (event) => {
       // Try to find in Movie table first
       let movie = await Movie.findOne({
         where: { tmdbId: event.tmdbId }
@@ -286,7 +296,7 @@ router.get("/profile/watched-movies", async (req, res) => {
   }
 });
 
-// Get any user's public watched movies
+// Get any user's public watched movies (with deduplication by tmdbId)
 router.get("/profile/user/:userId/watched-movies", async (req, res) => {
   try {
     const { userId } = req.params;
@@ -305,11 +315,21 @@ router.get("/profile/user/:userId/watched-movies", async (req, res) => {
         action: "watched"
       },
       order: [["createdAt", "DESC"]],
-      limit: 50
+      limit: 100
+    });
+
+    // Deduplicate by tmdbId - keep only the most recent for each movie
+    const seenMovies = new Set();
+    const uniqueMovies = watchedMovies.filter((event) => {
+      if (seenMovies.has(event.tmdbId)) {
+        return false;
+      }
+      seenMovies.add(event.tmdbId);
+      return true;
     });
 
     // Get movie details for each watched movie
-    const movieDetailsPromises = watchedMovies.map(async (event) => {
+    const movieDetailsPromises = uniqueMovies.map(async (event) => {
       // Try to find in Movie table first
       let movie = await Movie.findOne({
         where: { tmdbId: event.tmdbId }
@@ -332,6 +352,62 @@ router.get("/profile/user/:userId/watched-movies", async (req, res) => {
   } catch (error) {
     console.error("Public watched movies fetch error:", error.message);
     return res.status(500).json({ message: "Failed to fetch watched movies" });
+  }
+});
+
+// Get any user's public buddies (confirmed friends)
+router.get("/profile/user/:userId/buddies", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const parsedUserId = parseInt(userId);
+
+    // Check if user exists
+    const user = await User.findByPk(parsedUserId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Get friends for this user
+    const friendships = await Friendship.findAll({
+      where: { userId: parsedUserId },
+      include: [
+        {
+          model: User,
+          as: "friend",
+          attributes: ["id", "name", "email", "profilePicture"]
+        }
+      ]
+    });
+
+    // Get interaction count for each friend
+    const friendsWithInteractions = await Promise.all(
+      friendships.map(async (f) => {
+        const sentCount = await UserMovie.count({
+          where: {
+            senderId: parsedUserId,
+            receiverId: f.friend.id
+          }
+        });
+        const receivedCount = await UserMovie.count({
+          where: {
+            senderId: f.friend.id,
+            receiverId: parsedUserId
+          }
+        });
+        return {
+          ...f.friend.toJSON(),
+          interactionCount: sentCount + receivedCount
+        };
+      })
+    );
+
+    // Sort by interaction count
+    friendsWithInteractions.sort((a, b) => b.interactionCount - a.interactionCount);
+
+    return res.json(friendsWithInteractions);
+  } catch (error) {
+    console.error("Public buddies fetch error:", error.message);
+    return res.status(500).json({ message: "Failed to fetch buddies" });
   }
 });
 

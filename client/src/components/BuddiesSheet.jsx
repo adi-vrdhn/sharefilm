@@ -17,12 +17,14 @@ const BuddiesSheet = ({ isOpen, onClose, userId, isOwnProfile }) => {
         setLoading(true);
         const endpoint = isOwnProfile
           ? "/friends/confirmed"
-          : `/friends/confirmed/${userId}`;
+          : `/profile/user/${userId}/buddies`;
         const response = await api.get(endpoint);
         setBuddies(response.data || []);
         setFilteredBuddies(response.data || []);
       } catch (error) {
         console.error("Error fetching buddies:", error);
+        setBuddies([]);
+        setFilteredBuddies([]);
       } finally {
         setLoading(false);
       }
