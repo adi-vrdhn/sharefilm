@@ -16,6 +16,7 @@ import Watchlist from "./pages/Watchlist";
 import Profile from "./pages/Profile";
 import Analytics from "./pages/Analytics";
 import Games from "./pages/Games";
+import MovieMatcher from "./pages/MovieMatcher";
 
 const LoadingScreen = () => (
   <div style={{
@@ -163,6 +164,16 @@ const App = () => {
           <ProtectedRoute>
             <Layout>
               <Analytics />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/matcher"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <MovieMatcher />
             </Layout>
           </ProtectedRoute>
         }

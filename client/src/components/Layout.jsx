@@ -31,6 +31,7 @@ const Layout = ({ children }) => {
     { path: "/discover", label: "Discover", icon: "" },
     { path: "/games", label: "Games", icon: "" },
     { path: "/party", label: "Movie Party", icon: "" },
+    { path: "/matcher", label: "Movie Matcher", icon: "" },
     { path: "/friends", label: "Friends", icon: "" },
     { path: "/notifications", label: "Notifications", icon: "" },
     { path: "/analytics", label: "Analytics", icon: "" }
