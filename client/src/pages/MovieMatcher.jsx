@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import api from "../api/axios";
 
 const LANGUAGES = [
@@ -34,21 +34,6 @@ const MovieMatcher = () => {
   // Friend match state
   const [friends, setFriends] = useState([]);
   const [matchReport, setMatchReport] = useState(null);
-
-  // Load Google AdSense ads when component mounts or step changes to selection
-  useEffect(() => {
-    if (step === "selection" && typeof window !== "undefined") {
-      // Push new ad unit to be processed by AdSense
-      if (window.adsbygoogle && window.adsbygoogle.length !== undefined) {
-        try {
-          window.adsbygoogle.push({});
-          console.log("AdSense ad pushed successfully");
-        } catch (error) {
-          console.log("AdSense is loading or not available yet", error);
-        }
-      }
-    }
-  }, [step]);
 
   // STEP 1: Onboarding
   const handleOnboardingComplete = async () => {
@@ -277,20 +262,7 @@ const MovieMatcher = () => {
             ))}
           </div>
 
-          {/* Google AdSense Ad Space */}
-          <div style={styles.adSpace} id="movie-matcher-ad">
-            <ins className="adsbygoogle"
-              style={{
-                display: "block",
-                textAlign: "center"
-              }}
-              data-ad-layout="in-article"
-              data-ad-format="fluid"
-              data-ad-client="ca-pub-6890987360770257"
-              data-ad-slot="1234567890"></ins>
-          </div>
-
-          <div style={styles.selectedCount}>
+            <div style={styles.selectedCount}>
             Selected: {selectedMovies.length} / 5
           </div>
 
@@ -623,25 +595,6 @@ const styles = {
     color: "#d1d5db",
     fontSize: "12px",
     wordWrap: "break-word"
-  },
-  adSpace: {
-    margin: "30px 0",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: "280px"
-  },
-  adPlaceholder: {
-    width: "100%",
-    maxWidth: "300px",
-    height: "250px",
-    background: "#111",
-    border: "2px dashed #374151",
-    borderRadius: "8px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#6b7280"
   }
 };
 
