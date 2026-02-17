@@ -56,6 +56,16 @@ app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+// Debug endpoint to check configuration
+app.get("/debug/config", (req, res) => {
+  res.json({
+    tmdb_api_key_configured: !!process.env.TMDB_API_KEY,
+    tmdb_api_key_length: process.env.TMDB_API_KEY ? process.env.TMDB_API_KEY.length : 0,
+    node_env: process.env.NODE_ENV,
+    port: process.env.PORT || 4000
+  });
+});
+
 app.use("/auth", authRoutes);
 
 // Public search endpoint (no auth required)
