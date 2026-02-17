@@ -1,6 +1,6 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
-const { User, Friendship, UserMovie, Movie } = require("../models");
+const { User, Friendship, UserMovie, Movie, SwipeEvent } = require("../models");
 const { Op } = require("sequelize");
 
 const router = express.Router();
@@ -247,35 +247,91 @@ router.get("/profile/user/:userId/movies-to", async (req, res) => {
   }
 });
 
-// Get movies recommended by a user (they are senders)
-router.get("/profile/user/:userId/movies-from", async (req, res) => {
+// Get current user's watched movies
+router.get("/profile/watched-movies", async (req, res) => {
+  try {
+    const watchedMovies = await SwipeEvent.findAll({
+      where: {
+        userId: req.user.id,
+        action: "watched"
+      },
+      order: [["createdAt", "DESC"]],
+      limit: 50
+    });
+
+    // Get movie details for each watched movie
+    const movieDetailsPromises = watchedMovies.map(async (event) => {
+      // Try to find in Movie table first
+      let movie = await Movie.findOne({
+        where: { tmdbId: event.tmdbId }
+      });
+
+      // If not in our db, return minimal info from TMDB (already cached in event)
+      return {
+        id: event.id,
+        tmdbId: event.tmdbId,
+        title: movie?.title || "Unknown Movie",
+        posterPath: movie?.poster || null,
+        year: movie?.year || null,
+        watchedAt: event.createdAt
+      };
+    });
+
+    const movies = await Promise.all(movieDetailsPromises);
+
+    return res.json({ movies });
+  } catch (error) {
+    console.error("Watched movies fetch error:", error.message);
+    return res.status(500).json({ message: "Failed to fetch watched movies" });
+  }
+});
+
+// Get any user's public watched movies
+router.get("/profile/user/:userId/watched-movies", async (req, res) => {
   try {
     const { userId } = req.params;
     const parsedUserId = parseInt(userId);
 
-    const movies = await UserMovie.findAll({
-      where: { senderId: parsedUserId },
-      include: [
-        {
-          model: Movie,
-          attributes: ["id", "title", "poster", "year"],
-          required: true
-        },
-        {
-          model: User,
-          as: "receiver",
-          attributes: ["id", "name", "profilePicture"],
-          required: true
-        }
-      ],
-      order: [["dateAdded", "DESC"]],
-      attributes: ["id", "dateAdded"]
+    // Check if user exists
+    const user = await User.findByPk(parsedUserId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Get watched movies for the user
+    const watchedMovies = await SwipeEvent.findAll({
+      where: {
+        userId: parsedUserId,
+        action: "watched"
+      },
+      order: [["createdAt", "DESC"]],
+      limit: 50
     });
 
-    return res.json(movies);
+    // Get movie details for each watched movie
+    const movieDetailsPromises = watchedMovies.map(async (event) => {
+      // Try to find in Movie table first
+      let movie = await Movie.findOne({
+        where: { tmdbId: event.tmdbId }
+      });
+
+      // If not in our db, return minimal info from TMDB (already cached in event)
+      return {
+        id: event.id,
+        tmdbId: event.tmdbId,
+        title: movie?.title || "Unknown Movie",
+        posterPath: movie?.poster || null,
+        year: movie?.year || null,
+        watchedAt: event.createdAt
+      };
+    });
+
+    const movies = await Promise.all(movieDetailsPromises);
+
+    return res.json({ movies });
   } catch (error) {
-    console.error("Movies-from fetch error:", error.message);
-    return res.status(500).json({ message: "Failed to fetch movies" });
+    console.error("Public watched movies fetch error:", error.message);
+    return res.status(500).json({ message: "Failed to fetch watched movies" });
   }
 });
 

@@ -3,6 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
 import ImageEditor from "../components/ImageEditor";
+import BuddiesSheet from "../components/BuddiesSheet";
+import WatchedMoviesSheet from "../components/WatchedMoviesSheet";
 import "../styles/profile.css";
 
 const Profile = () => {
@@ -15,8 +17,8 @@ const Profile = () => {
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [tempBio, setTempBio] = useState("");
   const [isEditingPicture, setIsEditingPicture] = useState(false);
-  const [showBuddies, setShowBuddies] = useState(false);
-  const [buddies, setBuddies] = useState([]);
+  const [showBuddiesSheet, setShowBuddiesSheet] = useState(false);
+  const [showWatchedMoviesSheet, setShowWatchedMoviesSheet] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showUsernameModal, setShowUsernameModal] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -73,14 +75,8 @@ const Profile = () => {
     }
   };
 
-  const loadBuddies = async () => {
-    try {
-      const response = await api.get("/profile/me/buddies");
-      setBuddies(response.data);
-      setShowBuddies(true);
-    } catch (error) {
-      setStatus("Failed to load buddies");
-    }
+  const handleOpenBuddiesSheet = () => {
+    setShowBuddiesSheet(true);
   };
 
   const loadMoviesTo = async () => {
@@ -248,43 +244,29 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Buddies Section - Expandable */}
-        {isOwnProfile && (
-          <div className="buddies-section">
-            <button
-              className="buddies-header"
-              onClick={loadBuddies}
-            >
-              <span className="buddies-icon">👥</span>
-              My Buddies ({profile.buddyCount || 0})
-              <span className={`expand-icon ${showBuddies ? "expanded" : ""}`}>▼</span>
-            </button>
-            {showBuddies && (
-              <div className="buddies-list">
-                {buddies.length > 0 ? (
-                  buddies.map((buddy) => (
-                    <div
-                      key={buddy.id}
-                      className="buddy-item"
-                      onClick={() => navigate(`/profile/${buddy.id}`)}
-                    >
-                      {buddy.profilePicture ? (
-                        <img src={buddy.profilePicture} alt={buddy.name} className="buddy-picture" />
-                      ) : (
-                        <div className="buddy-picture-placeholder">
-                          {buddy.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                      <span className="buddy-name">{buddy.name}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="no-buddies">No buddies yet</p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        {/* Buddies Section - Sheet Button */}
+        <div className="buddies-section">
+          <button
+            className="section-button buddies-button"
+            onClick={handleOpenBuddiesSheet}
+          >
+            <span className="button-emoji">👥</span>
+            <span className="button-text">Buddies</span>
+            <span className="button-badge">{profile.buddyCount || 0}</span>
+          </button>
+        </div>
+
+        {/* Watched Movies Section - Sheet Button */}
+        <div className="watched-movies-section">
+          <button
+            className="section-button watched-movies-button"
+            onClick={() => setShowWatchedMoviesSheet(true)}
+          >
+            <span className="button-emoji">🎬</span>
+            <span className="button-text">Watched Movies</span>
+            <span className="button-badge">0</span>
+          </button>
+        </div>
 
         {/* Movies Recommended To This User */}
         <div className="recommendations-section">
@@ -499,6 +481,21 @@ const Profile = () => {
         </div>
       )}
 
+      {/* Buddies Sheet */}
+      <BuddiesSheet
+        isOpen={showBuddiesSheet}
+        onClose={() => setShowBuddiesSheet(false)}
+        userId={userId}
+        isOwnProfile={isOwnProfile}
+      />
+
+      {/* Watched Movies Sheet */}
+      <WatchedMoviesSheet
+        isOpen={showWatchedMoviesSheet}
+        onClose={() => setShowWatchedMoviesSheet(false)}
+        userId={userId}
+        isOwnProfile={isOwnProfile}
+      />
     </div>
   );
 };

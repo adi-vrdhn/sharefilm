@@ -243,110 +243,59 @@
   color: #2e7d32;
 }
 
-/* Buddies Section */
-.buddies-section {
-  margin: 30px 0;
-  background: var(--card);
-  border: 1px solid rgba(200, 160, 72, 0.2);
-  border-radius: 16px;
-  overflow: hidden;
+/* Social Sections - Buddies & Watched Movies */
+.buddies-section,
+.watched-movies-section {
+  margin: 20px 0;
 }
 
-.buddies-header {
+.section-button {
   width: 100%;
   padding: 16px;
-  background: rgba(17, 20, 25, 0.9);
-  border: none;
-  border-bottom: 1px solid rgba(200, 160, 72, 0.2);
+  background: linear-gradient(135deg, rgba(200, 160, 72, 0.15), rgba(225, 182, 90, 0.1));
+  border: 1px solid rgba(200, 160, 72, 0.3);
+  border-radius: 12px;
   display: flex;
   align-items: center;
   gap: 12px;
   font-size: 16px;
   font-weight: 600;
-  color: var(--accent-2);
+  color: var(--text);
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition: all 0.3s ease;
   font-family: inherit;
 }
 
-.buddies-header:hover {
-  background: rgba(200, 160, 72, 0.15);
-}
-
-.expand-icon {
-  margin-left: auto;
-  transition: transform 0.3s ease;
-  display: inline-block;
-}
-
-.expand-icon.expanded {
-  transform: rotate(-180deg);
-}
-
-.buddies-list {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-  gap: 12px;
-  padding: 16px;
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.buddy-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 12px;
-  background: rgba(17, 20, 25, 0.9);
-  border: 1px solid rgba(225, 182, 90, 0.2);
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.buddy-item:hover {
-  background: rgba(17, 20, 25, 0.95);
-  border-color: rgba(225, 182, 90, 0.4);
+.section-button:hover {
+  background: linear-gradient(135deg, rgba(200, 160, 72, 0.25), rgba(225, 182, 90, 0.15));
+  border-color: rgba(200, 160, 72, 0.5);
   transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(200, 160, 72, 0.1);
 }
 
-.buddy-picture,
-.buddy-picture-placeholder {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
+.button-emoji {
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.button-text {
+  flex: 1;
+  text-align: left;
+}
+
+.button-badge {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 8px;
+  background: rgba(200, 160, 72, 0.3);
+  border-radius: 12px;
+  font-size: 12px;
   font-weight: 700;
-  background: linear-gradient(135deg, rgba(200, 160, 72, 0.2), rgba(225, 182, 90, 0.15));
-  border: 2px solid rgba(200, 160, 72, 0.3);
-}
-
-.buddy-picture {
-  object-fit: cover;
-}
-
-.buddy-name {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  text-align: center;
-  word-break: break-word;
-  max-width: 85px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.no-buddies {
-  grid-column: 1 / -1;
-  text-align: center;
-  color: var(--text-secondary);
-  padding: 20px;
-  font-style: italic;
+  color: var(--accent-2);
 }
 
 /* Recommendations Section */
