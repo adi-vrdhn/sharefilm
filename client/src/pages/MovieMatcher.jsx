@@ -38,12 +38,13 @@ const MovieMatcher = () => {
   // Load Google AdSense ads when component mounts or step changes to selection
   useEffect(() => {
     if (step === "selection" && typeof window !== "undefined") {
-      // Load AdSense ad script
-      if (window.adsbygoogle) {
+      // Push new ad unit to be processed by AdSense
+      if (window.adsbygoogle && window.adsbygoogle.length !== undefined) {
         try {
           window.adsbygoogle.push({});
+          console.log("AdSense ad pushed successfully");
         } catch (error) {
-          console.log("AdSense not yet loaded");
+          console.log("AdSense is loading or not available yet", error);
         }
       }
     }
@@ -278,9 +279,15 @@ const MovieMatcher = () => {
 
           {/* Google AdSense Ad Space */}
           <div style={styles.adSpace} id="movie-matcher-ad">
-            <div style={styles.adPlaceholder}>
-              <p style={{ margin: 0, fontSize: "12px", color: "#9ca3af" }}>Ad Space - Google AdSense</p>
-            </div>
+            <ins className="adsbygoogle"
+              style={{
+                display: "block",
+                textAlign: "center"
+              }}
+              data-ad-layout="in-article"
+              data-ad-format="fluid"
+              data-ad-client="ca-pub-6890987360770257"
+              data-ad-slot="1234567890"></ins>
           </div>
 
           <div style={styles.selectedCount}>
