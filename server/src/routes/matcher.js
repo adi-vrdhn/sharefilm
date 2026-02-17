@@ -37,16 +37,34 @@ router.post("/matcher/taste-profile", async (req, res) => {
   }
 });
 
-// POST: Add movies to profile
+// POST: Add movies to profile (MINIMUM 5 MOVIES)
 router.post("/matcher/add-movies", async (req, res) => {
   try {
-    const { movies } = req.body;
-
-    if (!movies || movies.length < 5) {
-      return res.status(400).json({ message: "Select at least 5 movies" });
+    if (!req.user) {
+      return res.status(401).json({ message: "User not authenticated" });
     }
 
-    const [profile] = await UserMovieProfile.findOrCreate({
+    const { movies } = req.body;
+
+    if (!movies || !Array.isArray(movies)) {
+      return res.status(400).json({ message: "Movies must be an array" });
+    }
+
+    if (movies.length < 5) {
+      return res.status(400).json({ 
+        message: `Select at least 5 movies (${movies.length}/5)` 
+      });
+    }
+
+    // Validate movie structure
+    const validMovies = movies.every(m => m.tmdb_id && m.title);
+    if (!validMovies) {
+      return res.status(400).json({ message: "Each movie must have tmdb_id and title" });
+    }
+
+    console.log(`Saving ${movies.length} movies for user ${req.user.id}`);
+
+    const [profile, created] = await UserMovieProfile.findOrCreate({
       where: { userId: req.user.id },
       defaults: {
         userId: req.user.id,
@@ -54,13 +72,24 @@ router.post("/matcher/add-movies", async (req, res) => {
       }
     });
 
-    // Update existing profile
-    await profile.update({ movies });
+    // Update if profile already exists
+    if (!created) {
+      await profile.update({ movies });
+    }
 
-    return res.json({ message: "Movies saved", profile });
+    console.log(`Successfully saved movies for user ${req.user.id}`);
+
+    return res.json({ 
+      message: "Movies saved successfully", 
+      movieCount: movies.length,
+      profile 
+    });
   } catch (error) {
-    console.error("Error saving movies:", error.message);
-    return res.status(500).json({ message: "Failed to save movies" });
+    console.error("Error saving movies:", error.message, error.stack);
+    return res.status(500).json({ 
+      message: "Failed to save movies",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
   }
 });
 
@@ -76,31 +105,50 @@ router.get("/matcher/profile", async (req, res) => {
 
 // DELETE: Remove movie from profile
 router.delete("/matcher/movie/:movieId", async (req, res) => {
-  try {
+  try {\n    if (!req.user) {
+      return res.status(401).json({ message: \"User not authenticated\" });
+    }
+
     const { movieId } = req.params;
     const profile = await UserMovieProfile.findOne({ where: { userId: req.user.id } });
 
     if (!profile) {
-      return res.status(404).json({ message: "Profile not found" });
+      return res.status(404).json({ message: \"Profile not found\" });
     }
 
-    profile.movies = profile.movies.filter(m => m.id !== movieId);
+    profile.movies = profile.movies.filter(m => m.tmdb_id !== movieId);
     await profile.save();
 
-    return res.json({ message: "Movie removed" });
+    return res.json({ message: \"Movie removed\", profile });
   } catch (error) {
+    console.error(\"Error removing movie:\", error.message);
     return res.status(500).json({ message: "Failed to remove movie" });
   }
 });
 
-// POST: Calculate match with friend
+// POST: Calculate match with friend - REFINED ALGORITHM
 router.post("/matcher/calculate-match/:friendId", async (req, res) => {
   try {
+    if (!req.user) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
     const friendId = parseInt(req.params.friendId);
+
+    if (!friendId || isNaN(friendId)) {
+      return res.status(400).json({ message: "Invalid friend ID" });
+    }
+
+    console.log(`Calculating match between user ${req.user.id} and friend ${friendId}`);
 
     const friend = await User.findByPk(friendId);
     if (!friend) {
       return res.status(404).json({ message: "Friend not found" });
+    }
+
+    const userProfile = await UserMovieProfile.findOne({ where: { userId: req.user.id } });
+    if (!userProfile?.movies || userProfile.movies.length === 0) {
+      return res.status(400).json({ message: "You must select movies first" });
     }
 
     const friendProfile = await UserMovieProfile.findOne({ where: { userId: friendId } });
@@ -108,9 +156,14 @@ router.post("/matcher/calculate-match/:friendId", async (req, res) => {
       return res.status(400).json({ message: "Friend hasn't selected movies yet" });
     }
 
+    console.log(`User ${req.user.id} has ${userProfile.movies.length} movies`);
+    console.log(`Friend ${friendId} has ${friendProfile.movies.length} movies`);
+
     const matchScore = await calculateMatchScore(req.user.id, friendId);
     const matchingMovies = await getMatchingMovies(req.user.id, friendId);
     const recommendations = await getFriendRecommendations(req.user.id, friendId);
+
+    console.log(`Match calculated: ${matchScore}%, Common movies: ${matchingMovies.length}, Recommendations: ${recommendations.length}`);
 
     return res.json({
       friend: {
@@ -124,8 +177,11 @@ router.post("/matcher/calculate-match/:friendId", async (req, res) => {
       matchPercentage: `${matchScore}%`
     });
   } catch (error) {
-    console.error("Error calculating match:", error.message);
-    return res.status(500).json({ message: "Failed to calculate match" });
+    console.error("Error calculating match:", error.message, error.stack);
+    return res.status(500).json({ 
+      message: "Failed to calculate match",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
   }
 });
 
