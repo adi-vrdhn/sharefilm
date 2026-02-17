@@ -245,6 +245,12 @@ router.post("/swipeEvent", async (req, res) => {
 
 router.post("/addMovieForFriend", async (req, res) => {
   try {
+    // Debug: Check if user exists
+    if (!req.user) {
+      console.error("[addMovieForFriend] No user in request - authentication failed");
+      return res.status(401).json({ message: "Authentication required" });
+    }
+
     const { movie, friend, force } = req.body;
 
     if (!movie || !friend) {
@@ -307,7 +313,11 @@ router.post("/addMovieForFriend", async (req, res) => {
 
     return res.json({ id: userMovie.id });
   } catch (error) {
-    return res.status(500).json({ message: "Add movie failed" });
+    console.error("[addMovieForFriend] Error:", error.message, error.stack);
+    return res.status(500).json({ 
+      message: "Add movie failed",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined
+    });
   }
 });
 
