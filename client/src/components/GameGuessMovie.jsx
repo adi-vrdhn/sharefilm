@@ -43,8 +43,10 @@ const GameGuessMovie = () => {
   const fetchRandomMovie = async (lang, retryCount = 0) => {
     try {
       setLoadingMovie(true);
+      // Add random seed to prevent caching and ensure different results each time
+      const randomSeed = Math.random() * 1000000;
       const response = await axios.get(
-        `${API_BASE_URL}/api/games/guess-the-movie/random?language=${lang}&yearFrom=${yearFrom}&yearTo=${yearTo}`
+        `${API_BASE_URL}/api/games/guess-the-movie/random?language=${lang}&yearFrom=${yearFrom}&yearTo=${yearTo}&seed=${randomSeed}`
       );
 
       if (!response.data) {

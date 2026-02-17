@@ -86,33 +86,34 @@ router.get("/api/games/guess-the-movie/random", async (req, res) => {
 
     // Strategy 1: Try with original language and low thresholds
     let movie = null;
-    let attemptPage = Math.floor(Math.random() * 10) + 1; // Start with lower page range
 
-    // For Indian languages, try lower thresholds first
+    // For Indian languages, randomize page heavily (1-500)
     if (isIndianLanguage) {
+      const randomPage = Math.floor(Math.random() * 500) + 1; // Random page 1-500
       const params = {
         api_key: TMDB_API_KEY,
         with_original_language: langCode,
         sort_by: "popularity.desc",
         "vote_count.gte": 50, // Very low threshold for Indian content
         "vote_average.gte": 4.5,
-        page: attemptPage,
+        page: randomPage, // Use random page, not sequential
         ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
         ...(yearTo && { "primary_release_date.lte": `${yearTo}-12-31` })
       };
 
       movie = await fetchMovieWithCast(params);
 
-      // Strategy 2: If failed, try consecutive pages instead of random
+      // Strategy 2: If failed on random page, try different random pages (not sequential)
       if (!movie) {
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 0; i < 10; i++) { // Try 10 different random pages
+          const randomPage2 = Math.floor(Math.random() * 500) + 1;
           const params2 = {
             api_key: TMDB_API_KEY,
             with_original_language: langCode,
             sort_by: "popularity.desc",
             "vote_count.gte": 30,
             "vote_average.gte": 4.0,
-            page: i,
+            page: randomPage2,
             ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
             ...(yearTo && { "primary_release_date.lte": `${yearTo}-12-31` })
           };
@@ -123,52 +124,56 @@ router.get("/api/games/guess-the-movie/random", async (req, res) => {
 
       // Strategy 3: If still failed, try NO vote threshold at all for Indian languages
       if (!movie) {
+        const randomPage3 = Math.floor(Math.random() * 300) + 1;
         const params3 = {
           api_key: TMDB_API_KEY,
           with_original_language: langCode,
           sort_by: "popularity.desc",
-          page: Math.floor(Math.random() * 20) + 1,
+          page: randomPage3,
           ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
           ...(yearTo && { "primary_release_date.lte": `${yearTo}-12-31` })
         };
         movie = await fetchMovieWithCast(params3);
       }
 
-      // Strategy 4: Last resort - fetch any movie in that language 
+      // Strategy 4: Last resort - fetch any movie in that language from random page
       if (!movie) {
+        const randomPage4 = Math.floor(Math.random() * 100) + 1;
         const params4 = {
           api_key: TMDB_API_KEY,
           with_original_language: langCode,
           sort_by: "popularity.desc",
-          page: 1
+          page: randomPage4
         };
         movie = await fetchMovieWithCast(params4);
       }
     } else {
-      // For non-Indian languages, use standard approach
+      // For non-Indian languages, randomize pages 1-100
+      const randomPage = Math.floor(Math.random() * 100) + 1; // Random page 1-100
       const params = {
         api_key: TMDB_API_KEY,
         with_original_language: langCode,
         sort_by: "popularity.desc",
         "vote_count.gte": 300,
         "vote_average.gte": 5.5,
-        page: attemptPage,
+        page: randomPage,
         ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
         ...(yearTo && { "primary_release_date.lte": `${yearTo}-12-31` })
       };
 
       movie = await fetchMovieWithCast(params);
 
-      // Fallback for non-Indian
+      // Fallback for non-Indian with random pages
       if (!movie) {
-        for (let i = 1; i <= 5; i++) {
+        for (let i = 0; i < 10; i++) {
+          const randomPage2 = Math.floor(Math.random() * 100) + 1;
           const params2 = {
             api_key: TMDB_API_KEY,
             with_original_language: langCode,
             sort_by: "popularity.desc",
             "vote_count.gte": 100,
             "vote_average.gte": 5.0,
-            page: i,
+            page: randomPage2,
             ...(yearFrom && { "primary_release_date.gte": `${yearFrom}-01-01` }),
             ...(yearTo && { "primary_release_date.lte": `${yearTo}-12-31` })
           };
