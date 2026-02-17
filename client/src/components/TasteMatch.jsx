@@ -35,17 +35,22 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
         setFriendVotesCount(state.friend_votes);
         setPhase("waiting");
       } else if (state.status === "voting_in_progress") {
-        // Continue voting
-        setVotesCount(state.votes_current_user);
-        setFriendVotesCount(state.votes_friend);
+        // Check if current user has voted yet
         if (state.votes_current_user < votesRequired) {
+          // Current user hasn't finished voting - show movie cards
+          setVotesCount(state.votes_current_user);
+          setFriendVotesCount(state.votes_friend);
           fetchNextMovie();
         } else {
-          // Completed voting, now waiting
+          // Current user finished voting, now waiting
+          setVotesCount(state.votes_current_user);
+          setFriendVotesCount(state.votes_friend);
           setPhase("waiting");
         }
       } else if (state.status === "not_started") {
-        // Start fresh
+        // Start fresh - show first movie
+        setVotesCount(0);
+        setFriendVotesCount(0);
         fetchNextMovie();
       }
     } catch (err) {
