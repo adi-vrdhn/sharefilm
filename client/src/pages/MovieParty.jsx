@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import API from "../api/axios";
 import "../styles/movieparty.css";
+import ComingSoonModal from "../components/ComingSoonModal";
 
 const MovieParty = () => {
   const { user } = useAuth();
+  const [showComingSoon, setShowComingSoon] = useState(true);
   const [friends, setFriends] = useState([]);
   const [selectedFriends, setSelectedFriends] = useState([]);
   const [selectedMovies, setSelectedMovies] = useState([]);
@@ -369,6 +371,14 @@ const MovieParty = () => {
 
   return (
     <div className="movie-party-page">
+      {/* Coming Soon Modal */}
+      {showComingSoon && (
+        <ComingSoonModal 
+          featureName="House Party" 
+          onClose={() => setShowComingSoon(false)} 
+        />
+      )}
+
       <div className="party-container">
         <div className="party-header">
           <h1>🎬 Movie Party</h1>
