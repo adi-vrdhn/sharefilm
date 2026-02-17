@@ -78,8 +78,9 @@ const TasteMatch = ({ friendId, friendName, onClose }) => {
       setPhase("voting");
     } catch (err) {
       if (err.response?.status === 404) {
-        // No more movies available
-        console.log("No more movies available");
+        // No more movies available, move to waiting phase
+        console.log("No more movies available - moving to waiting phase");
+        setPhase("waiting");
       } else {
         console.error("Error fetching movie:", err);
         setError("Failed to load movie");
