@@ -15,7 +15,6 @@ const sharedPartyRoutes = require("./routes/sharedParty");
 const profileRoutes = require("./routes/profile");
 const analyticsRoutes = require("./routes/analytics");
 const gamesRoutes = require("./routes/games");
-const tasteMatchRoutes = require("./routes/tasteMatch");
 const authMiddleware = require("./middleware/auth");
 
 const app = express();
@@ -62,7 +61,6 @@ app.use(messageRoutes);
 app.use(sharedPartyRoutes);
 app.use(profileRoutes);
 app.use("/analytics", analyticsRoutes);
-app.use(tasteMatchRoutes);
 
 // SPA fallback: serve index.html for any non-API routes
 app.get("*", (req, res) => {
