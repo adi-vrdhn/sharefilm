@@ -51,8 +51,8 @@ router.post("/matcher/add-movies", async (req, res) => {
     }
 
     if (movies.length < 5) {
-      return res.status(400).json({ 
-        message: `Select at least 5 movies (${movies.length}/5)` 
+      return res.status(400).json({
+        message: `Select at least 5 movies (${movies.length}/5)`
       });
     }
 
@@ -79,14 +79,14 @@ router.post("/matcher/add-movies", async (req, res) => {
 
     console.log(`Successfully saved movies for user ${req.user.id}`);
 
-    return res.json({ 
-      message: "Movies saved successfully", 
+    return res.json({
+      message: "Movies saved successfully",
       movieCount: movies.length,
-      profile 
+      profile
     });
   } catch (error) {
     console.error("Error saving movies:", error.message, error.stack);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Failed to save movies",
       error: process.env.NODE_ENV === "development" ? error.message : undefined
     });
@@ -105,23 +105,24 @@ router.get("/matcher/profile", async (req, res) => {
 
 // DELETE: Remove movie from profile
 router.delete("/matcher/movie/:movieId", async (req, res) => {
-  try {\n    if (!req.user) {
-      return res.status(401).json({ message: \"User not authenticated\" });
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "User not authenticated" });
     }
 
     const { movieId } = req.params;
     const profile = await UserMovieProfile.findOne({ where: { userId: req.user.id } });
 
     if (!profile) {
-      return res.status(404).json({ message: \"Profile not found\" });
+      return res.status(404).json({ message: "Profile not found" });
     }
 
     profile.movies = profile.movies.filter(m => m.tmdb_id !== movieId);
     await profile.save();
 
-    return res.json({ message: \"Movie removed\", profile });
+    return res.json({ message: "Movie removed", profile });
   } catch (error) {
-    console.error(\"Error removing movie:\", error.message);
+    console.error("Error removing movie:", error.message);
     return res.status(500).json({ message: "Failed to remove movie" });
   }
 });
@@ -178,7 +179,7 @@ router.post("/matcher/calculate-match/:friendId", async (req, res) => {
     });
   } catch (error) {
     console.error("Error calculating match:", error.message, error.stack);
-    return res.status(500).json({ 
+    return res.status(500).json({
       message: "Failed to calculate match",
       error: process.env.NODE_ENV === "development" ? error.message : undefined
     });
