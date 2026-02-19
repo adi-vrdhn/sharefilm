@@ -10,6 +10,7 @@ require("./models");
 
 // 🔒 Security middleware imports
 const { securityHeaders, generalLimiter, authLimiter, searchLimiter } = require("./middleware/security");
+const { sanitizeInput } = require("./middleware/sanitization");
 
 const authRoutes = require("./routes/auth");
 const movieRoutes = require("./routes/movies");
@@ -63,6 +64,9 @@ app.use(
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
+
+// 🔒 Sanitize all user input
+app.use(sanitizeInput);
 
 // ============================================
 // PUBLIC ENDPOINTS (no authentication)

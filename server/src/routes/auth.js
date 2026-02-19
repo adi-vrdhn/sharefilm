@@ -2,6 +2,8 @@ const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { User } = require("../models");
+const { recordFailedAttempt, isAccountLocked, clearLoginAttempts } = require("../middleware/accountLockout");
+const { logFailedLogin, logSuccessfulLogin, logAccountLockout } = require("../middleware/auditLog");
 
 const router = express.Router();
 
@@ -65,27 +67,62 @@ router.post("/signup", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
+    const ipAddress = req.ip || req.connection.remoteAddress;
 
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password required" });
     }
 
+    // 🔒 Check if account is locked
+    const lockStatus = isAccountLocked(email);
+    if (lockStatus.locked) {
+      logAccountLockout(email, ipAddress);
+      return res.status(429).json({
+        message: `Account locked due to too many failed attempts. Try again in ${lockStatus.remainingTime} minutes.`,
+        lockedUntil: lockStatus.remainingTime
+      });
+    }
+
     const user = await User.findOne({ where: { email } });
+    
+    // Generic error message - don't reveal if email exists
     if (!user) {
+      recordFailedAttempt(email);
+      logFailedLogin(email, ipAddress, "User not found");
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) {
-      return res.status(401).json({ message: "Invalid credentials" });
+      const attemptResult = recordFailedAttempt(email);
+      logFailedLogin(email, ipAddress, "Wrong password");
+      
+      // If account just got locked
+      if (attemptResult.isLocked) {
+        logAccountLockout(email, ipAddress);
+        return res.status(429).json({
+          message: "Too many failed login attempts. Account locked for 15 minutes.",
+          lockedUntil: attemptResult.remainingTime
+        });
+      }
+      
+      return res.status(401).json({
+        message: "Invalid credentials",
+        attemptsRemaining: attemptResult.attemptsRemaining
+      });
     }
 
+    // ✅ Successful login - clear attempts
+    clearLoginAttempts(email);
+    logSuccessfulLogin(user.id, email, ipAddress);
+    
     const token = generateToken(user);
     return res.json({ 
       token, 
       user: { id: user.id, name: user.name, email: user.email, profilePicture: user.profilePicture, bio: user.bio } 
     });
   } catch (error) {
+    console.error("[LOGIN] Error:", error.message);
     return res.status(500).json({ message: "Login failed" });
   }
 });
