@@ -9,16 +9,28 @@ const generateToken = (user) => {
   return jwt.sign(
     { id: user.id, name: user.name, email: user.email },
     process.env.JWT_SECRET,
-    { expiresIn: "7d" }
+    { expiresIn: "1d" } // Changed from 7d to 1d for better security
   );
 };
-
 router.post("/signup", async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // 🔒 Password strength validation
+    const passwordRegex = /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}$/;
+    if (!passwordRegex.test(password)) {
+      return res.status(400).json({ 
+        message: "Password must be at least 8 characters with uppercase, lowercase, number, and special character" 
+      });
+    }
+
+    // Input validation
+    if (name.length < 2 || name.length > 50) {
+      return res.status(400).json({ message: "Name must be 2-50 characters" });
     }
 
     const existing = await User.findOne({
@@ -45,6 +57,7 @@ router.post("/signup", async (req, res) => {
       user: { id: user.id, name: user.name, email: user.email, profilePicture: user.profilePicture, bio: user.bio } 
     });
   } catch (error) {
+    console.error("[SIGNUP] Error:", error.message);
     return res.status(500).json({ message: "Signup failed" });
   }
 });

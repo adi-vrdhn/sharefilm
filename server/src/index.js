@@ -8,6 +8,9 @@ const { Server } = require("socket.io");
 const sequelize = require("./config/db");
 require("./models");
 
+// 🔒 Security middleware imports
+const { securityHeaders, generalLimiter, authLimiter, searchLimiter } = require("./middleware/security");
+
 const authRoutes = require("./routes/auth");
 const movieRoutes = require("./routes/movies");
 const notificationRoutes = require("./routes/notifications");
@@ -39,6 +42,11 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN || "")
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+// 🔒 SECURITY FIRST: Apply helmet and rate limiting early
+app.use(securityHeaders);
+app.use(generalLimiter);
+
+// CORS configuration
 app.use(
   cors({
     origin: (origin, callback) => {
@@ -50,27 +58,23 @@ app.use(
     credentials: true
   })
 );
-app.use(express.json());
+
+// Body parser with request size limits (prevent large payloads)
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(cookieParser());
 
+// ============================================
+// PUBLIC ENDPOINTS (no authentication)
+// ============================================
+
+// Health check endpoint
 app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// Debug endpoint to check configuration
-app.get("/debug/config", (req, res) => {
-  res.json({
-    tmdb_api_key_configured: !!process.env.TMDB_API_KEY,
-    tmdb_api_key_length: process.env.TMDB_API_KEY ? process.env.TMDB_API_KEY.length : 0,
-    node_env: process.env.NODE_ENV,
-    port: process.env.PORT || 4000
-  });
-});
-
-app.use("/auth", authRoutes);
-
-// Public search endpoint (no auth required)
-app.get("/search-movies", async (req, res) => {
+// Public search endpoint with rate limiting
+app.get("/search-movies", searchLimiter, async (req, res) => {
   try {
     const { query } = req.query;
     
@@ -81,66 +85,41 @@ app.get("/search-movies", async (req, res) => {
       });
     }
 
-    console.log(`[SEARCH] Query: "${query}"`);
+    // Sanitize query
+    const sanitizedQuery = query.trim().substring(0, 100);
     
-    // Test TMDB API key first
     if (!process.env.TMDB_API_KEY) {
-      console.error("[SEARCH] TMDB_API_KEY is not set!");
+      console.error("[SEARCH] TMDB_API_KEY not configured");
       return res.status(500).json({ 
-        message: "Server configuration error: TMDB API key not set",
-        movies: [],
-        error: "TMDB_API_KEY missing"
+        message: "Search service temporarily unavailable",
+        movies: []
       });
     }
 
     const { searchMovies } = require("./services/tmdb");
-    const results = await searchMovies(query);
-    
-    console.log(`[SEARCH] Returning ${results.length} results for "${query}"`);
-    console.log(`[SEARCH] Sample result:`, results[0]);
+    const results = await searchMovies(sanitizedQuery);
     
     return res.json({ 
       movies: results,
       count: results.length
     });
   } catch (error) {
-    console.error("[SEARCH] Error:", {
-      message: error.message,
-      stack: error.stack,
-      response: error.response?.data
-    });
-    
-    if (error.message.includes("TMDB_API_KEY")) {
-      return res.status(500).json({ 
-        message: "Server configuration error: TMDB API key not set",
-        error: error.message,
-        movies: []
-      });
-    }
-    
-    // Check for specific TMDB API errors
-    if (error.response?.status === 401) {
-      return res.status(500).json({ 
-        message: "TMDB API key is invalid",
-        error: "Authentication failed",
-        movies: []
-      });
-    }
-    
+    console.error("[SEARCH] Error:", error.message);
+    // Generic error message - don't expose internal details
     return res.status(500).json({ 
-      message: "Failed to search movies",
-      error: error.message,
+      message: "Search failed. Please try again.",
       movies: []
     });
   }
 });
 
-// Public endpoint to get movie details with crew (directors, cast)
+// Public endpoint to get movie details
 app.get("/movie-details/:id", async (req, res) => {
   try {
     const { id } = req.params;
     
-    if (!id || isNaN(id)) {
+    // Validate ID is a positive integer
+    if (!id ||isNaN(id) || parseInt(id) <= 0) {
       return res.status(400).json({ 
         message: "Invalid movie ID",
         directors: [],
@@ -149,12 +128,10 @@ app.get("/movie-details/:id", async (req, res) => {
       });
     }
 
-    console.log(`[MOVIE-DETAILS] Fetching details for movie ID: ${id}`);
-    
     if (!process.env.TMDB_API_KEY) {
-      console.error("[MOVIE-DETAILS] TMDB_API_KEY is not set!");
+      console.error("[MOVIE-DETAILS] TMDB_API_KEY not configured");
       return res.status(500).json({ 
-        message: "Server configuration error",
+        message: "Service temporarily unavailable",
         directors: [],
         cast: [],
         genre_names: []
@@ -164,15 +141,11 @@ app.get("/movie-details/:id", async (req, res) => {
     const { getMovieDetailsWithCrew } = require("./services/tmdb");
     const details = await getMovieDetailsWithCrew(id);
     
-    console.log(`[MOVIE-DETAILS] Got details for: ${details.title}`);
-    
     return res.json(details);
   } catch (error) {
     console.error("[MOVIE-DETAILS] Error:", error.message);
-    
     return res.status(500).json({ 
       message: "Failed to fetch movie details",
-      error: error.message,
       directors: [],
       cast: [],
       genre_names: []
@@ -185,19 +158,17 @@ app.get("/smart-suggestions/:id", async (req, res) => {
   try {
     const { id } = req.params;
     
-    if (!id || isNaN(id)) {
+    if (!id || isNaN(id) || parseInt(id) <= 0) {
       return res.status(400).json({ 
         message: "Invalid movie ID",
         suggestions: []
       });
     }
 
-    console.log(`[SMART-SUGGESTIONS] Fetching suggestions for movie ID: ${id}`);
-    
     if (!process.env.TMDB_API_KEY) {
-      console.error("[SMART-SUGGESTIONS] TMDB_API_KEY is not set!");
+      console.error("[SMART-SUGGESTIONS] TMDB_API_KEY not configured");
       return res.status(500).json({ 
-        message: "Server configuration error",
+        message: "Service temporarily unavailable",
         suggestions: []
       });
     }
@@ -205,49 +176,51 @@ app.get("/smart-suggestions/:id", async (req, res) => {
     const { getSmartSuggestions } = require("./services/tmdb");
     const suggestions = await getSmartSuggestions(id);
     
-    console.log(`[SMART-SUGGESTIONS] Got ${suggestions.length} suggestions`);
-    
     return res.json({ 
       suggestions,
       count: suggestions.length
     });
   } catch (error) {
     console.error("[SMART-SUGGESTIONS] Error:", error.message);
-    
     return res.status(500).json({ 
       message: "Failed to fetch suggestions",
-      error: error.message,
       suggestions: []
     });
   }
 });
 
-// Public endpoint for smart suggestions based on entire profile
+// Public endpoint for smart suggestions based on profile
 app.post("/smart-suggestions/profile", async (req, res) => {
   try {
     const { movieIds } = req.body;
     
     if (!Array.isArray(movieIds) || movieIds.length === 0) {
       return res.status(400).json({ 
-        message: "Invalid movie IDs - must be non-empty array",
+        message: "Invalid request",
         suggestions: []
       });
     }
 
-    // Validate all IDs are numbers
-    if (!movieIds.every(id => !isNaN(id))) {
+    // Validate all IDs are positive integers
+    if (!movieIds.every(id => Number.isInteger(id) && id > 0)) {
       return res.status(400).json({
-        message: "All movie IDs must be valid numbers",
+        message: "Invalid movie IDs",
         suggestions: []
       });
     }
 
-    console.log(`[PROFILE-SUGGESTIONS] Fetching suggestions for profile with ${movieIds.length} movies`);
-    
+    // Limit to prevent abuse
+    if (movieIds.length > 100) {
+      return res.status(400).json({
+        message: "Maximum 100 movies allowed",
+        suggestions: []
+      });
+    }
+
     if (!process.env.TMDB_API_KEY) {
-      console.error("[PROFILE-SUGGESTIONS] TMDB_API_KEY is not set!");
+      console.error("[PROFILE-SUGGESTIONS] TMDB_API_KEY not configured");
       return res.status(500).json({ 
-        message: "Server configuration error",
+        message: "Service temporarily unavailable",
         suggestions: []
       });
     }
@@ -255,18 +228,14 @@ app.post("/smart-suggestions/profile", async (req, res) => {
     const { getSmartSuggestionsForProfile } = require("./services/tmdb");
     const suggestions = await getSmartSuggestionsForProfile(movieIds);
     
-    console.log(`[PROFILE-SUGGESTIONS] Got ${suggestions.length} suggestions`);
-    
     return res.json({ 
       suggestions,
       count: suggestions.length
     });
   } catch (error) {
     console.error("[PROFILE-SUGGESTIONS] Error:", error.message);
-    
     return res.status(500).json({ 
-      message: "Failed to fetch profile suggestions",
-      error: error.message,
+      message: "Failed to fetch suggestions",
       suggestions: []
     });
   }
@@ -278,19 +247,25 @@ app.post("/smart-suggestions/similar/:id", async (req, res) => {
     const { id } = req.params;
     const { limit = 20 } = req.body;
     
-    if (!id || isNaN(id)) {
+    if (!id || isNaN(id) || parseInt(id) <= 0) {
       return res.status(400).json({ 
         message: "Invalid movie ID",
         suggestions: []
       });
     }
 
-    console.log(`[SIMILAR-ADVANCED] Fetching advanced similar movies for movie ID: ${id}`);
-    
+    // Validate limit
+    if (!Number.isInteger(limit) || limit < 1 || limit > 50) {
+      return res.status(400).json({
+        message: "Invalid limit parameter",
+        suggestions: []
+      });
+    }
+
     if (!process.env.TMDB_API_KEY) {
-      console.error("[SIMILAR-ADVANCED] TMDB_API_KEY is not set!");
+      console.error("[SIMILAR-ADVANCED] TMDB_API_KEY not configured");
       return res.status(500).json({ 
-        message: "Server configuration error",
+        message: "Service temporarily unavailable",
         suggestions: []
       });
     }
@@ -304,7 +279,7 @@ app.post("/smart-suggestions/similar/:id", async (req, res) => {
     try {
       referenceMovieDetails = await getMovieDetailsWithCrew(id);
     } catch (err) {
-      console.warn("[SIMILAR-ADVANCED] Could not fetch reference movie details, using basic scores");
+      console.warn("[SIMILAR-ADVANCED] Could not fetch reference movie details");
     }
     
     let enhancedSuggestions = suggestions;
@@ -322,7 +297,7 @@ app.post("/smart-suggestions/similar/:id", async (req, res) => {
         keywords: referenceMovieDetails.keywords || []
       });
 
-      // Score each suggestion using similarity formula
+      // Score each suggestion
       enhancedSuggestions = suggestions.map(suggestion => {
         const suggestionVector = new MovieVector({
           id: suggestion.tmdb_id,
@@ -345,8 +320,6 @@ app.post("/smart-suggestions/similar/:id", async (req, res) => {
       }).sort((a, b) => b.advancedScore - a.advancedScore);
     }
 
-    console.log(`[SIMILAR-ADVANCED] Returning ${enhancedSuggestions.slice(0, limit).length} enhanced suggestions`);
-    
     return res.json({ 
       suggestions: enhancedSuggestions.slice(0, limit),
       count: enhancedSuggestions.length,
@@ -361,21 +334,27 @@ app.post("/smart-suggestions/similar/:id", async (req, res) => {
     });
   } catch (error) {
     console.error("[SIMILAR-ADVANCED] Error:", error.message);
-    
     return res.status(500).json({ 
-      message: "Failed to fetch advanced similar suggestions",
-      error: error.message,
+      message: "Failed to fetch suggestions",
       suggestions: []
     });
   }
 });
 
-// Games routes (no auth required, public endpoints)
+// Games routes (public)
 app.use(gamesRoutes);
 
 // Serve static files from React build BEFORE auth middleware
 const buildPath = path.join(__dirname, "../../client/dist");
 app.use(express.static(buildPath));
+
+// ============================================
+// PROTECTED ENDPOINTS (require authentication)
+// ============================================
+
+// 🔒 Apply auth rate limiting and auth middleware
+app.use("/auth", authLimiter);
+app.use("/auth", authRoutes);
 
 // Apply auth middleware only to API routes
 app.use(authMiddleware);
@@ -394,6 +373,16 @@ app.get("*", (req, res) => {
   res.sendFile(path.join(buildPath, "index.html"));
 });
 
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error("[ERROR]", err.message);
+  
+  // Don't expose internal error details
+  return res.status(500).json({
+    message: "An error occurred. Please try again."
+  });
+});
+
 // Initialize Socket.io
 initializeSocket(io);
 
@@ -405,10 +394,11 @@ const start = async () => {
 
     const port = process.env.PORT || 4000;
     server.listen(port, () => {
-      console.log(`Server running on ${port}`);
+      console.log(`🔒 Secure server running on port ${port}`);
+      console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
     });
   } catch (error) {
-    console.error("Failed to start server", error);
+    console.error("Failed to start server", error.message);
     process.exit(1);
   }
 };
