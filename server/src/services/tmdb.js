@@ -460,8 +460,8 @@ const getMovieDetailsWithCrew = async (tmdbId) => {
   }
 
   try {
-    // Fetch movie details and credits in parallel
-    const [detailsResponse, creditsResponse] = await Promise.all([
+    // Fetch movie details, credits, and keywords in parallel
+    const [detailsResponse, creditsResponse, keywordsResponse] = await Promise.all([
       axios.get(`${TMDB_BASE}/movie/${tmdbId}`, {
         params: {
           api_key: apiKey
@@ -471,7 +471,12 @@ const getMovieDetailsWithCrew = async (tmdbId) => {
         params: {
           api_key: apiKey
         }
-      })
+      }),
+      axios.get(`${TMDB_BASE}/movie/${tmdbId}/keywords`, {
+        params: {
+          api_key: apiKey
+        }
+      }).catch(() => null) // Keywords may not be available
     ]);
 
     const movie = detailsResponse.data;
@@ -490,6 +495,11 @@ const getMovieDetailsWithCrew = async (tmdbId) => {
     // Get genre names
     const genre_names = movie.genres ? movie.genres.map(g => g.name) : [];
 
+    // Extract keywords
+    const keywords = keywordsResponse && keywordsResponse.data && keywordsResponse.data.keywords
+      ? keywordsResponse.data.keywords.slice(0, 10).map(k => k.name)
+      : [];
+
     return {
       tmdb_id: movie.id,
       title: movie.title,
@@ -503,6 +513,7 @@ const getMovieDetailsWithCrew = async (tmdbId) => {
       genre_names,
       directors,
       cast,
+      keywords,
       release_date: movie.release_date,
       popularity: movie.popularity || 0
     };

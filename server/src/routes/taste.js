@@ -1,7 +1,8 @@
 const express = require("express");
 const { UserTasteMovie } = require("../models");
-const { getMovieDetails } = require("../services/tmdb");
+const { getMovieDetails, getMovieDetailsWithCrew } = require("../services/tmdb");
 const { calculateMatchPercentage, findSimilarMovies, getUserTasteMovies } = require("../services/tasteMatching");
+const { MovieVector, UserTasteVector, cosineSimilarity, cosineToPercentage, scoreMovieForUser, scoreSimilarMovie } = require("../services/movieEvaluation");
 
 const router = express.Router();
 
@@ -154,6 +155,205 @@ router.get("/taste/match/:friendId", async (req, res) => {
   } catch (error) {
     console.error("[TASTE] Error calculating match:", error.message);
     return res.status(500).json({ message: "Failed to calculate match" });
+  }
+});
+
+// GET: Calculate advanced match with evaluation system
+router.get("/taste/match-advanced/:friendId", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const { friendId } = req.params;
+    console.log(`[MATCH-ADVANCED] Calculating match between ${req.user.id} and ${friendId}`);
+
+    // Get both users' taste movies
+    const currentUserMovies = await UserTasteMovie.findAll({
+      where: { userId: req.user.id },
+      raw: true
+    });
+
+    const friendMovies = await UserTasteMovie.findAll({
+      where: { userId: parseInt(friendId) },
+      raw: true
+    });
+
+    // Check if both have taste
+    if (currentUserMovies.length === 0 || friendMovies.length === 0) {
+      return res.status(400).json({
+        message: "Both users must have added movies to their taste for advanced matching",
+        currentUserMovieCount: currentUserMovies.length,
+        friendMovieCount: friendMovies.length
+      });
+    }
+
+    console.log(`[MATCH-ADVANCED] User1 has ${currentUserMovies.length} movies, User2 has ${friendMovies.length} movies`);
+
+    // Create movie vectors for both users
+    const user1MovieVectors = currentUserMovies.map(movie => 
+      new MovieVector({
+        id: movie.tmdb_id,
+        title: movie.title,
+        vote_average: movie.vote_average,
+        popularity: movie.popularity,
+        release_date: movie.release_date,
+        genre_ids: movie.genres || [],
+        directors: movie.directors || [],
+        cast: movie.cast || [],
+        keywords: movie.keywords || []
+      })
+    );
+
+    const user2MovieVectors = friendMovies.map(movie =>
+      new MovieVector({
+        id: movie.tmdb_id,
+        title: movie.title,
+        vote_average: movie.vote_average,
+        popularity: movie.popularity,
+        release_date: movie.release_date,
+        genre_ids: movie.genres || [],
+        directors: movie.directors || [],
+        cast: movie.cast || [],
+        keywords: movie.keywords || []
+      })
+    );
+
+    // Create user taste vectors
+    const user1Taste = new UserTasteVector(user1MovieVectors);
+    const user2Taste = new UserTasteVector(user2MovieVectors);
+
+    console.log(`[MATCH-ADVANCED] User1 profile: ${user1Taste.tasteProfile.diversity} taste, rating ${user1Taste.tasteProfile.avgRating.toFixed(2)}, blockbuster bias ${user1Taste.tasteProfile.blockbusterBias.toFixed(2)}`);
+    console.log(`[MATCH-ADVANCED] User2 profile: ${user2Taste.tasteProfile.diversity} taste, rating ${user2Taste.tasteProfile.avgRating.toFixed(2)}, blockbuster bias ${user2Taste.tasteProfile.blockbusterBias.toFixed(2)}`);
+
+    // Calculate cosine similarity
+    const cosine = cosineSimilarity(user1Taste.vector, user2Taste.vector);
+    const compatibilityScore = cosineToPercentage(cosine);
+
+    console.log(`[MATCH-ADVANCED] Cosine similarity: ${cosine.toFixed(4)}, Compatibility: ${compatibilityScore.toFixed(2)}%`);
+
+    return res.json({
+      compatibilityScore: Math.round(compatibilityScore),
+      cosineRaw: cosine,
+      currentUserMovieCount: currentUserMovies.length,
+      friendMovieCount: friendMovies.length,
+      currentUserProfile: user1Taste.tasteProfile,
+      friendProfile: user2Taste.tasteProfile,
+      compatibility: {
+        score: Math.round(compatibilityScore),
+        level: compatibilityScore > 80 ? "Perfect Match" : 
+               compatibilityScore > 65 ? "Great Match" :
+               compatibilityScore > 50 ? "Good Match" :
+               compatibilityScore > 35 ? "Moderate Match" : "Casual Match",
+        description: `You and your friend have ${
+          user1Taste.tasteProfile.diversity === user2Taste.tasteProfile.diversity 
+            ? "similar taste diversity" 
+            : "different taste diversity"
+        }. ${
+          Math.abs(user1Taste.tasteProfile.avgRating - user2Taste.tasteProfile.avgRating) < 0.5
+            ? "You prefer similar movie ratings."
+            : "You have different preferences for movie ratings."
+        } ${
+          Math.abs(user1Taste.tasteProfile.blockbusterBias - user2Taste.tasteProfile.blockbusterBias) < 0.3
+            ? "You both lean toward similar blockbuster/niche preferences."
+            : "You have different preferences for blockbusters vs niche films."
+        }`
+      }
+    });
+  } catch (error) {
+    console.error("[MATCH-ADVANCED] Error calculating match:", error.message);
+    return res.status(500).json({ 
+      message: "Failed to calculate advanced match",
+      error: error.message
+    });
+  }
+});
+
+// POST: Get personalized recommendations based on user's taste profile
+router.post("/taste/recommendations", async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    const { candidateMovies, limit = 20 } = req.body;
+
+    if (!Array.isArray(candidateMovies) || candidateMovies.length === 0) {
+      return res.status(400).json({ message: "candidateMovies array is required" });
+    }
+
+    console.log(`[RECOMMENDATIONS] Getting recommendations for user ${req.user.id}, evaluating ${candidateMovies.length} candidates`);
+
+    // Get user's taste movies
+    const userMovies = await UserTasteMovie.findAll({
+      where: { userId: req.user.id },
+      raw: true
+    });
+
+    if (userMovies.length === 0) {
+      return res.status(400).json({ 
+        message: "User must have added movies to their taste profile",
+        recommendations: []
+      });
+    }
+
+    // Create user taste vector
+    const userMovieVectors = userMovies.map(movie =>
+      new MovieVector({
+        id: movie.tmdb_id,
+        title: movie.title,
+        vote_average: movie.vote_average,
+        popularity: movie.popularity,
+        release_date: movie.release_date,
+        genre_ids: movie.genres || [],
+        directors: movie.directors || [],
+        cast: movie.cast || [],
+        keywords: movie.keywords || []
+      })
+    );
+
+    const userTaste = new UserTasteVector(userMovieVectors);
+
+    // Score each candidate movie
+    const scoredMovies = candidateMovies
+      .map(movie => {
+        const movieVector = new MovieVector({
+          id: movie.id,
+          title: movie.title,
+          vote_average: movie.vote_average,
+          popularity: movie.popularity,
+          release_date: movie.release_date,
+          genre_ids: movie.genre_ids || [],
+          directors: movie.directors || [],
+          cast: movie.cast || [],
+          keywords: movie.keywords || []
+        });
+
+        const scoring = scoreMovieForUser(movieVector, userTaste);
+        return {
+          ...movie,
+          score: scoring.score,
+          scoreBreakdown: scoring.breakdown,
+          details: scoring.details
+        };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, limit);
+
+    console.log(`[RECOMMENDATIONS] Generated ${scoredMovies.length} recommendations, top score: ${scoredMovies[0]?.score}`);
+
+    return res.json({
+      recommendations: scoredMovies,
+      count: scoredMovies.length,
+      userProfile: userTaste.tasteProfile
+    });
+  } catch (error) {
+    console.error("[RECOMMENDATIONS] Error:", error.message);
+    return res.status(500).json({
+      message: "Failed to generate recommendations",
+      error: error.message,
+      recommendations: []
+    });
   }
 });
 
