@@ -181,13 +181,133 @@ const getSimilarMovies = async (tmdbId) => {
 
   return (response.data.results || []).map((movie) => ({
     tmdb_id: movie.id,
+    id: movie.id,
     title: movie.title,
     poster: movie.poster_path ? `${POSTER_BASE}${movie.poster_path}` : "",
+    poster_path: movie.poster_path,
     year: movie.release_date ? movie.release_date.split("-")[0] : "",
     overview: movie.overview || "",
     rating: movie.vote_average || 0,
     genre_ids: movie.genre_ids || []
   }));
+};
+
+const getSmartSuggestions = async (tmdbId) => {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) {
+    throw new Error("TMDB_API_KEY is required");
+  }
+
+  try {
+    console.log(`[SUGGESTIONS] Fetching smart suggestions for movie ${tmdbId}`);
+
+    // Fetch movie details and credits in parallel
+    const movieDetailsResponse = await axios.get(`${TMDB_BASE}/movie/${tmdbId}`, {
+      params: { api_key: apiKey }
+    });
+
+    const creditsResponse = await axios.get(`${TMDB_BASE}/movie/${tmdbId}/credits`, {
+      params: { api_key: apiKey }
+    });
+
+    const movieData = movieDetailsResponse.data;
+    const creditsData = creditsResponse.data;
+
+    // Extract genres, directors, and lead actor(s)
+    const genreIds = (movieData.genres || []).map(g => g.id);
+    const directors = creditsData.crew
+      .filter(p => p.job === "Director")
+      .map(p => p.id)
+      .slice(0, 2); // Top 2 directors
+    const leadActors = creditsData.cast
+      .slice(0, 3) // Top 3 lead actors
+      .map(p => p.id);
+
+    console.log(`[SUGGESTIONS] Genres: ${genreIds}, Directors: ${directors}, Actors: ${leadActors}`);
+
+    // Fetch all suggestion types in parallel
+    const [similarResponse, genreResponse, directorResponse, castResponse] = await Promise.all([
+      // Similar movies
+      axios.get(`${TMDB_BASE}/movie/${tmdbId}/similar`, {
+        params: {
+          api_key: apiKey,
+          page: 1
+        }
+      }),
+      // Movies from same genres
+      axios.get(`${TMDB_BASE}/discover/movie`, {
+        params: {
+          api_key: apiKey,
+          with_genres: genreIds.join(","),
+          sort_by: "vote_average.desc",
+          page: 1
+        }
+      }),
+      // Movies from same directors
+      axios.get(`${TMDB_BASE}/discover/movie`, {
+        params: {
+          api_key: apiKey,
+          with_crew: directors.join(","),
+          sort_by: "vote_average.desc",
+          page: 1
+        }
+      }),
+      // Movies with same cast
+      axios.get(`${TMDB_BASE}/discover/movie`, {
+        params: {
+          api_key: apiKey,
+          with_cast: leadActors.join(","),
+          sort_by: "vote_average.desc",
+          page: 1
+        }
+      })
+    ]);
+
+    // Combine all results with deduplication
+    const allMovies = [
+      ...(similarResponse.data.results || []),
+      ...(genreResponse.data.results || []),
+      ...(directorResponse.data.results || []),
+      ...(castResponse.data.results || [])
+    ];
+
+    // Remove the original movie and duplicates
+    const movieIds = new Set();
+    const uniqueMovies = [];
+
+    for (const movie of allMovies) {
+      if (movie.id !== tmdbId && !movieIds.has(movie.id)) {
+        movieIds.add(movie.id);
+        uniqueMovies.push(movie);
+      }
+    }
+
+    // Sort by rating and popularity
+    uniqueMovies.sort((a, b) => {
+      const ratingDiff = (b.vote_average || 0) - (a.vote_average || 0);
+      if (Math.abs(ratingDiff) > 0.5) return ratingDiff;
+      return (b.popularity || 0) - (a.popularity || 0);
+    });
+
+    // Return top 20
+    const suggestions = uniqueMovies.slice(0, 20).map((movie) => ({
+      id: movie.id,
+      tmdb_id: movie.id,
+      title: movie.title,
+      poster_path: movie.poster_path,
+      year: movie.release_date ? movie.release_date.split("-")[0] : "",
+      overview: movie.overview || "",
+      vote_average: movie.vote_average || 0,
+      popularity: movie.popularity || 0,
+      genre_ids: movie.genre_ids || []
+    }));
+
+    console.log(`[SUGGESTIONS] Returning ${suggestions.length} suggestions`);
+    return suggestions;
+  } catch (error) {
+    console.error("[SUGGESTIONS] Error fetching suggestions:", error.message);
+    throw error;
+  }
 };
 
 
@@ -360,5 +480,6 @@ module.exports = {
   getWatchProviders,
   discoverMovies,
   getSimilarMovies,
+  getSmartSuggestions,
   getMoviesByPreference
 };

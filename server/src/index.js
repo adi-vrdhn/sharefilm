@@ -180,6 +180,48 @@ app.get("/movie-details/:id", async (req, res) => {
   }
 });
 
+// Public endpoint for smart suggestions
+app.get("/smart-suggestions/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ 
+        message: "Invalid movie ID",
+        suggestions: []
+      });
+    }
+
+    console.log(`[SMART-SUGGESTIONS] Fetching suggestions for movie ID: ${id}`);
+    
+    if (!process.env.TMDB_API_KEY) {
+      console.error("[SMART-SUGGESTIONS] TMDB_API_KEY is not set!");
+      return res.status(500).json({ 
+        message: "Server configuration error",
+        suggestions: []
+      });
+    }
+
+    const { getSmartSuggestions } = require("./services/tmdb");
+    const suggestions = await getSmartSuggestions(id);
+    
+    console.log(`[SMART-SUGGESTIONS] Got ${suggestions.length} suggestions`);
+    
+    return res.json({ 
+      suggestions,
+      count: suggestions.length
+    });
+  } catch (error) {
+    console.error("[SMART-SUGGESTIONS] Error:", error.message);
+    
+    return res.status(500).json({ 
+      message: "Failed to fetch suggestions",
+      error: error.message,
+      suggestions: []
+    });
+  }
+});
+
 // Games routes (no auth required, public endpoints)
 app.use(gamesRoutes);
 
