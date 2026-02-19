@@ -3,12 +3,28 @@ const { UserTasteMovie } = require("../models");
 /**
  * Calculate match percentage based on genre priority
  * Weighted: 60% genre, 20% directors, 20% actors
+ * SYMMETRIC: Calculates both directions and averages for true symmetry
  */
 const calculateMatchPercentage = (user1Movies, user2Movies) => {
   if (!user1Movies || !user2Movies || user1Movies.length === 0 || user2Movies.length === 0) {
     return 0;
   }
 
+  // Calculate match in BOTH directions
+  const match1to2 = calculateDirectionalMatch(user1Movies, user2Movies);
+  const match2to1 = calculateDirectionalMatch(user2Movies, user1Movies);
+  
+  // Average both directions for true symmetry - guarantees same result either way
+  const avgMatch = (match1to2 + match2to1) / 2;
+  const matchPercentage = Math.round(avgMatch);
+
+  return Math.min(100, Math.max(0, matchPercentage));
+};
+
+/**
+ * Calculate match in one direction (user1 comparing to user2)
+ */
+const calculateDirectionalMatch = (user1Movies, user2Movies) => {
   let totalGenreMatch = 0;
   let totalDirectorMatch = 0;
   let totalActorMatch = 0;
@@ -49,7 +65,7 @@ const calculateMatchPercentage = (user1Movies, user2Movies) => {
       }
     });
 
-    // Get average for this movie comparison
+    // Get best match for this movie comparison
     if (genreMatches.length > 0) {
       totalGenreMatch += Math.max(...genreMatches);
     }
@@ -61,19 +77,16 @@ const calculateMatchPercentage = (user1Movies, user2Movies) => {
     }
   });
 
-  // Normalize by both users' average movie count (symmetric)
-  const avgMovieCount = (user1Movies.length + user2Movies.length) / 2;
-  
-  const avgGenreMatch = (totalGenreMatch / Math.max(avgMovieCount, 1)) || 0;
-  const avgDirectorMatch = (totalDirectorMatch / Math.max(avgMovieCount, 1)) || 0;
-  const avgActorMatch = (totalActorMatch / Math.max(avgMovieCount, 1)) || 0;
+  // Normalize by user1's movie count
+  const avgGenreMatch = (totalGenreMatch / Math.max(user1Movies.length, 1)) || 0;
+  const avgDirectorMatch = (totalDirectorMatch / Math.max(user1Movies.length, 1)) || 0;
+  const avgActorMatch = (totalActorMatch / Math.max(user1Movies.length, 1)) || 0;
 
   // Weighted calculation: 60% genre, 20% directors, 20% actors
-  const matchPercentage = Math.round(
-    avgGenreMatch * 0.6 + avgDirectorMatch * 0.2 + avgActorMatch * 0.2
-  );
+  const matchPercentage = 
+    avgGenreMatch * 0.6 + avgDirectorMatch * 0.2 + avgActorMatch * 0.2;
 
-  return Math.min(100, Math.max(0, matchPercentage));
+  return matchPercentage;
 };
 
 /**
