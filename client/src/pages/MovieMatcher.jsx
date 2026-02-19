@@ -357,156 +357,161 @@ const MovieMatcher = () => {
 
         {error && <div className="error-box">{error}</div>}
 
-        {/* Step 1: Search Bar */}
-        <div className="search-section">
-          <input
-            type="text"
-            placeholder="Add a movie you love 🔍"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="search-input search-input-large"
-            autoFocus
-          />
-          {searchQuery.length > 0 && searching && <span className="search-hint">🔄 Searching...</span>}
-        </div>
+        {/* Search and Suggestions Wrapper */}
+        <div className="search-suggestions-wrapper">
+          {/* Step 1: Search Bar */}
+          <div className="search-section">
+            <input
+              type="text"
+              placeholder="Add a movie you love 🔍"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="search-input search-input-large"
+              autoFocus
+            />
+            {searchQuery.length > 0 && searching && <span className="search-hint">🔄 Searching...</span>}
+          </div>
 
-        {searchQuery.length > 0 && searching && <p className="loading">🔄 Searching...</p>}
-        
-        {searchQuery.length > 0 && !searching && searchResults.length === 0 && (
-          <p className="no-results">📭 No movies found for "{searchQuery}"</p>
-        )}
+          {searchQuery.length > 0 && searching && <p className="loading">🔄 Searching...</p>}
+          
+          {searchQuery.length > 0 && !searching && searchResults.length === 0 && (
+            <p className="no-results">📭 No movies found for "{searchQuery}"</p>
+          )}
 
-        {/* Search Results Dropdown */}
-        {searchResults.length > 0 && !selectedForSuggestions && (
-          <div className="search-dropdown">
-            <div className="dropdown-header">
-              <span>Search Results ({searchResults.length})</span>
-              <button
-                onClick={() => {
-                  setSearchResults([]);
-                  setSearchQuery("");
-                }}
-                className="btn-close-dropdown"
-              >
-                ✕
-              </button>
-            </div>
-            <div className="dropdown-results">
-              {searchResults.map((movie) => (
-                <div key={movie.id} className="dropdown-movie-item">
-                  <img
-                    src={
-                      movie.poster
-                        ? movie.poster
-                        : movie.poster_path
-                        ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
-                        : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='180'%3E%3Crect fill='%23374151' width='120' height='180'/%3E%3C/svg%3E"
-                    }
-                    alt={movie.title}
-                    onError={(e) => {
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='180'%3E%3Crect fill='%23374151' width='120' height='180'/%3E%3C/svg%3E";
-                    }}
-                  />
-                  <div className="dropdown-movie-info">
-                    <p className="dropdown-movie-title">{movie.title}</p>
-                    <p className="dropdown-movie-year">{movie.year}</p>
-                    <div className="dropdown-movie-actions">
-                      <button
-                        onClick={() => handleAddMovie(movie)}
-                        disabled={loading || myMovies.some(m => m.tmdb_id === (movie.id || movie.tmdb_id))}
-                        className="btn-add btn-xs"
-                        title="Add to taste"
-                      >
-                        {myMovies.some(m => m.tmdb_id === (movie.id || movie.tmdb_id)) ? "✓" : "➕"}
-                      </button>
-                      <button
-                        onClick={() => fetchSmartSuggestions(movie)}
-                        className="btn-suggestions btn-xs"
-                        title="Get similar recommendations"
-                      >
-                        🧠
-                      </button>
+          {/* Search Results Dropdown */}
+          {searchResults.length > 0 && !selectedForSuggestions && (
+            <div className="search-dropdown">
+              <div className="dropdown-header">
+                <span>Search Results ({searchResults.length})</span>
+                <button
+                  onClick={() => {
+                    setSearchResults([]);
+                    setSearchQuery("");
+                  }}
+                  className="btn-close-dropdown"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="dropdown-results">
+                {searchResults.map((movie) => (
+                  <div key={movie.id} className="dropdown-movie-item">
+                    <img
+                      src={
+                        movie.poster
+                          ? movie.poster
+                          : movie.poster_path
+                          ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
+                          : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='180'%3E%3Crect fill='%23374151' width='120' height='180'/%3E%3C/svg%3E"
+                      }
+                      alt={movie.title}
+                      onError={(e) => {
+                        e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='180'%3E%3Crect fill='%23374151' width='120' height='180'/%3E%3C/svg%3E";
+                      }}
+                    />
+                    <div className="dropdown-movie-info">
+                      <p className="dropdown-movie-title">{movie.title}</p>
+                      <p className="dropdown-movie-year">{movie.year}</p>
+                      <div className="dropdown-movie-actions">
+                        <button
+                          onClick={() => handleAddMovie(movie)}
+                          disabled={loading || myMovies.some(m => m.tmdb_id === (movie.id || movie.tmdb_id))}
+                          className="btn-add btn-xs"
+                          title="Add to taste"
+                        >
+                          {myMovies.some(m => m.tmdb_id === (movie.id || movie.tmdb_id)) ? "✓" : "➕"}
+                        </button>
+                        <button
+                          onClick={() => fetchSmartSuggestions(movie)}
+                          className="btn-suggestions btn-xs"
+                          title="Get similar recommendations"
+                        >
+                          🧠
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Step 2: Smart Suggestions */}
-        {selectedForSuggestions && (
-          <div className="suggestions-section">
-            <div className="suggestions-header">
-              <h3>💡 Because you liked <strong>{selectedForSuggestions.title}</strong></h3>
-              <button
-                onClick={() => {
-                  setSelectedForSuggestions(null);
-                  setSimilarMovies([]);
-                  setSelectedSuggestions([]);
-                }}
-                className="btn-close"
-              >
-                ✕
-              </button>
-            </div>
-
-            {suggestionsLoading && <p className="loading">🔍 Finding similar movies...</p>}
-
-            {!suggestionsLoading && similarMovies.length === 0 && (
-              <p className="no-results">No suggestions found</p>
-            )}
-
-            {!suggestionsLoading && similarMovies.length > 0 && (
-              <>
-                <div className="suggestions-carousel">
-                  <div className="carousel-track">
-                    {similarMovies.map((movie) => {
-                      const isSelected = selectedSuggestions.some(m => m.id === movie.id);
-                      return (
-                        <div
-                          key={movie.id}
-                          className={`suggestion-item ${isSelected ? "selected" : ""}`}
-                          onClick={() => toggleSuggestionSelection(movie)}
-                          title={`${movie.similarityScore}% match`}
-                        >
-                          <img
-                            src={
-                              movie.poster_path
-                                ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
-                                : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='210'%3E%3Crect fill='%23374151' width='140' height='210'/%3E%3C/svg%3E"
-                            }
-                            alt={movie.title}
-                            onError={(e) => {
-                              e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='210'%3E%3Crect fill='%23374151' width='140' height='210'/%3E%3C/svg%3E";
-                            }}
-                          />
-                          {movie.similarityScore && (
-                            <div className="similarity-badge">{movie.similarityScore}%</div>
-                          )}
-                          {isSelected && <div className="selection-badge">✓</div>}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="suggestions-actions">
-                  <p className="selection-count">
-                    {selectedSuggestions.length} selected
-                  </p>
+          {/* Step 2: Smart Suggestions - Positioned Overlay */}
+          {selectedForSuggestions && (
+            <div className="suggestions-overlay">
+              <div className="suggestions-section">
+                <div className="suggestions-header">
+                  <h3>💡 Because you liked <strong>{selectedForSuggestions.title}</strong></h3>
                   <button
-                    onClick={addSelectedSuggestions}
-                    disabled={selectedSuggestions.length === 0 || loading}
-                    className="btn-primary"
+                    onClick={() => {
+                      setSelectedForSuggestions(null);
+                      setSimilarMovies([]);
+                      setSelectedSuggestions([]);
+                    }}
+                    className="btn-close"
                   >
-                    {loading ? "Adding..." : `➕ Add ${selectedSuggestions.length} Movies`}
+                    ✕
                   </button>
                 </div>
-              </>
-            )}
-          </div>
-        )}
+
+                {suggestionsLoading && <p className="loading">🔍 Finding similar movies...</p>}
+
+                {!suggestionsLoading && similarMovies.length === 0 && (
+                  <p className="no-results">No suggestions found</p>
+                )}
+
+                {!suggestionsLoading && similarMovies.length > 0 && (
+                  <>
+                    <div className="suggestions-carousel">
+                      <div className="carousel-track">
+                        {similarMovies.map((movie) => {
+                          const isSelected = selectedSuggestions.some(m => m.id === movie.id);
+                          return (
+                            <div
+                              key={movie.id}
+                              className={`suggestion-item ${isSelected ? "selected" : ""}`}
+                              onClick={() => toggleSuggestionSelection(movie)}
+                              title={`${movie.similarityScore}% match`}
+                            >
+                              <img
+                                src={
+                                  movie.poster_path
+                                    ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
+                                    : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='210'%3E%3Crect fill='%23374151' width='140' height='210'/%3E%3C/svg%3E"
+                                }
+                                alt={movie.title}
+                                onError={(e) => {
+                                  e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='210'%3E%3Crect fill='%23374151' width='140' height='210'/%3E%3C/svg%3E";
+                                }}
+                              />
+                              {movie.similarityScore && (
+                                <div className="similarity-badge">{movie.similarityScore}%</div>
+                              )}
+                              {isSelected && <div className="selection-badge">✓</div>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="suggestions-actions">
+                      <p className="selection-count">
+                        {selectedSuggestions.length} selected
+                      </p>
+                      <button
+                        onClick={addSelectedSuggestions}
+                        disabled={selectedSuggestions.length === 0 || loading}
+                        className="btn-primary"
+                      >
+                        {loading ? "Adding..." : `➕ Add ${selectedSuggestions.length} Movies`}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
         <button
           onClick={() => {
