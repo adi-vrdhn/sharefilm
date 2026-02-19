@@ -109,9 +109,22 @@ class UserTasteVector {
 
     movieArrays.forEach(arr => {
       arr.forEach((val, idx) => {
-        average[idx] += val / this.movieCount;
+        average[idx] += val;
       });
     });
+
+    // Divide by count AFTER summing all values
+    average.forEach((val, idx) => {
+      average[idx] = val / this.movieCount;
+    });
+
+    // Normalize to unit vector (magnitude = 1) for symmetric comparison
+    const magnitude = Math.sqrt(average.reduce((sum, val) => sum + val * val, 0));
+    if (magnitude > 0) {
+      average.forEach((val, idx) => {
+        average[idx] = val / magnitude;
+      });
+    }
 
     return average;
   }

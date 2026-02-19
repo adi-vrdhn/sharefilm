@@ -61,10 +61,12 @@ const calculateMatchPercentage = (user1Movies, user2Movies) => {
     }
   });
 
-  // Normalize by number of movies
-  const avgGenreMatch = (totalGenreMatch / user1Movies.length) || 0;
-  const avgDirectorMatch = (totalDirectorMatch / user1Movies.length) || 0;
-  const avgActorMatch = (totalActorMatch / user1Movies.length) || 0;
+  // Normalize by both users' average movie count (symmetric)
+  const avgMovieCount = (user1Movies.length + user2Movies.length) / 2;
+  
+  const avgGenreMatch = (totalGenreMatch / Math.max(avgMovieCount, 1)) || 0;
+  const avgDirectorMatch = (totalDirectorMatch / Math.max(avgMovieCount, 1)) || 0;
+  const avgActorMatch = (totalActorMatch / Math.max(avgMovieCount, 1)) || 0;
 
   // Weighted calculation: 60% genre, 20% directors, 20% actors
   const matchPercentage = Math.round(
