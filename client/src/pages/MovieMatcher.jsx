@@ -468,6 +468,7 @@ const MovieMatcher = () => {
                           key={movie.id}
                           className={`suggestion-item ${isSelected ? "selected" : ""}`}
                           onClick={() => toggleSuggestionSelection(movie)}
+                          title={`${movie.similarityScore}% match`}
                         >
                           <img
                             src={
@@ -480,6 +481,9 @@ const MovieMatcher = () => {
                               e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='210'%3E%3Crect fill='%23374151' width='140' height='210'/%3E%3C/svg%3E";
                             }}
                           />
+                          {movie.similarityScore && (
+                            <div className="similarity-badge">{movie.similarityScore}%</div>
+                          )}
                           {isSelected && <div className="selection-badge">✓</div>}
                         </div>
                       );

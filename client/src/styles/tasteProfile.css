@@ -1041,6 +1041,22 @@
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.4);
 }
 
+.similarity-badge {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .suggestions-actions {
   display: flex;
   justify-content: space-between;

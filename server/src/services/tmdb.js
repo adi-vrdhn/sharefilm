@@ -201,32 +201,44 @@ const getSmartSuggestions = async (tmdbId) => {
   try {
     console.log(`[SUGGESTIONS] Fetching smart suggestions for movie ${tmdbId}`);
 
-    // Fetch movie details and credits in parallel
-    const movieDetailsResponse = await axios.get(`${TMDB_BASE}/movie/${tmdbId}`, {
-      params: { api_key: apiKey }
-    });
-
-    const creditsResponse = await axios.get(`${TMDB_BASE}/movie/${tmdbId}/credits`, {
-      params: { api_key: apiKey }
-    });
+    // Fetch original movie details and credits
+    const [movieDetailsResponse, creditsResponse] = await Promise.all([
+      axios.get(`${TMDB_BASE}/movie/${tmdbId}`, {
+        params: { api_key: apiKey }
+      }),
+      axios.get(`${TMDB_BASE}/movie/${tmdbId}/credits`, {
+        params: { api_key: apiKey }
+      })
+    ]);
 
     const movieData = movieDetailsResponse.data;
     const creditsData = creditsResponse.data;
 
-    // Extract genres, directors, and lead actor(s)
-    const genreIds = (movieData.genres || []).map(g => g.id);
-    const directors = creditsData.crew
+    // Extract reference movie attributes
+    const refGenreIds = (movieData.genres || []).map(g => g.id);
+    const refLanguage = movieData.original_language;
+    
+    // Extract directors (top 2)
+    const refDirectors = creditsData.crew
       .filter(p => p.job === "Director")
       .map(p => p.id)
-      .slice(0, 2); // Top 2 directors
-    const leadActors = creditsData.cast
-      .slice(0, 3) // Top 3 lead actors
+      .slice(0, 2);
+    
+    // Extract lead actors (top 5)
+    const refActors = creditsData.cast
+      .slice(0, 5)
       .map(p => p.id);
+    
+    // Extract writers (screenplay/story)
+    const refWriters = creditsData.crew
+      .filter(p => ["Screenplay", "Story", "Writer"].includes(p.job))
+      .map(p => p.id)
+      .slice(0, 3);
 
-    console.log(`[SUGGESTIONS] Genres: ${genreIds}, Directors: ${directors}, Actors: ${leadActors}`);
+    console.log(`[SUGGESTIONS] Ref - Genres: ${refGenreIds}, Lang: ${refLanguage}, Directors: ${refDirectors}, Writers: ${refWriters}`);
 
-    // Fetch all suggestion types in parallel
-    const [similarResponse, genreResponse, directorResponse, castResponse] = await Promise.all([
+    // Fetch candidate movies based on multiple criteria
+    const [similarResponse, genreResponse, directorResponse, languageResponse] = await Promise.all([
       // Similar movies
       axios.get(`${TMDB_BASE}/movie/${tmdbId}/similar`, {
         params: {
@@ -234,11 +246,11 @@ const getSmartSuggestions = async (tmdbId) => {
           page: 1
         }
       }),
-      // Movies from same genres
+      // Movies from same genres (high priority)
       axios.get(`${TMDB_BASE}/discover/movie`, {
         params: {
           api_key: apiKey,
-          with_genres: genreIds.join(","),
+          with_genres: refGenreIds.join(","),
           sort_by: "vote_average.desc",
           page: 1
         }
@@ -247,50 +259,77 @@ const getSmartSuggestions = async (tmdbId) => {
       axios.get(`${TMDB_BASE}/discover/movie`, {
         params: {
           api_key: apiKey,
-          with_crew: directors.join(","),
+          with_crew: refDirectors.join(","),
           sort_by: "vote_average.desc",
           page: 1
         }
       }),
-      // Movies with same cast
+      // Movies in same language
       axios.get(`${TMDB_BASE}/discover/movie`, {
         params: {
           api_key: apiKey,
-          with_cast: leadActors.join(","),
+          with_original_language: refLanguage,
           sort_by: "vote_average.desc",
           page: 1
         }
       })
     ]);
 
-    // Combine all results with deduplication
-    const allMovies = [
+    // Combine all results
+    const candidateMovies = [
       ...(similarResponse.data.results || []),
       ...(genreResponse.data.results || []),
       ...(directorResponse.data.results || []),
-      ...(castResponse.data.results || [])
+      ...(languageResponse.data.results || [])
     ];
 
-    // Remove the original movie and duplicates
-    const movieIds = new Set();
-    const uniqueMovies = [];
+    // Scoring function - ranks movies by similarity to reference
+    const scoreMovie = (candidate) => {
+      if (candidate.id === tmdbId) return -1; // Exclude original movie
 
-    for (const movie of allMovies) {
-      if (movie.id !== tmdbId && !movieIds.has(movie.id)) {
-        movieIds.add(movie.id);
-        uniqueMovies.push(movie);
+      let score = 0;
+
+      // Genre match (60% weight) - HIGHEST PRIORITY
+      if (candidate.genre_ids && candidate.genre_ids.length > 0) {
+        const commonGenres = candidate.genre_ids.filter(g => refGenreIds.includes(g)).length;
+        const totalGenres = new Set([...candidate.genre_ids, ...refGenreIds]).size;
+        const genreScore = totalGenres > 0 ? (commonGenres / totalGenres) * 100 : 0;
+        score += genreScore * 0.6;
+      }
+
+      // Language match (15% weight) - VERY IMPORTANT
+      const languageScore = candidate.original_language === refLanguage ? 100 : 0;
+      score += languageScore * 0.15;
+
+      // Director match (10% weight)
+      // Note: We don't have director info in discover results, but use as tiebreaker
+      score += 0 * 0.1; // Will be enhanced if director data available
+
+      // Popularity & Rating tiebreaker (15% weight)
+      const popularityScore = Math.min((candidate.popularity || 0) / 100, 1) * 100;
+      const ratingScore = (candidate.vote_average || 0) * 10;
+      score += ((popularityScore + ratingScore) / 2) * 0.15;
+
+      return score;
+    };
+
+    // Remove duplicates and score
+    const movieMap = new Map();
+    for (const movie of candidateMovies) {
+      if (!movieMap.has(movie.id)) {
+        const score = scoreMovie(movie);
+        if (score >= 30) { // Minimum similarity threshold
+          movieMap.set(movie.id, { ...movie, similarityScore: score });
+        }
       }
     }
 
-    // Sort by rating and popularity
-    uniqueMovies.sort((a, b) => {
-      const ratingDiff = (b.vote_average || 0) - (a.vote_average || 0);
-      if (Math.abs(ratingDiff) > 0.5) return ratingDiff;
-      return (b.popularity || 0) - (a.popularity || 0);
-    });
+    // Sort by similarity score
+    const rankedMovies = Array.from(movieMap.values())
+      .sort((a, b) => b.similarityScore - a.similarityScore)
+      .slice(0, 20); // Return top 20
 
-    // Return top 20
-    const suggestions = uniqueMovies.slice(0, 20).map((movie) => ({
+    const suggestions = rankedMovies.map((movie) => ({
       id: movie.id,
       tmdb_id: movie.id,
       title: movie.title,
@@ -299,10 +338,12 @@ const getSmartSuggestions = async (tmdbId) => {
       overview: movie.overview || "",
       vote_average: movie.vote_average || 0,
       popularity: movie.popularity || 0,
-      genre_ids: movie.genre_ids || []
+      genre_ids: movie.genre_ids || [],
+      similarityScore: Math.round(movie.similarityScore)
     }));
 
-    console.log(`[SUGGESTIONS] Returning ${suggestions.length} suggestions`);
+    console.log(`[SUGGESTIONS] Returning ${suggestions.length} suggestions with scores`);
+    console.log(`[SUGGESTIONS] Top match: ${suggestions[0]?.title} (${suggestions[0]?.similarityScore}%)`);
     return suggestions;
   } catch (error) {
     console.error("[SUGGESTIONS] Error fetching suggestions:", error.message);
