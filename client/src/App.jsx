@@ -19,7 +19,6 @@ import Profile from "./pages/Profile";
 import Analytics from "./pages/Analytics";
 import Games from "./pages/Games";
 import MovieMatcher from "./pages/MovieMatcher";
-import MovieAI from "./pages/MovieAI";
 
 const LoadingScreen = () => (
   <div style={{
@@ -180,14 +179,6 @@ const App = () => {
             <Layout>
               <MovieMatcher />
             </Layout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/movie-ai"
-        element={
-          <ProtectedRoute>
-            <MovieAI />
           </ProtectedRoute>
         }
       />

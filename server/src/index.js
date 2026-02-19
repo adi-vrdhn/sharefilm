@@ -23,7 +23,6 @@ const analyticsRoutes = require("./routes/analytics");
 const gamesRoutes = require("./routes/games");
 const matcherRoutes = require("./routes/matcher");
 const tasteRoutes = require("./routes/taste");
-const movieAiRoutes = require("./routes/movieAi");
 const authMiddleware = require("./middleware/auth");
 const { initializeSocket } = require("./services/socket");
 
@@ -371,7 +370,6 @@ app.use(friendRoutes);
 app.use(messageRoutes);
 app.use(sharedPartyRoutes);
 app.use(profileRoutes);
-app.use("/api/movie-ai", movieAiRoutes);
 app.use("/analytics", analyticsRoutes);
 
 // SPA fallback: serve index.html for any non-API routes
