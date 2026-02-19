@@ -512,6 +512,168 @@ const getMovieDetailsWithCrew = async (tmdbId) => {
   }
 };
 
+// Get smart suggestions for an entire profile (array of movie IDs)
+const getSmartSuggestionsForProfile = async (tmdbIds) => {
+  const apiKey = process.env.TMDB_API_KEY;
+  if (!apiKey) {
+    throw new Error("TMDB_API_KEY is required");
+  }
+
+  if (!Array.isArray(tmdbIds) || tmdbIds.length === 0) {
+    throw new Error("tmdbIds must be a non-empty array");
+  }
+
+  try {
+    console.log(`[PROFILE-SUGGESTIONS] Fetching suggestions for profile with ${tmdbIds.length} movies`);
+
+    // Fetch all reference movies' details and credits in parallel
+    const moviePromises = tmdbIds.slice(0, 10).map(id => // Limit to 10 movies to avoid too many requests
+      Promise.all([
+        axios.get(`${TMDB_BASE}/movie/${id}`, { params: { api_key: apiKey } }).catch(() => null),
+        axios.get(`${TMDB_BASE}/movie/${id}/credits`, { params: { api_key: apiKey } }).catch(() => null)
+      ])
+    );
+
+    const movieDataPairs = await Promise.all(moviePromises);
+
+    // Aggregate profile attributes
+    const profileGenreIds = new Set();
+    const profileLanguages = {};
+    const profileDirectors = new Set();
+    const profileActors = new Set();
+    const profileWriters = new Set();
+
+    for (const [detailsResp, creditsResp] of movieDataPairs) {
+      if (!detailsResp || !creditsResp) continue;
+
+      const movieData = detailsResp.data;
+      const creditsData = creditsResp.data;
+
+      // Aggregate genres
+      (movieData.genres || []).forEach(g => profileGenreIds.add(g.id));
+
+      // Track languages
+      const lang = movieData.original_language;
+      profileLanguages[lang] = (profileLanguages[lang] || 0) + 1;
+
+      // Aggregate directors
+      creditsData.crew
+        .filter(p => p.job === "Director")
+        .slice(0, 2)
+        .forEach(p => profileDirectors.add(p.id));
+
+      // Aggregate lead actors
+      creditsData.cast
+        .slice(0, 5)
+        .forEach(p => profileActors.add(p.id));
+
+      // Aggregate writers
+      creditsData.crew
+        .filter(p => ["Screenplay", "Story", "Writer"].includes(p.job))
+        .slice(0, 3)
+        .forEach(p => profileWriters.add(p.id));
+    }
+
+    const profileGenreIdsArray = Array.from(profileGenreIds);
+    const primaryLanguage = Object.entries(profileLanguages).sort((a, b) => b[1] - a[1])[0]?.[0];
+    const profileDirectorsArray = Array.from(profileDirectors).slice(0, 5);
+
+    console.log(`[PROFILE-SUGGESTIONS] Profile - Genres: ${profileGenreIdsArray}, Primary Lang: ${primaryLanguage}`);
+
+    // Fetch candidate movies based on profile
+    const discoverParams = {
+      api_key: apiKey,
+      sort_by: "vote_average.desc",
+      page: 1,
+      with_original_language: primaryLanguage
+    };
+
+    if (profileGenreIdsArray.length > 0) {
+      discoverParams.with_genres = profileGenreIdsArray.slice(0, 5).join(","); // TMDB limit
+    }
+
+    const [genreResponse, languageResponse] = await Promise.all([
+      axios.get(`${TMDB_BASE}/discover/movie`, { params: discoverParams }),
+      axios.get(`${TMDB_BASE}/discover/movie`, {
+        params: {
+          api_key: apiKey,
+          with_original_language: primaryLanguage,
+          sort_by: "vote_average.desc",
+          page: 1
+        }
+      })
+    ]);
+
+    // Combine results
+    const candidateMovies = [
+      ...(genreResponse.data.results || []),
+      ...(languageResponse.data.results || [])
+    ];
+
+    // Scoring function
+    const scoreMovie = (candidate) => {
+      // Skip if already in user's taste
+      if (tmdbIds.includes(candidate.id)) return -1;
+
+      let score = 0;
+
+      // Genre match (60% weight)
+      if (candidate.genre_ids && candidate.genre_ids.length > 0) {
+        const commonGenres = candidate.genre_ids.filter(g => profileGenreIdsArray.includes(g)).length;
+        const totalGenres = new Set([...candidate.genre_ids, ...profileGenreIdsArray]).size;
+        const genreScore = totalGenres > 0 ? (commonGenres / totalGenres) * 100 : 0;
+        score += genreScore * 0.6;
+      }
+
+      // Language match (15% weight)
+      const languageScore = candidate.original_language === primaryLanguage ? 100 : 0;
+      score += languageScore * 0.15;
+
+      // Popularity & Rating tiebreaker (15% weight)
+      const popularityScore = Math.min((candidate.popularity || 0) / 100, 1) * 100;
+      const ratingScore = (candidate.vote_average || 0) * 10;
+      score += ((popularityScore + ratingScore) / 2) * 0.15;
+
+      return score;
+    };
+
+    // Remove duplicates and score
+    const movieMap = new Map();
+    for (const movie of candidateMovies) {
+      if (!movieMap.has(movie.id)) {
+        const score = scoreMovie(movie);
+        if (score >= 30) {
+          movieMap.set(movie.id, { ...movie, similarityScore: score });
+        }
+      }
+    }
+
+    // Sort by similarity score
+    const rankedMovies = Array.from(movieMap.values())
+      .sort((a, b) => b.similarityScore - a.similarityScore)
+      .slice(0, 20);
+
+    const suggestions = rankedMovies.map((movie) => ({
+      id: movie.id,
+      tmdb_id: movie.id,
+      title: movie.title,
+      poster_path: movie.poster_path,
+      year: movie.release_date ? movie.release_date.split("-")[0] : "",
+      overview: movie.overview || "",
+      vote_average: movie.vote_average || 0,
+      popularity: movie.popularity || 0,
+      genre_ids: movie.genre_ids || [],
+      similarityScore: Math.round(movie.similarityScore)
+    }));
+
+    console.log(`[PROFILE-SUGGESTIONS] Returning ${suggestions.length} suggestions`);
+    return suggestions;
+  } catch (error) {
+    console.error("[PROFILE-SUGGESTIONS] Error:", error.message);
+    throw error;
+  }
+};
+
 module.exports = {
   searchMovies,
   getPopularMovies,
@@ -522,5 +684,6 @@ module.exports = {
   discoverMovies,
   getSimilarMovies,
   getSmartSuggestions,
+  getSmartSuggestionsForProfile,
   getMoviesByPreference
 };

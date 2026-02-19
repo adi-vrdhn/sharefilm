@@ -22,6 +22,10 @@ const MovieMatcher = () => {
   const [similarMovies, setSimilarMovies] = useState([]);
   const [suggestionsLoading, setSuggestionsLoading] = useState(false);
   const [selectedSuggestions, setSelectedSuggestions] = useState([]);
+  
+  // Profile suggestions state
+  const [profileSuggestions, setProfileSuggestions] = useState([]);
+  const [profileSuggestionsLoading, setProfileSuggestionsLoading] = useState(false);
 
   // Match Result State
   const [selectedFriend, setSelectedFriend] = useState(null);
@@ -33,6 +37,13 @@ const MovieMatcher = () => {
     loadFriends();
   }, []);
 
+  // Auto-load profile suggestions when entering AddMovie view and when myMovies changes
+  useEffect(() => {
+    if (view === "addMovie" && myMovies.length > 0 && !searchQuery) {
+      loadProfileSuggestions();
+    }
+  }, [view, myMovies, searchQuery]);
+
   // Debounced search
   useEffect(() => {
     if (searchDebounceRef.current) {
@@ -41,6 +52,10 @@ const MovieMatcher = () => {
 
     if (searchQuery.length < 2) {
       setSearchResults([]);
+      // When search is cleared, reload profile suggestions
+      if (view === "addMovie" && myMovies.length > 0) {
+        loadProfileSuggestions();
+      }
       return;
     }
 
@@ -72,6 +87,38 @@ const MovieMatcher = () => {
     } catch (err) {
       console.error("Error loading friends:", err);
       setFriends([]); // Continue without friends
+    }
+  };
+
+  // Load suggestions for entire profile
+  const loadProfileSuggestions = async () => {
+    if (myMovies.length === 0) {
+      setProfileSuggestions([]);
+      return;
+    }
+
+    setProfileSuggestionsLoading(true);
+    try {
+      const movieIds = myMovies.map(m => m.tmdb_id);
+      console.log("🎬 Loading suggestions for profile with", movieIds.length, "movies");
+      
+      const response = await api.post("/smart-suggestions/profile", {
+        movieIds
+      });
+      
+      console.log("✅ Got profile suggestions:", response.data.suggestions?.length || 0);
+      setProfileSuggestions(response.data.suggestions || []);
+      // Auto-select the profile as the source for suggestions display
+      setSelectedForSuggestions({
+        title: "Your Taste Profile",
+        id: "profile"
+      });
+      setSimilarMovies(response.data.suggestions || []);
+    } catch (err) {
+      console.error("❌ Error loading profile suggestions:", err);
+      setProfileSuggestions([]);
+    } finally {
+      setProfileSuggestionsLoading(false);
     }
   };
 
@@ -129,10 +176,13 @@ const MovieMatcher = () => {
       console.log("✅ Movie added successfully");
 
       // Reload movies
-      loadMyTasteMovies();
+      await loadMyTasteMovies();
       setSearchQuery("");
       setSearchResults([]);
       setError("");
+      // Auto-refresh profile suggestions
+      setSelectedForSuggestions(null);
+      setSimilarMovies([]);
     } catch (err) {
       console.error("❌ Error adding movie:", err);
       setError(err.response?.data?.message || "Failed to add movie");
@@ -213,10 +263,12 @@ const MovieMatcher = () => {
       }
 
       console.log("✅ Added", selectedSuggestions.length, "movies from suggestions");
-      loadMyTasteMovies();
+      await loadMyTasteMovies();
       setSelectedSuggestions([]);
       setSelectedForSuggestions(null);
       setSimilarMovies([]);
+      // Auto-refresh profile suggestions for updated taste
+      setTimeout(() => loadProfileSuggestions(), 300);
     } catch (err) {
       console.error("Error adding suggestions:", err);
       setError("Failed to add some movies");
@@ -441,7 +493,13 @@ const MovieMatcher = () => {
             <div className="suggestions-overlay">
               <div className="suggestions-section">
                 <div className="suggestions-header">
-                  <h3>💡 Because you liked <strong>{selectedForSuggestions.title}</strong></h3>
+                  <h3>
+                    💡 
+                    {selectedForSuggestions.id === "profile" 
+                      ? <>Suggestions for <strong>Your Taste</strong></>
+                      : <>Because you liked <strong>{selectedForSuggestions.title}</strong></>
+                    }
+                  </h3>
                   <button
                     onClick={() => {
                       setSelectedForSuggestions(null);

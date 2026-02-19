@@ -222,6 +222,56 @@ app.get("/smart-suggestions/:id", async (req, res) => {
   }
 });
 
+// Public endpoint for smart suggestions based on entire profile
+app.post("/smart-suggestions/profile", async (req, res) => {
+  try {
+    const { movieIds } = req.body;
+    
+    if (!Array.isArray(movieIds) || movieIds.length === 0) {
+      return res.status(400).json({ 
+        message: "Invalid movie IDs - must be non-empty array",
+        suggestions: []
+      });
+    }
+
+    // Validate all IDs are numbers
+    if (!movieIds.every(id => !isNaN(id))) {
+      return res.status(400).json({
+        message: "All movie IDs must be valid numbers",
+        suggestions: []
+      });
+    }
+
+    console.log(`[PROFILE-SUGGESTIONS] Fetching suggestions for profile with ${movieIds.length} movies`);
+    
+    if (!process.env.TMDB_API_KEY) {
+      console.error("[PROFILE-SUGGESTIONS] TMDB_API_KEY is not set!");
+      return res.status(500).json({ 
+        message: "Server configuration error",
+        suggestions: []
+      });
+    }
+
+    const { getSmartSuggestionsForProfile } = require("./services/tmdb");
+    const suggestions = await getSmartSuggestionsForProfile(movieIds);
+    
+    console.log(`[PROFILE-SUGGESTIONS] Got ${suggestions.length} suggestions`);
+    
+    return res.json({ 
+      suggestions,
+      count: suggestions.length
+    });
+  } catch (error) {
+    console.error("[PROFILE-SUGGESTIONS] Error:", error.message);
+    
+    return res.status(500).json({ 
+      message: "Failed to fetch profile suggestions",
+      error: error.message,
+      suggestions: []
+    });
+  }
+});
+
 // Games routes (no auth required, public endpoints)
 app.use(gamesRoutes);
 
