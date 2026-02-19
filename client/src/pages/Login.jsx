@@ -64,6 +64,9 @@ const Login = () => {
         <p className="helper-text">
           New here? <Link to="/signup">Create an account</Link>.
         </p>
+        <p className="helper-text">
+          <Link to="/forgot-password">Forgot your password?</Link>
+        </p>
         <div className="auth-footer">Created by ADITYAVARDHAN (BATMAN)</div>
       </div>
     </div>
