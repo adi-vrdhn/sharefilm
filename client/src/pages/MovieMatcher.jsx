@@ -431,7 +431,7 @@ const MovieMatcher = () => {
           )}
 
           {/* Search Results Dropdown */}
-          {searchResults.length > 0 && !selectedForSuggestions && (
+          {searchResults.length > 0 && (!selectedForSuggestions || selectedForSuggestions.id === "profile") && (
             <div className="search-dropdown">
               <div className="dropdown-header">
                 <span>Search Results ({searchResults.length})</span>
