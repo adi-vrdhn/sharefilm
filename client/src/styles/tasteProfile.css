@@ -661,6 +661,9 @@
   padding: 10px 0;
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+  /* Show ~4 movies at a time */
+  max-width: 100%;
+  display: flex;
 }
 
 .movie-carousel::-webkit-scrollbar {
@@ -1778,5 +1781,327 @@
 
   .suggestions-overlay {
     max-height: 90vh;
+  }
+}
+
+/* ========== FRIEND DROPDOWN STYLES ========== */
+
+.friends-dropdown-container {
+  position: relative;
+  margin-top: 20px;
+}
+
+.btn-friends-dropdown {
+  width: 100%;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 16px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-friends-dropdown:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.btn-friends-dropdown:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dropdown-arrow {
+  font-size: 12px;
+  margin-left: 8px;
+  transition: transform 0.3s ease;
+}
+
+.friends-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+  border: 1px solid rgba(251, 191, 36, 0.2);
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  max-height: 400px;
+  overflow-y: auto;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.friend-search-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  border-bottom: 1px solid rgba(156, 163, 175, 0.3);
+  background: rgba(0, 0, 0, 0.2);
+  color: #f0f0f0;
+  font-size: 14px;
+  border-radius: 10px 10px 0 0;
+  box-sizing: border-box;
+}
+
+.friend-search-input::placeholder {
+  color: #9ca3af;
+}
+
+.friend-search-input:focus {
+  outline: none;
+  background: rgba(59, 130, 246, 0.1);
+  border-bottom-color: #3b82f6;
+}
+
+.friends-list {
+  padding: 8px 0;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.friend-dropdown-item {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+  border-bottom: 1px solid rgba(156, 163, 175, 0.1);
+}
+
+.friend-dropdown-item:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.friend-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.friend-item-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 12px;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid rgba(251, 191, 36, 0.3);
+  flex-shrink: 0;
+}
+
+.friend-item-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder-small {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.friend-item-info {
+  flex: 1;
+}
+
+.friend-item-name {
+  margin: 0;
+  color: #f0f0f0;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.btn-match-small {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  color: #1f2937;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.btn-match-small:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+.btn-match-small:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.no-friends-found {
+  padding: 20px 16px;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Mobile styles for friend dropdown */
+@media (max-width: 768px) {
+  .friends-dropdown {
+    max-height: 300px;
+    max-width: 90vw;
+  }
+
+  .btn-friends-dropdown {
+    padding: 12px 14px;
+    font-size: 14px;
+  }
+
+  .friend-dropdown-item {
+    padding: 10px 12px;
+  }
+
+  .friend-item-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .friend-item-name {
+    font-size: 13px;
+  }
+
+  .btn-match-small {
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .friends-dropdown {
+    max-height: 280px;
+    max-width: 95vw;
+    margin: 0 auto;
+  }
+
+  .btn-friends-dropdown {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .friend-search-input {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+
+  .friend-dropdown-item {
+    padding: 9px 10px;
+  }
+
+  .friend-item-avatar {
+    width: 32px;
+    height: 32px;
+    margin-right: 10px;
+  }
+
+  .friend-item-name {
+    font-size: 12px;
+  }
+
+  .avatar-placeholder-small {
+    font-size: 12px;
+  }
+
+  .btn-match-small {
+    padding: 4px 8px;
+    font-size: 11px;
+  }
+}
+
+/* ========== CAROUSEL OPTIMIZATION FOR 4 MOVIES ========== */
+
+/* Desktop: Show exactly 4 movies */
+@media (min-width: 1024px) {
+  .carousel-track {
+    gap: 15px;
+  }
+
+  .carousel-item {
+    /* 160px * 4 = 640px + gaps = ~700px total for 4 visible movies */
+    flex: 0 0 160px;
+  }
+
+  .carousel-poster {
+    width: 160px;
+    height: 240px;
+  }
+}
+
+/* Tablet: Show 3 movies */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .carousel-track {
+    gap: 12px;
+  }
+
+  .carousel-item {
+    flex: 0 0 130px;
+  }
+
+  .carousel-poster {
+    width: 130px;
+    height: 195px;
+  }
+}
+
+/* Mobile: Show 2.5 movies with scroll */
+@media (max-width: 767px) {
+  .carousel-track {
+    gap: 10px;
+  }
+
+  .carousel-item {
+    flex: 0 0 100px;
+  }
+
+  .carousel-poster {
+    width: 100px;
+    height: 150px;
+  }
+}
+
+/* Ultra mobile: Show 2 movies */
+@media (max-width: 480px) {
+  .carousel-track {
+    gap: 8px;
+  }
+
+  .carousel-item {
+    flex: 0 0 90px;
+  }
+
+  .carousel-poster {
+    width: 90px;
+    height: 135px;
   }
 }

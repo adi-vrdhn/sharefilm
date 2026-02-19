@@ -29,6 +29,10 @@ const MovieMatcher = () => {
   // Match Result State
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [matchResult, setMatchResult] = useState(null);
+  
+  // Friend dropdown state
+  const [friendDropdownOpen, setFriendDropdownOpen] = useState(false);
+  const [friendSearchQuery, setFriendSearchQuery] = useState("");
 
   // Load user's taste movies on mount
   useEffect(() => {
@@ -366,30 +370,69 @@ const MovieMatcher = () => {
               <p>📭 No friends yet. Add friends to compare movie tastes!</p>
             </div>
           ) : (
-            <div className="friends-carousel">
-              <div className="friends-track">
-                {friends.map((friend) => (
-                  <div
-                    key={friend.id}
-                    className="friend-avatar-card"
-                    onClick={() => handleShowMatch(friend)}
-                  >
-                    <div className="avatar">
-                      {friend.profilePicture ? (
-                        <img src={friend.profilePicture} alt={friend.name} />
-                      ) : (
-                        <div className="avatar-placeholder">
-                          {friend.name.charAt(0).toUpperCase()}
-                        </div>
-                      )}
-                    </div>
-                    <p className="friend-name">{friend.name}</p>
-                    <button className="btn-match" disabled={myMovies.length === 0}>
-                      {loading ? "..." : "Match"}
-                    </button>
+            <div className="friends-dropdown-container">
+              <button
+                className="btn-friends-dropdown"
+                onClick={() => setFriendDropdownOpen(!friendDropdownOpen)}
+                disabled={myMovies.length === 0}
+              >
+                👥 Select Friend to Match ({friends.length})
+                <span className="dropdown-arrow">{friendDropdownOpen ? "▼" : "▶"}</span>
+              </button>
+              
+              {friendDropdownOpen && (
+                <div className="friends-dropdown">
+                  <input
+                    type="text"
+                    placeholder="🔍 Search friends..."
+                    className="friend-search-input"
+                    value={friendSearchQuery}
+                    onChange={(e) => setFriendSearchQuery(e.target.value)}
+                    autoFocus
+                  />
+                  <div className="friends-list">
+                    {friends
+                      .filter((friend) =>
+                        friend.name.toLowerCase().includes(friendSearchQuery.toLowerCase())
+                      )
+                      .length === 0 ? (
+                      <p className="no-friends-found">No friends found</p>
+                    ) : (
+                      friends
+                        .filter((friend) =>
+                          friend.name.toLowerCase().includes(friendSearchQuery.toLowerCase())
+                        )
+                        .map((friend) => (
+                          <div
+                            key={friend.id}
+                            className="friend-dropdown-item"
+                            onClick={() => {
+                              handleShowMatch(friend);
+                              setFriendDropdownOpen(false);
+                              setFriendSearchQuery("");
+                            }}
+                          >
+                            <div className="friend-item-avatar">
+                              {friend.profilePicture ? (
+                                <img src={friend.profilePicture} alt={friend.name} />
+                              ) : (
+                                <div className="avatar-placeholder-small">
+                                  {friend.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                            </div>
+                            <div className="friend-item-info">
+                              <p className="friend-item-name">{friend.name}</p>
+                            </div>
+                            <button className="btn-match-small" disabled={loading}>
+                              {loading ? "..." : "→"}
+                            </button>
+                          </div>
+                        ))
+                    )}
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
           )}
         </div>
