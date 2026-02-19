@@ -45,7 +45,7 @@ Respond ONLY with valid JSON, nothing else.`;
     const response = await axios.post(
       `${OLLAMA_API}/generate`,
       {
-        model: 'llama3:8b',
+        model: 'mistral',
         prompt: systemPrompt,
         stream: false,
         temperature: 0.7,
@@ -174,22 +174,22 @@ async function verifyOllamaConnection() {
     const response = await axios.get(`${OLLAMA_API}/tags`, {
       timeout: 5000,
     });
-    const hasLlama = response.data.models?.some((m) =>
-      m.name.includes('llama3')
+    const hasModel = response.data.models?.some((m) =>
+      m.name.includes('mistral')
     );
 
-    if (hasLlama) {
-      console.log('✅ Ollama connection verified. Llama3:8b available.');
-      return { connected: true, model: 'llama3:8b' };
+    if (hasModel) {
+      console.log('✅ Ollama connection verified. Mistral available.');
+      return { connected: true, model: 'mistral' };
     } else {
       console.warn(
-        '⚠️  Ollama running but llama3:8b not found. Please run: ollama pull llama3:8b'
+        '⚠️  Ollama running but mistral not found. Please run: ollama pull mistral'
       );
       return {
         connected: true,
         model: null,
         warning:
-          'llama3:8b model not found. Pull it first: ollama pull llama3:8b',
+          'mistral model not found. Pull it first: ollama pull mistral',
       };
     }
   } catch (error) {
