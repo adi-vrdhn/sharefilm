@@ -272,6 +272,104 @@ app.post("/smart-suggestions/profile", async (req, res) => {
   }
 });
 
+// Public endpoint for advanced similar movie recommendations
+app.post("/smart-suggestions/similar/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { limit = 20 } = req.body;
+    
+    if (!id || isNaN(id)) {
+      return res.status(400).json({ 
+        message: "Invalid movie ID",
+        suggestions: []
+      });
+    }
+
+    console.log(`[SIMILAR-ADVANCED] Fetching advanced similar movies for movie ID: ${id}`);
+    
+    if (!process.env.TMDB_API_KEY) {
+      console.error("[SIMILAR-ADVANCED] TMDB_API_KEY is not set!");
+      return res.status(500).json({ 
+        message: "Server configuration error",
+        suggestions: []
+      });
+    }
+
+    const { getSmartSuggestions, getMovieDetailsWithCrew } = require("./services/tmdb");
+    const { MovieVector, scoreSimilarMovie } = require("./services/movieEvaluation");
+    const suggestions = await getSmartSuggestions(id);
+    
+    // Get reference movie details for enhanced scoring
+    let referenceMovieDetails = null;
+    try {
+      referenceMovieDetails = await getMovieDetailsWithCrew(id);
+    } catch (err) {
+      console.warn("[SIMILAR-ADVANCED] Could not fetch reference movie details, using basic scores");
+    }
+    
+    let enhancedSuggestions = suggestions;
+    
+    if (referenceMovieDetails) {
+      const referenceVector = new MovieVector({
+        id: referenceMovieDetails.tmdb_id,
+        title: referenceMovieDetails.title,
+        vote_average: referenceMovieDetails.rating,
+        popularity: referenceMovieDetails.popularity,
+        release_date: referenceMovieDetails.release_date,
+        genre_ids: referenceMovieDetails.genres || [],
+        directors: referenceMovieDetails.directors || [],
+        cast: referenceMovieDetails.cast || [],
+        keywords: referenceMovieDetails.keywords || []
+      });
+
+      // Score each suggestion using similarity formula
+      enhancedSuggestions = suggestions.map(suggestion => {
+        const suggestionVector = new MovieVector({
+          id: suggestion.tmdb_id,
+          title: suggestion.title,
+          vote_average: suggestion.vote_average,
+          popularity: suggestion.popularity,
+          release_date: suggestion.release_date,
+          genre_ids: suggestion.genre_ids || [],
+          directors: suggestion.directors || [],
+          cast: suggestion.cast || [],
+          keywords: suggestion.keywords || []
+        });
+
+        const similarityScoring = scoreSimilarMovie(suggestionVector, referenceVector);
+        return {
+          ...suggestion,
+          advancedScore: similarityScoring.score,
+          scoreBreakdown: similarityScoring.breakdown
+        };
+      }).sort((a, b) => b.advancedScore - a.advancedScore);
+    }
+
+    console.log(`[SIMILAR-ADVANCED] Returning ${enhancedSuggestions.slice(0, limit).length} enhanced suggestions`);
+    
+    return res.json({ 
+      suggestions: enhancedSuggestions.slice(0, limit),
+      count: enhancedSuggestions.length,
+      referenceMovie: referenceMovieDetails ? {
+        id: referenceMovieDetails.tmdb_id,
+        title: referenceMovieDetails.title,
+        rating: referenceMovieDetails.rating,
+        popularity: referenceMovieDetails.popularity,
+        directors: referenceMovieDetails.directors,
+        cast: referenceMovieDetails.cast
+      } : null
+    });
+  } catch (error) {
+    console.error("[SIMILAR-ADVANCED] Error:", error.message);
+    
+    return res.status(500).json({ 
+      message: "Failed to fetch advanced similar suggestions",
+      error: error.message,
+      suggestions: []
+    });
+  }
+});
+
 // Games routes (no auth required, public endpoints)
 app.use(gamesRoutes);
 
