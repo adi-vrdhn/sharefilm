@@ -376,45 +376,57 @@ const MovieMatcher = () => {
           <p className="no-results">📭 No movies found for "{searchQuery}"</p>
         )}
 
-        {/* Search Results */}
+        {/* Search Results Dropdown */}
         {searchResults.length > 0 && !selectedForSuggestions && (
-          <div className="search-results">
-            <h3>Search Results ({searchResults.length})</h3>
-            <div className="movies-grid">
+          <div className="search-dropdown">
+            <div className="dropdown-header">
+              <span>Search Results ({searchResults.length})</span>
+              <button
+                onClick={() => {
+                  setSearchResults([]);
+                  setSearchQuery("");
+                }}
+                className="btn-close-dropdown"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="dropdown-results">
               {searchResults.map((movie) => (
-                <div key={movie.id} className="search-result-card">
+                <div key={movie.id} className="dropdown-movie-item">
                   <img
                     src={
                       movie.poster
                         ? movie.poster
                         : movie.poster_path
-                        ? `https://image.tmdb.org/t/p/w300${movie.poster_path}`
-                        : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23374151' width='200' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%239ca3af'%3ENo Poster%3C/text%3E%3C/svg%3E"
+                        ? `https://image.tmdb.org/t/p/w200${movie.poster_path}`
+                        : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='180'%3E%3Crect fill='%23374151' width='120' height='180'/%3E%3C/svg%3E"
                     }
                     alt={movie.title}
                     onError={(e) => {
-                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='300'%3E%3Crect fill='%23374151' width='200' height='300'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='14' fill='%239ca3af'%3ENo Poster%3C/text%3E%3C/svg%3E";
+                      e.target.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='180'%3E%3Crect fill='%23374151' width='120' height='180'/%3E%3C/svg%3E";
                     }}
                   />
-                  <div className="movie-info">
-                    <h4>{movie.title}</h4>
-                    <p className="year">{movie.year}</p>
-                  </div>
-                  <div className="movie-actions">
-                    <button
-                      onClick={() => handleAddMovie(movie)}
-                      disabled={loading || myMovies.some(m => m.tmdb_id === (movie.id || movie.tmdb_id))}
-                      className="btn-add btn-small"
-                    >
-                      {myMovies.some(m => m.tmdb_id === (movie.id || movie.tmdb_id)) ? "✓ Added" : "➕ Add"}
-                    </button>
-                    <button
-                      onClick={() => fetchSmartSuggestions(movie)}
-                      className="btn-suggestions btn-small"
-                      title="Get similar recommendations"
-                    >
-                      🧠 Suggest
-                    </button>
+                  <div className="dropdown-movie-info">
+                    <p className="dropdown-movie-title">{movie.title}</p>
+                    <p className="dropdown-movie-year">{movie.year}</p>
+                    <div className="dropdown-movie-actions">
+                      <button
+                        onClick={() => handleAddMovie(movie)}
+                        disabled={loading || myMovies.some(m => m.tmdb_id === (movie.id || movie.tmdb_id))}
+                        className="btn-add btn-xs"
+                        title="Add to taste"
+                      >
+                        {myMovies.some(m => m.tmdb_id === (movie.id || movie.tmdb_id)) ? "✓" : "➕"}
+                      </button>
+                      <button
+                        onClick={() => fetchSmartSuggestions(movie)}
+                        className="btn-suggestions btn-xs"
+                        title="Get similar recommendations"
+                      >
+                        🧠
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
