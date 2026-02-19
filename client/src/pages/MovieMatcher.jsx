@@ -25,7 +25,6 @@ const MovieMatcher = () => {
   
   // Profile suggestions state
   const [profileSuggestions, setProfileSuggestions] = useState([]);
-  const [profileSuggestionsLoading, setProfileSuggestionsLoading] = useState(false);
 
   // Match Result State
   const [selectedFriend, setSelectedFriend] = useState(null);
@@ -97,7 +96,7 @@ const MovieMatcher = () => {
       return;
     }
 
-    setProfileSuggestionsLoading(true);
+    setSuggestionsLoading(true);
     try {
       const movieIds = myMovies.map(m => m.tmdb_id);
       console.log("🎬 Loading suggestions for profile with", movieIds.length, "movies");
@@ -118,7 +117,7 @@ const MovieMatcher = () => {
       console.error("❌ Error loading profile suggestions:", err);
       setProfileSuggestions([]);
     } finally {
-      setProfileSuggestionsLoading(false);
+      setSuggestionsLoading(false);
     }
   };
 
