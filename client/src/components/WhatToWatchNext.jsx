@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Star, Play, TrendingUp } from "lucide-react";
-import { api } from "../services/api";
+import api from "../api/axios";
 
 const WhatToWatchNext = () => {
   const [recommendations, setRecommendations] = useState([]);
