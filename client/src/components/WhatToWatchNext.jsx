@@ -15,11 +15,16 @@ const WhatToWatchNext = () => {
     try {
       setLoading(true);
       setError(null);
+      console.log("🎬 Fetching recommendations...");
       const response = await api.get("/recommendations?limit=5");
-      setRecommendations(response.data.data.recommendations);
+      console.log("📊 Recommendations response:", response.data);
+      
+      // Handle different response structures
+      const recs = response.data?.data?.recommendations || response.data?.recommendations || response.data || [];
+      setRecommendations(Array.isArray(recs) ? recs : []);
     } catch (err) {
-      console.error("Error fetching recommendations:", err);
-      setError("Failed to load recommendations");
+      console.error("❌ Error fetching recommendations:", err);
+      setError(`Failed to load recommendations: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -46,33 +51,37 @@ const WhatToWatchNext = () => {
 
   if (error) {
     return (
-      <div className="mt-8 p-6 rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20">
+      <div className="mt-8 p-6 rounded-lg border border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/30">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp size={24} className="text-red-600" />
+          <TrendingUp size={24} className="text-red-600 dark:text-red-400" />
           <h3 className="text-xl font-bold text-red-800 dark:text-red-200">
             What to Watch Next
           </h3>
         </div>
-        <p className="text-red-700 dark:text-red-300">{error}</p>
-        <button
-          onClick={fetchRecommendations}
-          className="mt-4 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition"
-        >
-          Try Again
-        </button>
+        <div className="bg-white dark:bg-gray-800 p-4 rounded border border-red-200 dark:border-red-700">
+          <p className="text-red-700 dark:text-red-300 mb-4 text-sm">{error}</p>
+          <button
+            onClick={fetchRecommendations}
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm font-semibold transition"
+          >
+            Retry
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mt-8 p-6 rounded-lg border border-gray-200 dark:border-gray-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700">
+    <div className="mt-8 p-6 rounded-lg border border-blue-300 dark:border-blue-700 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-800 dark:to-gray-700 shadow-lg">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
           <TrendingUp size={24} className="text-blue-600 dark:text-blue-400" />
-          <h3 className="text-xl font-bold">What to Watch Next</h3>
+          <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+            🎬 What to Watch Next
+          </h3>
         </div>
-        <span className="text-sm text-gray-600 dark:text-gray-400">
-          Personalized for you
+        <span className="text-xs bg-blue-200 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-2 py-1 rounded">
+          Personalized
         </span>
       </div>
 
