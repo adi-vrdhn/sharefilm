@@ -98,25 +98,29 @@ const ImageEditor = ({ onSave, onCancel, currentImage }) => {
     if (!canvas) return;
 
     try {
-      // Convert to JPEG with very aggressive compression (quality 0.3)
-      let quality = 0.3;
+      // Convert to JPEG with very aggressive compression (quality 0.25)
+      let quality = 0.25;
       let compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+      
+      console.log("Initial compressed size:", compressedBase64.length);
       
       // Validate data URL format
       if (!compressedBase64.startsWith("data:image/jpeg;base64,")) {
         throw new Error("Invalid image data");
       }
       
-      // Progressively reduce quality if still too large (keep under 100KB)
-      while (compressedBase64.length > 100000 && quality > 0.05) {
+      // Progressively reduce quality if still too large (keep under 80KB)
+      while (compressedBase64.length > 80000 && quality > 0.05) {
         quality -= 0.05;
         compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+        console.log("Quality " + quality.toFixed(2) + " size:", compressedBase64.length);
       }
       
-      if (compressedBase64.length > 100000) {
+      if (compressedBase64.length > 80000) {
         throw new Error("Image still too large after compression");
       }
       
+      console.log("Final compressed size:", compressedBase64.length);
       onSave(compressedBase64);
     } catch (error) {
       console.error("Image save error:", error);

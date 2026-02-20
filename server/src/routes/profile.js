@@ -97,10 +97,16 @@ router.put("/profile/me", async (req, res) => {
     }
     
     if (profilePicture !== undefined) {
-      // Validate image size - max 100KB
-      if (profilePicture.length > 100000) {
+      // Validate image is a valid base64 data URL
+      if (typeof profilePicture !== 'string' || !profilePicture.startsWith('data:image')) {
+        return res.status(400).json({ message: "Invalid image format. Must be base64 encoded." });
+      }
+      
+      // Validate image size - max 80KB
+      if (profilePicture.length > 80000) {
         return res.status(400).json({ message: "Image too large. Please compress and try again." });
       }
+      
       user.profilePicture = profilePicture;
     }
 

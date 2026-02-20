@@ -63,11 +63,31 @@ const Profile = () => {
   };
   const handlePictureSave = async (imageData) => {
     try {
-      // Image upload temporarily disabled due to data URL issues
-      setStatus("Profile pictures are being optimized. Coming soon!");
-      setIsEditingPicture(false);
+      if (!imageData || imageData.length === 0) {
+        setStatus("No image data to save");
+        return;
+      }
+      
+      // Check size before sending
+      if (imageData.length > 100000) {
+        setStatus("Image compressed further, please try again");
+        return;
+      }
+      
+      const response = await api.put("/profile/me", { profilePicture: imageData });
+      if (response.data && response.data.profilePicture) {
+        setProfile((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
+        updateProfilePicture(imageData);
+        setIsEditingPicture(false);
+        setStatus("Profile picture updated!");
+        setTimeout(() => setStatus(""), 3000);
+        // Force refresh
+        window.location.reload();
+      }
     } catch (error) {
-      setStatus("Profile picture feature is temporarily unavailable");
+      const message = error.response?.data?.message || error.message || "Failed to update profile picture";
+      setStatus(message);
+      console.error("Picture save error:", error);
     }
   };
 
