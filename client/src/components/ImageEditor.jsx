@@ -97,17 +97,17 @@ const ImageEditor = ({ onSave, onCancel, currentImage }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Convert to JPEG with quality compression
-    const compressedBase64 = canvas.toDataURL("image/jpeg", 0.7);
+    // Convert to JPEG with aggressive quality compression to keep size < 200KB
+    let quality = 0.6;
+    let compressedBase64 = canvas.toDataURL("image/jpeg", quality);
     
-    // Check size and compress further if needed
-    if (compressedBase64.length > 500000) {
-      // If still too large, reduce quality further
-      const veryCompressedBase64 = canvas.toDataURL("image/jpeg", 0.5);
-      onSave(veryCompressedBase64);
-    } else {
-      onSave(compressedBase64);
+    // Progressively reduce quality if still too large
+    while (compressedBase64.length > 200000 && quality > 0.1) {
+      quality -= 0.1;
+      compressedBase64 = canvas.toDataURL("image/jpeg", quality);
     }
+    
+    onSave(compressedBase64);
   };
 
   React.useEffect(() => {

@@ -95,7 +95,12 @@ router.put("/profile/me", async (req, res) => {
     if (bio !== undefined) {
       user.bio = bio;
     }
+    
     if (profilePicture !== undefined) {
+      // Validate image size - max 200KB
+      if (profilePicture.length > 200000) {
+        return res.status(400).json({ message: "Image too large. Please compress and try again." });
+      }
       user.profilePicture = profilePicture;
     }
 
