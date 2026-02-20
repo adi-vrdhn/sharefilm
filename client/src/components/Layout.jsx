@@ -46,10 +46,17 @@ const Layout = ({ children }) => {
           <Link to="/profile" className="user-profile-link" onClick={() => setSidebarOpen(false)}>
             <div className="user-avatar">
               {user?.profilePicture ? (
-                <img src={user.profilePicture} alt={user?.name} className="user-avatar-img" />
-              ) : (
-                <span className="user-avatar-text">{user?.name?.[0] || "U"}</span>
-              )}
+                <img 
+                  src={user.profilePicture} 
+                  alt={user?.name} 
+                  className="user-avatar-img"
+                  onError={(e) => {
+                    console.warn("Failed to load profile picture from sidebar, showing initial");
+                    e.target.style.display = 'none';
+                  }}
+                />
+              ) : null}
+              {!user?.profilePicture || <span className="user-avatar-text">{user?.name?.[0] || "U"}</span>}
             </div>
             <div className="user-info">
               <div className="user-name">{user?.name}</div>

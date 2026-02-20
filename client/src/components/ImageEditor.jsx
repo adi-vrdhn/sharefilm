@@ -98,32 +98,43 @@ const ImageEditor = ({ onSave, onCancel, currentImage }) => {
     if (!canvas) return;
 
     try {
-      // Convert to JPEG with very aggressive compression (quality 0.25)
-      let quality = 0.25;
-      let compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+      // Convert to JPEG with quality compression
+      let quality = 0.6;
+      let dataUrl = canvas.toDataURL("image/jpeg", quality);
       
-      console.log("Initial compressed size:", compressedBase64.length);
-      
-      // Validate data URL format
-      if (!compressedBase64.startsWith("data:image/jpeg;base64,")) {
-        throw new Error("Invalid image data");
+      // Validate format
+      if (!dataUrl || !dataUrl.startsWith("data:image/jpeg;base64,")) {
+        throw new Error("Invalid image format. Must be JPEG base64.");
       }
       
-      // Progressively reduce quality if still too large (keep under 80KB)
-      while (compressedBase64.length > 80000 && quality > 0.05) {
-        quality -= 0.05;
-        compressedBase64 = canvas.toDataURL("image/jpeg", quality);
-        console.log("Quality " + quality.toFixed(2) + " size:", compressedBase64.length);
+      // Extract just the base64 part (without the data:image/jpeg;base64, prefix)
+      const base64Only = dataUrl.replace(/^data:image\/jpeg;base64,/, "").trim();
+      
+      if (!base64Only || base64Only.length === 0) {
+        throw new Error("Invalid base64 data");
       }
       
-      if (compressedBase64.length > 80000) {
-        throw new Error("Image still too large after compression");
+      console.log("✅ Base64 extracted, length:", base64Only.length);
+      console.log("✅ First 50 chars:", base64Only.substring(0, 50));
+      
+      // Compress if needed (max 60KB)
+      let finalBase64 = base64Only;
+      while (finalBase64.length > 60000 && quality > 0.2) {
+        quality -= 0.1;
+        dataUrl = canvas.toDataURL("image/jpeg", quality);
+        finalBase64 = dataUrl.replace(/^data:image\/jpeg;base64,/, "").trim();
+        console.log(`Quality ${quality.toFixed(1)}: ${finalBase64.length} bytes`);
       }
       
-      console.log("Final compressed size:", compressedBase64.length);
-      onSave(compressedBase64);
+      if (finalBase64.length > 60000) {
+        throw new Error("Cannot compress image small enough");
+      }
+      
+      // Pass just the base64 string to parent
+      console.log("✅ Sending base64 string, final size:", finalBase64.length);
+      onSave(finalBase64);
     } catch (error) {
-      console.error("Image save error:", error);
+      console.error("❌ Image save error:", error);
       alert("Failed to process image: " + error.message);
     }
   };

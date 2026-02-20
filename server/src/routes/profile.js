@@ -98,15 +98,35 @@ router.put("/profile/me", async (req, res) => {
     
     if (profilePicture !== undefined) {
       // Validate image is a valid base64 data URL
-      if (typeof profilePicture !== 'string' || !profilePicture.startsWith('data:image')) {
-        return res.status(400).json({ message: "Invalid image format. Must be base64 encoded." });
+      if (typeof profilePicture !== 'string') {
+        return res.status(400).json({ message: "Profile picture must be a string." });
       }
       
-      // Validate image size - max 80KB
-      if (profilePicture.length > 80000) {
-        return res.status(400).json({ message: "Image too large. Please compress and try again." });
+      if (profilePicture.length === 0) {
+        return res.status(400).json({ message: "Profile picture cannot be empty." });
       }
       
+      // Check format: must be data:image/...;base64,XXXXX
+      const validFormats = ['data:image/jpeg;base64,', 'data:image/png;base64,', 'data:image/webp;base64,'];
+      const isValidFormat = validFormats.some(format => profilePicture.startsWith(format));
+      
+      if (!isValidFormat) {
+        console.error("Invalid format. First 100 chars:", profilePicture.substring(0, 100));
+        return res.status(400).json({ message: "Invalid image format. Must be JPEG, PNG, or WebP base64 data URL." });
+      }
+      
+      // Validate size - max 65KB
+      if (profilePicture.length > 65000) {
+        return res.status(400).json({ message: `Image too large (${profilePicture.length} bytes). Max 65KB.` });
+      }
+      
+      // Extract base64 part for validation
+      const base64Part = profilePicture.split(',')[1];
+      if (!base64Part || base64Part.length === 0) {
+        return res.status(400).json({ message: "Invalid base64 data." });
+      }
+      
+      console.log("✅ Profile picture validated. Size:", profilePicture.length, "bytes");
       user.profilePicture = profilePicture;
     }
 

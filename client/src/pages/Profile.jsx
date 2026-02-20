@@ -62,9 +62,33 @@ const Profile = () => {
     }
   };
 
-  const handlePictureSave = async (imageData) => {
+  const handlePictureSave = async (base64String) => {
     try {
-      const response = await api.put("/profile/me", { profilePicture: imageData });
+      console.log("📸 Starting picture save...");
+      console.log("Input base64 length:", base64String?.length);
+      console.log("First 50 chars:", base64String?.substring(0, 50));
+      
+      if (!base64String || base64String.length === 0) {
+        setStatus("Invalid image data");
+        return;
+      }
+      
+      // Reconstruct full data URL with proper format
+      const fullDataUrl = `data:image/jpeg;base64,${base64String.trim()}`;
+      console.log("Full data URL first 80 chars:", fullDataUrl.substring(0, 80));
+      
+      // Validate it's under size limit
+      if (fullDataUrl.length > 65000) {
+        setStatus("Image data too large, compressing more...");
+        return;
+      }
+      
+      const response = await api.put("/profile/me", { 
+        profilePicture: fullDataUrl
+      });
+      
+      console.log("✅ Response received:", response.data);
+      
       if (response.data.profilePicture) {
         setProfile((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
         updateProfilePicture(response.data.profilePicture);
@@ -73,6 +97,7 @@ const Profile = () => {
         setTimeout(() => setStatus(""), 3000);
       }
     } catch (error) {
+      console.error("❌ Picture save error:", error);
       setStatus(error.response?.data?.message || "Failed to update profile picture");
     }
   };
