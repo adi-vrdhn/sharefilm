@@ -36,7 +36,7 @@ const ImageEditor = ({ onSave, onCancel, currentImage }) => {
     if (!canvas || !image) return;
 
     const ctx = canvas.getContext("2d");
-    const size = 300;
+    const size = 200; // Reduced from 300 for smaller file size
     canvas.width = size;
     canvas.height = size;
 
@@ -97,17 +97,31 @@ const ImageEditor = ({ onSave, onCancel, currentImage }) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Convert to JPEG with aggressive quality compression to keep size < 200KB
-    let quality = 0.6;
-    let compressedBase64 = canvas.toDataURL("image/jpeg", quality);
-    
-    // Progressively reduce quality if still too large
-    while (compressedBase64.length > 200000 && quality > 0.1) {
-      quality -= 0.1;
-      compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+    try {
+      // Convert to JPEG with very aggressive compression (quality 0.3)
+      let quality = 0.3;
+      let compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+      
+      // Validate data URL format
+      if (!compressedBase64.startsWith("data:image/jpeg;base64,")) {
+        throw new Error("Invalid image data");
+      }
+      
+      // Progressively reduce quality if still too large (keep under 100KB)
+      while (compressedBase64.length > 100000 && quality > 0.05) {
+        quality -= 0.05;
+        compressedBase64 = canvas.toDataURL("image/jpeg", quality);
+      }
+      
+      if (compressedBase64.length > 100000) {
+        throw new Error("Image still too large after compression");
+      }
+      
+      onSave(compressedBase64);
+    } catch (error) {
+      console.error("Image save error:", error);
+      alert("Failed to process image: " + error.message);
     }
-    
-    onSave(compressedBase64);
   };
 
   React.useEffect(() => {
