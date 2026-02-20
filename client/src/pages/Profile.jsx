@@ -61,7 +61,18 @@ const Profile = () => {
       setStatus("Failed to update bio");
     }
   };
-
+  const handlePictureSave = async (imageData) => {
+    try {
+      const response = await api.put("/profile/me", { profilePicture: imageData });
+      setProfile((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
+      updateProfilePicture(imageData);
+      setIsEditingPicture(false);
+      setStatus("Profile picture updated!");
+      setTimeout(() => setStatus(""), 3000);
+    } catch (error) {
+      setStatus(error.response?.data?.message || "Failed to update profile picture");
+    }
+  };
   const handlePictureSave = async (base64Image) => {
     try {
       const response = await api.put("/profile/me", { profilePicture: base64Image });
