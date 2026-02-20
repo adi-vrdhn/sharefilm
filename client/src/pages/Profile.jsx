@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
+import ImageEditor from "../components/ImageEditor";
 import BuddiesSheet from "../components/BuddiesSheet";
 import WatchedMoviesSheet from "../components/WatchedMoviesSheet";
 import "../styles/profile.css";
@@ -15,6 +16,7 @@ const Profile = () => {
   const [status, setStatus] = useState("");
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [tempBio, setTempBio] = useState("");
+  const [isEditingPicture, setIsEditingPicture] = useState(false);
   const [showBuddiesSheet, setShowBuddiesSheet] = useState(false);
   const [showWatchedMoviesSheet, setShowWatchedMoviesSheet] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -57,6 +59,21 @@ const Profile = () => {
       setTimeout(() => setStatus(""), 3000);
     } catch (error) {
       setStatus("Failed to update bio");
+    }
+  };
+
+  const handlePictureSave = async (imageData) => {
+    try {
+      const response = await api.put("/profile/me", { profilePicture: imageData });
+      if (response.data.profilePicture) {
+        setProfile((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
+        updateProfilePicture(response.data.profilePicture);
+        setIsEditingPicture(false);
+        setStatus("Profile picture updated!");
+        setTimeout(() => setStatus(""), 3000);
+      }
+    } catch (error) {
+      setStatus(error.response?.data?.message || "Failed to update profile picture");
     }
   };
 
@@ -173,6 +190,16 @@ const Profile = () => {
               )}
             </div>
 
+            {isOwnProfile && (
+              <div className="profile-actions-vertical">
+                <button
+                  className="secondary"
+                  onClick={() => setIsEditingPicture(true)}
+                >
+                  📸 Change Picture
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Profile Info */}
@@ -458,6 +485,15 @@ const Profile = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Image Editor Modal */}
+      {isEditingPicture && (
+        <ImageEditor
+          currentImage={profile?.profilePicture}
+          onSave={handlePictureSave}
+          onCancel={() => setIsEditingPicture(false)}
+        />
       )}
 
       {/* Buddies Sheet */}
