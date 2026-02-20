@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
-import ImageEditor from "../components/ImageEditor";
 import BuddiesSheet from "../components/BuddiesSheet";
 import WatchedMoviesSheet from "../components/WatchedMoviesSheet";
 import "../styles/profile.css";
@@ -16,7 +15,6 @@ const Profile = () => {
   const [status, setStatus] = useState("");
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [tempBio, setTempBio] = useState("");
-  const [isEditingPicture, setIsEditingPicture] = useState(false);
   const [showBuddiesSheet, setShowBuddiesSheet] = useState(false);
   const [showWatchedMoviesSheet, setShowWatchedMoviesSheet] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -59,35 +57,6 @@ const Profile = () => {
       setTimeout(() => setStatus(""), 3000);
     } catch (error) {
       setStatus("Failed to update bio");
-    }
-  };
-  const handlePictureSave = async (imageData) => {
-    try {
-      if (!imageData || imageData.length === 0) {
-        setStatus("No image data to save");
-        return;
-      }
-      
-      // Check size before sending
-      if (imageData.length > 100000) {
-        setStatus("Image compressed further, please try again");
-        return;
-      }
-      
-      const response = await api.put("/profile/me", { profilePicture: imageData });
-      if (response.data && response.data.profilePicture) {
-        setProfile((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
-        updateProfilePicture(imageData);
-        setIsEditingPicture(false);
-        setStatus("Profile picture updated!");
-        setTimeout(() => setStatus(""), 3000);
-        // Force refresh
-        window.location.reload();
-      }
-    } catch (error) {
-      const message = error.response?.data?.message || error.message || "Failed to update profile picture";
-      setStatus(message);
-      console.error("Picture save error:", error);
     }
   };
 
@@ -203,16 +172,7 @@ const Profile = () => {
                 <div className="profile-picture-placeholder">{profile.name.charAt(0).toUpperCase()}</div>
               )}
             </div>
-            {isOwnProfile && (
-              <div className="profile-actions-vertical">
-                <button
-                  className="secondary"
-                  onClick={() => setIsEditingPicture(true)}
-                >
-                  📸 Change Picture
-                </button>
-              </div>
-            )}
+
           </div>
 
           {/* Profile Info */}
@@ -395,14 +355,7 @@ const Profile = () => {
         )}
       </div>
 
-      {/* Image Editor Modal */}
-      {isEditingPicture && (
-        <ImageEditor
-          currentImage={profile?.profilePicture}
-          onSave={handlePictureSave}
-          onCancel={() => setIsEditingPicture(false)}
-        />
-      )}
+
 
       {/* Password Change Modal */}
       {showPasswordModal && (
