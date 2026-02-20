@@ -24,6 +24,8 @@ const gamesRoutes = require("./routes/games");
 const matcherRoutes = require("./routes/matcher");
 const tasteRoutes = require("./routes/taste");
 const recommendationsRoutes = require("./routes/recommendations");
+const nextShowRoutes = require("./routes/nextShow");
+const tmdbRoutes = require("./routes/tmdb");
 const authMiddleware = require("./middleware/auth");
 const { initializeSocket } = require("./services/socket");
 
@@ -387,11 +389,15 @@ app.use(express.static(buildPath));
 app.use("/auth", authLimiter);
 app.use("/auth", authRoutes);
 
+// Public TMDB routes
+app.use("/api/tmdb", tmdbRoutes);
+
 // Apply auth middleware only to API routes
 app.use(authMiddleware);
 app.use(movieRoutes);
 app.use(matcherRoutes);
 app.use(tasteRoutes);
+app.use("/api/next-show", nextShowRoutes);
 app.use("/recommendations", recommendationsRoutes);
 app.use(notificationRoutes);
 app.use(friendRoutes);

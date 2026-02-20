@@ -18,6 +18,7 @@ import Analytics from "./pages/Analytics";
 import Games from "./pages/Games";
 import MovieMatcher from "./pages/MovieMatcher";
 import SwipeDiscovery from "./pages/SwipeDiscovery";
+import NextShow from "./pages/NextShow";
 
 const LoadingScreen = () => (
   <div style={{
@@ -185,6 +186,16 @@ const App = () => {
           <ProtectedRoute>
             <Layout>
               <SwipeDiscovery />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/next-show"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <NextShow />
             </Layout>
           </ProtectedRoute>
         }
