@@ -12,7 +12,6 @@ const UserTasteVector = require("./UserTasteVector");
 const UserTasteProfile = require("./UserTasteProfile");
 const UserMovieProfile = require("./UserMovieProfile");
 const UserTasteMovie = require("./UserTasteMovie");
-const PasswordReset = require("./PasswordReset");
 
 User.hasMany(UserMovie, { foreignKey: "receiver_id", as: "receivedMovies", constraints: true });
 User.hasMany(UserMovie, { foreignKey: "sender_id", as: "sentMovies", constraints: true });
@@ -51,10 +50,6 @@ UserTasteVector.belongsTo(User, { foreignKey: "user_id", constraints: true });
 User.hasMany(UserTasteMovie, { foreignKey: "userId", as: "tasteMovies", constraints: true });
 UserTasteMovie.belongsTo(User, { foreignKey: "userId", onDelete: "CASCADE" });
 
-// Password Reset relationship
-User.hasMany(PasswordReset, { foreignKey: "userId", constraints: true });
-PasswordReset.belongsTo(User, { foreignKey: "userId", onDelete: "CASCADE" });
-
 module.exports = {
   User,
   Movie,
@@ -69,6 +64,5 @@ module.exports = {
   UserTasteVector,
   UserTasteProfile,
   UserMovieProfile,
-  UserTasteMovie,
-  PasswordReset
+  UserTasteMovie
 };

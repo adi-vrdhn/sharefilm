@@ -5,8 +5,6 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Layout from "./components/Layout";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import AddMovie from "./pages/AddMovie";
 import MovieList from "./pages/MovieList";
@@ -49,8 +47,6 @@ const App = () => {
       <Route path="/" element={<Navigate to={user ? "/add" : "/login"} />} />
       <Route path="/login" element={<Login />} />
       <Route path="/signup" element={<Signup />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-      <Route path="/reset-password" element={<ResetPassword />} />
       
       <Route
         path="/add"
