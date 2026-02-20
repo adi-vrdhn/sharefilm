@@ -14,7 +14,7 @@ const securityHeaders = helmet({
       scriptSrc: ["'self'", "'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'"],
+      connectSrc: ["'self'", "https://sharefilm.onrender.com", "wss://sharefilm.onrender.com"],
       fontSrc: ["'self'"],
       formAction: ["'self'"],
       frameAncestors: ["'self'"]

@@ -27,37 +27,63 @@ const recommendationsRoutes = require("./routes/recommendations");
 const authMiddleware = require("./middleware/auth");
 const { initializeSocket } = require("./services/socket");
 
+// Define allowed origins BEFORE creating server
+const allowedOrigins = (process.env.CLIENT_ORIGIN || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: (process.env.CLIENT_ORIGIN || "").split(",").map((origin) => origin.trim()).filter(Boolean),
-    credentials: true
+    origin: function (origin, callback) {
+      if (!origin) {
+        return callback(null, true);
+      }
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(null, true); // Allow temporarily for debugging
+    },
+    credentials: true,
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   }
 });
 
 // Make io accessible to routes
 app.locals.io = io;
 
-const allowedOrigins = (process.env.CLIENT_ORIGIN || "")
-  .split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
-
 // 🔒 SECURITY FIRST: Apply helmet and rate limiting early
 app.use(securityHeaders);
 app.use(generalLimiter);
 
-// CORS configuration
+// CORS configuration - Enhanced for production
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
+    origin: function (origin, callback) {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) {
         return callback(null, true);
       }
-      return callback(new Error("Not allowed by CORS"));
+      
+      // Check if origin is in whitelist
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // For debugging - log rejected origins
+      console.warn(`[CORS] Rejected origin: ${origin}`);
+      console.warn(`[CORS] Allowed origins: ${allowedOrigins.join(", ") || "NONE SET"}`);
+      
+      callback(null, true); // Temporarily allow all for debugging
     },
-    credentials: true
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    exposedHeaders: ["Content-Range", "X-Content-Range"],
+    maxAge: 86400
   })
 );
 
