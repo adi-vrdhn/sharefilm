@@ -45,10 +45,10 @@ const generalLimiter = rateLimit({
   }
 });
 
-// Strict rate limiter: 5 requests per 15 minutes for auth endpoints
+// Strict rate limiter: 20 requests per 15 minutes for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: 20,
   message: "Too many login/signup attempts, please try again later.",
   standardHeaders: true,
   legacyHeaders: false,
