@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../contexts/api";
+import api from "../api/axios";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
