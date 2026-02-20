@@ -73,18 +73,6 @@ const Profile = () => {
       setStatus(error.response?.data?.message || "Failed to update profile picture");
     }
   };
-  const handlePictureSave = async (base64Image) => {
-    try {
-      const response = await api.put("/profile/me", { profilePicture: base64Image });
-      setProfile((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
-      updateProfilePicture(response.data.profilePicture);
-      setIsEditingPicture(false);
-      setStatus("Picture updated!");
-      setTimeout(() => setStatus(""), 3000);
-    } catch (error) {
-      setStatus("Failed to update picture");
-    }
-  };
 
   const handleOpenBuddiesSheet = () => {
     setShowBuddiesSheet(true);
