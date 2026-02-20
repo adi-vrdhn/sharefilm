@@ -23,6 +23,7 @@ const analyticsRoutes = require("./routes/analytics");
 const gamesRoutes = require("./routes/games");
 const matcherRoutes = require("./routes/matcher");
 const tasteRoutes = require("./routes/taste");
+const recommendationsRoutes = require("./routes/recommendations");
 const authMiddleware = require("./middleware/auth");
 const { initializeSocket } = require("./services/socket");
 
@@ -365,6 +366,7 @@ app.use(authMiddleware);
 app.use(movieRoutes);
 app.use(matcherRoutes);
 app.use(tasteRoutes);
+app.use("/recommendations", recommendationsRoutes);
 app.use(notificationRoutes);
 app.use(friendRoutes);
 app.use(messageRoutes);

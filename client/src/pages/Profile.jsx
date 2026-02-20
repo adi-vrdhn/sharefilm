@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
 import BuddiesSheet from "../components/BuddiesSheet";
 import WatchedMoviesSheet from "../components/WatchedMoviesSheet";
+import WhatToWatchNext from "../components/WhatToWatchNext";
 import "../styles/profile.css";
 
 const Profile = () => {
@@ -306,6 +307,9 @@ const handleOpenBuddiesSheet = () => {
             </div>
           )}
         </div>
+
+        {/* What to Watch Next - Personalized Recommendations */}
+        {isOwnProfile && <WhatToWatchNext />}
 
         {/* Account Settings - Own Profile Only */}
         {isOwnProfile && (
