@@ -10,7 +10,7 @@ const router = express.Router();
 router.get("/profile/me", async (req, res) => {
   try {
     const user = await User.findByPk(req.user.id, {
-      attributes: ["id", "name", "email", "bio", "profilePicture"]
+      attributes: ["id", "name", "email", "bio"]
     });
 
     if (!user) {
@@ -39,7 +39,7 @@ router.get("/profile/user/:userId", async (req, res) => {
     const parsedUserId = parseInt(userId);
     
     const user = await User.findByPk(parsedUserId, {
-      attributes: ["id", "name", "bio", "profilePicture"]
+      attributes: ["id", "name", "bio"]
     });
 
     if (!user) {
@@ -95,40 +95,13 @@ router.put("/profile/me", async (req, res) => {
     if (bio !== undefined) {
       user.bio = bio;
     }
-    
-    if (profilePicture !== undefined) {
-      // Validate image is a valid base64 string (without data URL prefix)
-      if (typeof profilePicture !== 'string') {
-        return res.status(400).json({ message: "Profile picture must be a string." });
-      }
-      
-      if (profilePicture.length === 0) {
-        return res.status(400).json({ message: "Profile picture cannot be empty." });
-      }
-      
-      // Validate it looks like base64 (alphanumeric, +, /, =)
-      if (!/^[A-Za-z0-9+/=]+$/.test(profilePicture)) {
-        console.error("Invalid base64 characters. First 100 chars:", profilePicture.substring(0, 100));
-        return res.status(400).json({ message: "Invalid base64 data." });
-      }
-      
-      // Validate max size - 60KB for base64 string
-      if (profilePicture.length > 60000) {
-        return res.status(400).json({ message: `Image too large (${profilePicture.length} bytes). Max 60KB.` });
-      }
-      
-      console.log("✅ Profile picture base64 validated. Stored length:", profilePicture.length, "bytes");
-      // Store just the base64 string in database (without data: prefix to avoid corruption)
-      user.profilePicture = profilePicture;
-    }
 
     await user.save();
 
     return res.json({
       id: user.id,
       name: user.name,
-      bio: user.bio,
-      profilePicture: user.profilePicture
+      bio: user.bio
     });
   } catch (error) {
     console.error("Profile update error:", error.message);

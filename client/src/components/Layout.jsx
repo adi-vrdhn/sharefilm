@@ -45,20 +45,7 @@ const Layout = ({ children }) => {
 
           <Link to="/profile" className="user-profile-link" onClick={() => setSidebarOpen(false)}>
             <div className="user-avatar">
-              {user?.profilePicture ? (
-                <img 
-                  src={`data:image/jpeg;base64,${user.profilePicture}`}
-                  alt={user?.name} 
-                  className="user-avatar-img"
-                  onError={(e) => {
-                    console.warn("❌ Failed to load profile picture. Base64 length:", user?.profilePicture?.length);
-                    e.target.style.display = 'none';
-                    const fallback = e.target.parentElement?.querySelector('.user-avatar-text');
-                    if (fallback) fallback.style.display = 'flex';
-                  }}
-                />
-              ) : null}
-              <span className="user-avatar-text" style={{display: user?.profilePicture ? 'none' : 'flex'}}>
+              <span className="user-avatar-text">
                 {user?.name?.[0] || "U"}
               </span>
             </div>

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import api from "../api/axios";
-import ImageEditor from "../components/ImageEditor";
 import BuddiesSheet from "../components/BuddiesSheet";
 import WatchedMoviesSheet from "../components/WatchedMoviesSheet";
 import "../styles/profile.css";
@@ -16,7 +15,6 @@ const Profile = () => {
   const [status, setStatus] = useState("");
   const [isEditingBio, setIsEditingBio] = useState(false);
   const [tempBio, setTempBio] = useState("");
-  const [isEditingPicture, setIsEditingPicture] = useState(false);
   const [showBuddiesSheet, setShowBuddiesSheet] = useState(false);
   const [showWatchedMoviesSheet, setShowWatchedMoviesSheet] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -62,43 +60,7 @@ const Profile = () => {
     }
   };
 
-  const handlePictureSave = async (base64String) => {
-    try {
-      console.log("📸 Starting picture save...");
-      console.log("Input base64 length:", base64String?.length);
-      
-      if (!base64String || base64String.length === 0) {
-        setStatus("Invalid image data");
-        return;
-      }
-      
-      // Send JUST the base64 string (without data:image prefix) to avoid corruption
-      // Let backend reconstruct the full URL
-      const cleanBase64 = base64String.trim();
-      console.log("✅ Sending clean base64, length:", cleanBase64.length);
-      
-      const response = await api.put("/profile/me", { 
-        profilePicture: cleanBase64
-      });
-      
-      console.log("✅ Response received:", response.data);
-      
-      if (response.data.profilePicture) {
-        // Store the full data URL for display
-        const fullDataUrl = `data:image/jpeg;base64,${response.data.profilePicture}`;
-        setProfile((prev) => ({ ...prev, profilePicture: fullDataUrl }));
-        updateProfilePicture(fullDataUrl);
-        setIsEditingPicture(false);
-        setStatus("Profile picture updated!");
-        setTimeout(() => setStatus(""), 3000);
-      }
-    } catch (error) {
-      console.error("❌ Picture save error:", error);
-      setStatus(error.response?.data?.message || "Failed to update profile picture");
-    }
-  };
-
-  const handleOpenBuddiesSheet = () => {
+const handleOpenBuddiesSheet = () => {
     setShowBuddiesSheet(true);
   };
 
@@ -194,36 +156,12 @@ const Profile = () => {
           {/* Profile Picture */}
           <div className="profile-picture-section">
             <div className="profile-picture-container">
-              {profile.profilePicture ? (
-                <>
-                  <img 
-                    src={`data:image/jpeg;base64,${profile.profilePicture}`}
-                    alt={profile.name} 
-                    className="profile-picture"
-                    onError={(e) => {
-                      console.warn("Failed to load profile picture. Length:", profile.profilePicture?.length);
-                      e.target.style.display = 'none';
-                    }}
-                  />
-                  <div className="profile-picture-placeholder" style={{display: 'flex'}}>
-                    {profile.name.charAt(0).toUpperCase()}
-                  </div>
-                </>
-              ) : (
-                <div className="profile-picture-placeholder">{profile.name.charAt(0).toUpperCase()}</div>
-              )}
+              <div className="profile-picture-placeholder">
+                {profile.name.charAt(0).toUpperCase()}
+              </div>
             </div>
 
-            {isOwnProfile && (
-              <div className="profile-actions-vertical">
-                <button
-                  className="secondary"
-                  onClick={() => setIsEditingPicture(true)}
-                >
-                  📸 Change Picture
-                </button>
-              </div>
-            )}
+
           </div>
 
           {/* Profile Info */}
@@ -511,16 +449,7 @@ const Profile = () => {
         </div>
       )}
 
-      {/* Image Editor Modal */}
-      {isEditingPicture && (
-        <ImageEditor
-          currentImage={profile?.profilePicture}
-          onSave={handlePictureSave}
-          onCancel={() => setIsEditingPicture(false)}
-        />
-      )}
-
-      {/* Buddies Sheet */}
+{/* Buddies Sheet */}
       <BuddiesSheet
         isOpen={showBuddiesSheet}
         onClose={() => setShowBuddiesSheet(false)}
