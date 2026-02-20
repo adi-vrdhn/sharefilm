@@ -15,6 +15,7 @@ const NextShow = () => {
     genres: [],
     languages: [],
     platforms: [],
+    searchMovie: null,
   });
   const [stats, setStats] = useState({
     watched: 0,
@@ -34,6 +35,21 @@ const NextShow = () => {
   const fetchMovies = async (appliedFilters) => {
     try {
       setLoading(true);
+      
+      // If a search movie was selected, fetch similar movies to it
+      if (appliedFilters.searchMovie) {
+        const response = await api.get("/api/next-show/similar-movies", {
+          params: {
+            movieId: appliedFilters.searchMovie.tmdb_id,
+            limit: 50,
+          },
+        });
+        setMovies(response.data.data.similar_movies || []);
+        setCurrentIndex(0);
+        return;
+      }
+
+      // Otherwise fetch with genre/language/platform filters
       const response = await api.get("/api/next-show/movies", {
         params: {
           genres: appliedFilters.genres.join(",") || "any",

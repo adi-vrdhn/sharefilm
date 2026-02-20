@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Check, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, Search, X } from "lucide-react";
 import api from "../api/axios";
 import "../styles/nextShowFilters.css";
 
@@ -11,6 +11,10 @@ const NextShowFilters = ({ onFiltersApplied }) => {
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [selectedLanguages, setSelectedLanguages] = useState([]);
   const [selectedPlatforms, setSelectedPlatforms] = useState([]);
+  
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchSuggestions, setSearchSuggestions] = useState([]);
+  const [selectedSearchMovie, setSelectedSearchMovie] = useState(null);
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -71,6 +75,25 @@ const NextShowFilters = ({ onFiltersApplied }) => {
     fetchGenres();
   }, []);
 
+  // Autocomplete search for movies
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchSuggestions([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        const response = await api.get(`/searchMovie?q=${encodeURIComponent(searchQuery)}`);
+        setSearchSuggestions(response.data.slice(0, 8));
+      } catch (error) {
+        setSearchSuggestions([]);
+      }
+    }, 350);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
   const toggleGenre = (genreId) => {
     setSelectedGenres((prev) =>
       prev.includes(genreId) ? prev.filter((g) => g !== genreId) : [...prev, genreId]
@@ -94,7 +117,20 @@ const NextShowFilters = ({ onFiltersApplied }) => {
       genres: selectedGenres,
       languages: selectedLanguages,
       platforms: selectedPlatforms,
+      searchMovie: selectedSearchMovie,
     });
+  };
+
+  const selectSearchMovie = (movie) => {
+    setSelectedSearchMovie(movie);
+    setSearchQuery(movie.title);
+    setSearchSuggestions([]);
+  };
+
+  const clearSearchMovie = () => {
+    setSelectedSearchMovie(null);
+    setSearchQuery("");
+    setSearchSuggestions([]);
   };
 
   const handleSelectAll = (type) => {
@@ -121,6 +157,91 @@ const NextShowFilters = ({ onFiltersApplied }) => {
         <div className="loader">Loading options...</div>
       ) : (
         <div className="filters-content">
+          {/* Search Box */}
+          <div className="filter-section search-section">
+            <h2>Search for a movie</h2>
+            <div className="search-container">
+              <Search size={20} className="search-icon" />
+              <input
+                type="text"
+                placeholder="Search a movie to get similar suggestions..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="search-input"
+              />
+              {searchQuery && (
+                <button
+                  className="clear-search-btn"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setSearchSuggestions([]);
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+
+            {/* Search Suggestions */}
+            {searchSuggestions.length > 0 && (
+              <div className="search-suggestions">
+                {searchSuggestions.map((movie) => (
+                  <button
+                    key={movie.tmdb_id}
+                    className="suggestion-item"
+                    onClick={() => selectSearchMovie(movie)}
+                  >
+                    <div className="suggestion-poster">
+                      {movie.poster_path && (
+                        <img
+                          src={`https://image.tmdb.org/t/p/w92${movie.poster_path}`}
+                          alt={movie.title}
+                        />
+                      )}
+                    </div>
+                    <div className="suggestion-info">
+                      <div className="suggestion-title">{movie.title}</div>
+                      <div className="suggestion-year">
+                        {movie.release_date ? new Date(movie.release_date).getFullYear() : "N/A"}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {selectedSearchMovie && (
+              <div className="selected-search-movie">
+                <div className="selected-movie-content">
+                  <div className="selected-movie-poster">
+                    {selectedSearchMovie.poster_path && (
+                      <img
+                        src={`https://image.tmdb.org/t/p/w154${selectedSearchMovie.poster_path}`}
+                        alt={selectedSearchMovie.title}
+                      />
+                    )}
+                  </div>
+                  <div className="selected-movie-info">
+                    <div className="selected-movie-title">{selectedSearchMovie.title}</div>
+                    <div className="selected-movie-year">
+                      {selectedSearchMovie.release_date ? new Date(selectedSearchMovie.release_date).getFullYear() : "N/A"}
+                    </div>
+                  </div>
+                </div>
+                <button
+                  className="remove-search-btn"
+                  onClick={clearSearchMovie}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+            )}
+
+            <p className="filter-note search-note">
+              {selectedSearchMovie ? "✓ Movie selected. Start swiping to find similar movies!" : "Optional: Search to find movies similar to your selection"}
+            </p>
+          </div>
+
           {/* Genres Filter */}
           <div className="filter-section">
             <div className="filter-title-row">
