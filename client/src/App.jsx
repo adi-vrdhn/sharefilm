@@ -17,6 +17,7 @@ import Profile from "./pages/Profile";
 import Analytics from "./pages/Analytics";
 import Games from "./pages/Games";
 import MovieMatcher from "./pages/MovieMatcher";
+import SwipeDiscovery from "./pages/SwipeDiscovery";
 
 const LoadingScreen = () => (
   <div style={{
@@ -174,6 +175,16 @@ const App = () => {
           <ProtectedRoute>
             <Layout>
               <MovieMatcher />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/swipe-discovery"
+        element={
+          <ProtectedRoute>
+            <Layout>
+              <SwipeDiscovery />
             </Layout>
           </ProtectedRoute>
         }

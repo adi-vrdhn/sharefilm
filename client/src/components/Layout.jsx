@@ -29,6 +29,7 @@ const Layout = ({ children }) => {
     { path: "/add", label: "Add Movie", icon: "" },
     { path: "/list", label: "Movie List", icon: "" },
     { path: "/discover", label: "Discover", icon: "" },
+    { path: "/swipe-discovery", label: "🎬 What to Watch Next", icon: "" },
     { path: "/games", label: "Games", icon: "" },
     { path: "/party", label: "Movie Party", icon: "" },
     { path: "/matcher", label: "Movie Matcher", icon: "" },
