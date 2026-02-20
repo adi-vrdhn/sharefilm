@@ -63,14 +63,11 @@ const Profile = () => {
   };
   const handlePictureSave = async (imageData) => {
     try {
-      const response = await api.put("/profile/me", { profilePicture: imageData });
-      setProfile((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
-      updateProfilePicture(imageData);
+      // Image upload temporarily disabled due to data URL issues
+      setStatus("Profile pictures are being optimized. Coming soon!");
       setIsEditingPicture(false);
-      setStatus("Profile picture updated!");
-      setTimeout(() => setStatus(""), 3000);
     } catch (error) {
-      setStatus(error.response?.data?.message || "Failed to update profile picture");
+      setStatus("Profile picture feature is temporarily unavailable");
     }
   };
 
@@ -171,7 +168,17 @@ const Profile = () => {
           <div className="profile-picture-section">
             <div className="profile-picture-container">
               {profile.profilePicture ? (
-                <img src={profile.profilePicture} alt={profile.name} className="profile-picture" />
+                <>
+                  <img 
+                    src={profile.profilePicture} 
+                    alt={profile.name} 
+                    className="profile-picture"
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                  <div className="profile-picture-placeholder" style={{display: 'flex'}}>
+                    {profile.name.charAt(0).toUpperCase()}
+                  </div>
+                </>
               ) : (
                 <div className="profile-picture-placeholder">{profile.name.charAt(0).toUpperCase()}</div>
               )}
