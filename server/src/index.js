@@ -392,18 +392,32 @@ initializeSocket(io);
 
 const start = async () => {
   try {
+    console.log("[DB] Attempting to authenticate with database...");
     await sequelize.authenticate();
-    // Use alter: true temporarily to update SharedParty table schema
+    console.log("[DB] ✅ Database authentication successful");
+    
+    console.log("[DB] Syncing models...");
     await sequelize.sync({ alter: true });
+    console.log("[DB] ✅ Database sync complete");
 
     const port = process.env.PORT || 4000;
     server.listen(port, () => {
       console.log(`🔒 Secure server running on port ${port}`);
       console.log(`Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(`Client origin: ${process.env.CLIENT_ORIGIN}`);
     });
   } catch (error) {
-    console.error("Failed to start server", error.message);
-    process.exit(1);
+    console.error("[DB] ❌ Database connection failed:");
+    console.error("[DB] Error type:", error.constructor.name);
+    console.error("[DB] Error message:", error.message);
+    console.error("[DB] Full error:", error);
+    
+    // Try to start server anyway with limited functionality
+    console.log("[DB] ⚠️  Starting server in degraded mode (no database)");
+    const port = process.env.PORT || 4000;
+    server.listen(port, () => {
+      console.log(`⚠️  Server running on port ${port} (database disconnected)`);
+    });
   }
 };
 
