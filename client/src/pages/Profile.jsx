@@ -66,32 +66,28 @@ const Profile = () => {
     try {
       console.log("📸 Starting picture save...");
       console.log("Input base64 length:", base64String?.length);
-      console.log("First 50 chars:", base64String?.substring(0, 50));
       
       if (!base64String || base64String.length === 0) {
         setStatus("Invalid image data");
         return;
       }
       
-      // Reconstruct full data URL with proper format
-      const fullDataUrl = `data:image/jpeg;base64,${base64String.trim()}`;
-      console.log("Full data URL first 80 chars:", fullDataUrl.substring(0, 80));
-      
-      // Validate it's under size limit
-      if (fullDataUrl.length > 65000) {
-        setStatus("Image data too large, compressing more...");
-        return;
-      }
+      // Send JUST the base64 string (without data:image prefix) to avoid corruption
+      // Let backend reconstruct the full URL
+      const cleanBase64 = base64String.trim();
+      console.log("✅ Sending clean base64, length:", cleanBase64.length);
       
       const response = await api.put("/profile/me", { 
-        profilePicture: fullDataUrl
+        profilePicture: cleanBase64
       });
       
       console.log("✅ Response received:", response.data);
       
       if (response.data.profilePicture) {
-        setProfile((prev) => ({ ...prev, profilePicture: response.data.profilePicture }));
-        updateProfilePicture(response.data.profilePicture);
+        // Store the full data URL for display
+        const fullDataUrl = `data:image/jpeg;base64,${response.data.profilePicture}`;
+        setProfile((prev) => ({ ...prev, profilePicture: fullDataUrl }));
+        updateProfilePicture(fullDataUrl);
         setIsEditingPicture(false);
         setStatus("Profile picture updated!");
         setTimeout(() => setStatus(""), 3000);
@@ -201,10 +197,13 @@ const Profile = () => {
               {profile.profilePicture ? (
                 <>
                   <img 
-                    src={profile.profilePicture} 
+                    src={`data:image/jpeg;base64,${profile.profilePicture}`}
                     alt={profile.name} 
                     className="profile-picture"
-                    onError={(e) => { e.target.style.display = 'none'; }}
+                    onError={(e) => {
+                      console.warn("Failed to load profile picture. Length:", profile.profilePicture?.length);
+                      e.target.style.display = 'none';
+                    }}
                   />
                   <div className="profile-picture-placeholder" style={{display: 'flex'}}>
                     {profile.name.charAt(0).toUpperCase()}

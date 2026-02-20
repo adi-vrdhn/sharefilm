@@ -47,16 +47,20 @@ const Layout = ({ children }) => {
             <div className="user-avatar">
               {user?.profilePicture ? (
                 <img 
-                  src={user.profilePicture} 
+                  src={`data:image/jpeg;base64,${user.profilePicture}`}
                   alt={user?.name} 
                   className="user-avatar-img"
                   onError={(e) => {
-                    console.warn("Failed to load profile picture from sidebar, showing initial");
+                    console.warn("❌ Failed to load profile picture. Base64 length:", user?.profilePicture?.length);
                     e.target.style.display = 'none';
+                    const fallback = e.target.parentElement?.querySelector('.user-avatar-text');
+                    if (fallback) fallback.style.display = 'flex';
                   }}
                 />
               ) : null}
-              {!user?.profilePicture || <span className="user-avatar-text">{user?.name?.[0] || "U"}</span>}
+              <span className="user-avatar-text" style={{display: user?.profilePicture ? 'none' : 'flex'}}>
+                {user?.name?.[0] || "U"}
+              </span>
             </div>
             <div className="user-info">
               <div className="user-name">{user?.name}</div>
