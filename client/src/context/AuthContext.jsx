@@ -84,6 +84,13 @@ export const AuthProvider = ({ children }) => {
     requestNotificationPermission();
   };
 
+  const googleLogin = async (googleToken) => {
+    const response = await api.post("/auth/google-login", { token: googleToken });
+    localStorage.setItem("token", response.data.token);
+    setUser(response.data.user);
+    requestNotificationPermission();
+  };
+
   const logout = async () => {
     await api.post("/auth/logout");
     localStorage.removeItem("token");
@@ -104,7 +111,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, login, signup, logout, updateUsername, updateProfilePicture, updateUser, fetchUser }}
+      value={{ user, loading, login, signup, logout, googleLogin, updateUsername, updateProfilePicture, updateUser, fetchUser }}
     >
       {children}
     </AuthContext.Provider>

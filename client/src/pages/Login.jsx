@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { GoogleLogin } from "@react-oauth/google";
 const Login = () => {
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
@@ -61,6 +62,19 @@ const Login = () => {
             Log In
           </button>
         </form>
+        
+        <div style={{ margin: "20px 0", textAlign: "center" }}>
+          <p className="helper-text" style={{ marginBottom: "10px" }}>Or sign in with Google</p>
+          <GoogleLogin
+            onSuccess={(credentialResponse) => {
+              googleLogin(credentialResponse.credential)
+                .then(() => navigate("/dashboard"))
+                .catch((err) => setError(err.response?.data?.message || "Google login failed"));
+            }}
+            onError={() => setError("Google login failed")}
+          />
+        </div>
+
         <p className="helper-text">
           New here? <Link to="/signup">Create an account</Link>.
         </p>

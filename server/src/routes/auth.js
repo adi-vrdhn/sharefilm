@@ -1,11 +1,13 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
 const { User } = require("../models");
 const { recordFailedAttempt, isAccountLocked, clearLoginAttempts } = require("../middleware/accountLockout");
 const { logFailedLogin, logSuccessfulLogin, logAccountLockout } = require("../middleware/auditLog");
 
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.VITE_GOOGLE_CLIENT_ID);
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -156,6 +158,65 @@ router.get("/me", async (req, res) => {
 
 router.post("/logout", (req, res) => {
   return res.json({ message: "Logged out" });
+});
+
+router.post("/google-login", async (req, res) => {
+  try {
+    const { token } = req.body;
+    
+    if (!token) {
+      return res.status(400).json({ message: "Google token is required" });
+    }
+
+    // Verify the Google token
+    const ticket = await googleClient.verifyIdToken({
+      idToken: token,
+      audience: process.env.VITE_GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, picture } = payload;
+
+    // Find or create user
+    let user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      // Create a new user with Google info
+      // Generate a random password for Google users (they won't use it)
+      const randomPassword = require("crypto").randomBytes(32).toString("hex");
+      const hashed = await bcrypt.hash(randomPassword, 10);
+      
+      user = await User.create({
+        email,
+        name: name || email.split("@")[0],
+        password: hashed,
+        profilePicture: picture,
+        googleAuth: true
+      });
+    } else if (!user.googleAuth) {
+      // If user exists but didn't use Google auth before, update their profile picture
+      user.profilePicture = picture;
+      user.googleAuth = true;
+      await user.save();
+    }
+
+    clearLoginAttempts(email);
+    const jwtToken = generateToken(user);
+
+    return res.json({ 
+      token: jwtToken, 
+      user: { 
+        id: user.id, 
+        name: user.name, 
+        email: user.email, 
+        profilePicture: user.profilePicture, 
+        bio: user.bio 
+      } 
+    });
+  } catch (error) {
+    console.error("[GOOGLE_LOGIN] Error:", error.message);
+    return res.status(401).json({ message: "Google authentication failed" });
+  }
 });
 
 module.exports = router;

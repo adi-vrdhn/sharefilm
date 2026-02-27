@@ -34,6 +34,12 @@ const User = sequelize.define(
       defaultValue: null,
       comment: "Base64 encoded image or URL"
     },
+    googleAuth: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+      comment: "Whether user signed up/logs in via Google"
+    },
     createdAt: {
       type: DataTypes.DATE,
       allowNull: true,
