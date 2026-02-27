@@ -5,7 +5,13 @@
   "main": "server/src/index.js",
   "scripts": {
     "build": "cd client && npm install && npm run build && cd ../server && npm install",
-    "start": "cd server && npm start"
+    "start": "cd server && npm start",
+    "mobile:install": "cd mobile && npm install",
+    "mobile:dev": "cd mobile && npm start",
+    "mobile:ios": "cd mobile && npm run ios",
+    "mobile:android": "cd mobile && npm run android",
+    "mobile:build:ios": "cd mobile && npm run build:ios",
+    "mobile:build:android": "cd mobile && npm run build:android"
   },
   "engines": {
     "node": "22.22.0"
