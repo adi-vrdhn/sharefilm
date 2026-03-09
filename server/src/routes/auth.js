@@ -159,93 +159,11 @@ router.post("/logout", (req, res) => {
   return res.json({ message: "Logged out" });
 });
 
-// Verify Google token using JWT (no external library needed)
-// TEMPORARILY DISABLED - Google login commented out
-/*
-const verifyGoogleToken = (token) => {
-  try {
-    // Decode the JWT header to get kid (key ID)
-    const parts = token.split('.');
-    if (parts.length !== 3) throw new Error('Invalid token format');
-    
-    // For production, you should verify the signature using Google's public keys
-    // For now, we decode and trust Google's token (ensure HTTPS in production)
-    const decoded = jwt.decode(token);
-    
-    if (!decoded) throw new Error('Invalid token');
-    
-    // Check token expiration
-    if (decoded.exp && decoded.exp < Math.floor(Date.now() / 1000)) {
-      throw new Error('Token expired');
-    }
-    
-    // Verify the token was issued by Google and is for our app
-    if (decoded.iss !== 'https://accounts.google.com' && decoded.iss !== 'accounts.google.com') {
-      throw new Error('Invalid issuer');
-    }
-    
-    if (decoded.aud !== process.env.VITE_GOOGLE_CLIENT_ID) {
-      throw new Error('Invalid audience');
-    }
-    
-    return decoded;
-  } catch (error) {
-    throw new Error(`Token verification failed: ${error.message}`);
-  }
-};
-
-router.post("/google-login", async (req, res) => {
-  try {
-    const { token } = req.body;
-    
-    if (!token) {
-      return res.status(400).json({ message: "Google token is required" });
-    }
-
-    // Verify the Google token
-    const payload = verifyGoogleToken(token);
-    const { email, name, picture } = payload;
-
-    // Find or create user
-    let user = await User.findOne({ where: { email } });
-
-    if (!user) {
-      // Create a new user with Google info
-      // Generate a random password for Google users (they won't use it)
-      const randomPassword = require("crypto").randomBytes(32).toString("hex");
-      const hashed = await bcrypt.hash(randomPassword, 10);
-      
-      user = await User.create({
-        email,
-        name: name || email.split("@")[0],
-        password: hashed,
-        profilePicture: picture,
-        googleAuth: true
-      });
-    } else if (!user.googleAuth) {
-      // If user exists but didn't use Google auth before, update their profile picture
-      user.profilePicture = picture;
-      user.googleAuth = true;
-      await user.save();
-    }
-
-    clearLoginAttempts(email);
-    const jwtToken = generateToken(user);
-
-    return res.json({ 
-      token: jwtToken, 
-      user: { 
-        id: user.id, 
-        name: user.name, 
-        email: user.email, 
-        profilePicture: user.profilePicture, 
-        bio: user.bio 
-      } 
-    });
-  } catch (error) {
-    console.error("[GOOGLE_LOGIN] Error:", error.message);
-    return res.status(401).json({ message: "Google authentication failed" });
-  }
-});
+// TODO: Re-enable Google login after setting up OAuth credentials
+// Requires: VITE_GOOGLE_CLIENT_ID and GOOGLE_CLIENT_ID in .env files
+// Steps: 1. Get credentials from Google Cloud Console
+//        2. Add VITE_GOOGLE_CLIENT_ID to client/.env
+//        3. Add GOOGLE_CLIENT_ID to server/.env
+//        4. Uncomment google-login endpoint
 
 module.exports = router;
