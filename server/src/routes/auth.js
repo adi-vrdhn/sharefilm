@@ -123,7 +123,8 @@ router.post("/login", async (req, res) => {
     });
   } catch (error) {
     console.error("[LOGIN] Error:", error.message);
-    return res.status(500).json({ message: "Login failed" });
+    console.error("[LOGIN] Full Error:", error); // Add full error for debugging
+    return res.status(500).json({ message: "Login failed", error: error.message }); // Return error message for debugging
   }
 });
 
@@ -159,6 +160,8 @@ router.post("/logout", (req, res) => {
 });
 
 // Verify Google token using JWT (no external library needed)
+// TEMPORARILY DISABLED - Google login commented out
+/*
 const verifyGoogleToken = (token) => {
   try {
     // Decode the JWT header to get kid (key ID)
